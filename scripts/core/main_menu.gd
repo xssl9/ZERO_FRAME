@@ -1,13 +1,7 @@
 extends Control
 
 const MAPS: Array[Array] = [
-	["ЗАБРОШЕННЫЙ КОМПЛЕКС", "res://scenes/levels/abandoned_building.tscn"],
-	["WAREHOUSE TEST", "res://scenes/levels/test_range.tscn"],
-	["BUILDING SCAN — INTERIOR", "res://scenes/levels/maps/building_scan.tscn"],
-	["RUINS OF HORE ABBEY", "res://scenes/levels/maps/hore_abbey.tscn"],
-	["SLADE GREEN COMMAND POST", "res://scenes/levels/maps/slade_green.tscn"],
-	["BRUTALIST CONCRETE INTERIOR", "res://scenes/levels/maps/brutalist_interior.tscn"],
-	["SQUINCH DOMES", "res://scenes/levels/maps/squinch_domes.tscn"]
+	["DEV TEST GRID", "res://scenes/levels/dev_test_grid.tscn"]
 ]
 
 const GRAPHICS_NAMES: PackedStringArray = ["AUTO", "PERFORMANCE", "HIGH", "ULTRA"]
@@ -25,7 +19,7 @@ func _ready() -> void:
 	title.position = Vector2(80.0, 48.0)
 	background.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "BODYCAM MAP SELECT   •   %d КАРТ" % MAPS.size()
+	subtitle.text = "BODYCAM   •   ВЫБОР КАРТЫ"
 	subtitle.modulate = Color("7f9ba5")
 	subtitle.position = Vector2(84.0, 118.0)
 	background.add_child(subtitle)

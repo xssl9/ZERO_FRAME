@@ -4,7 +4,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
-	var packed := load("res://scenes/levels/test_range.tscn") as PackedScene
+	var packed := load("res://scenes/levels/dev_test_grid.tscn") as PackedScene
 	var level := packed.instantiate()
 	root.add_child(level)
 	await process_frame

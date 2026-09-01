@@ -4,7 +4,7 @@ func _initialize() -> void:
 	call_deferred("_capture")
 
 func _capture() -> void:
-	var scene_path := "res://scenes/levels/test_range.tscn"
+	var scene_path := "res://scenes/levels/dev_test_grid.tscn"
 	var output_path := "/tmp/zero_frame_capture.png"
 	var override_position := Vector3.INF
 	var override_exposure := -1.0

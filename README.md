@@ -1,10 +1,14 @@
 # ZERO FRAME
 
-Playable Godot 4.7 first-person warehouse test experience.
+Playable Godot 4.7 first-person shooting sandbox.
 
-Open `project.godot` in Godot and press F6/F5. The warehouse test range starts directly; there is no story level.
+Open `project.godot` in Godot and press F5. The main menu opens; pick `DEV TEST GRID` to load the test level. There is no story level.
 
 Controls: WASD, mouse, Shift sprint, C crouch, LMB fire, RMB aim, R reload, 1/2 switch weapon, F flashlight, Esc menu.
+
+## Test level
+
+`scenes/levels/dev_test_grid.tscn` is the only map: a 48 × 48 m greybox room with a checkerboard grid floor (`shaders/dev_grid.gdshader`, 1 m per cell, thicker line every 8 m), a walled perimeter, tall and chest-high test walls, cover boxes, stairs onto a raised platform, a 15° ramp, three orange targets on the far wall, and a daytime HDRI sky. Everything is authored geometry and fully editable in the editor — nothing is generated at runtime.
 
 ## Editing weapon transforms
 
@@ -12,4 +16,4 @@ Open `scenes/weapons/ak_viewmodel.tscn` or `pistol_viewmodel.tscn` and edit only
 
 For a correct first-person preview, select `FPSPreviewCamera` and enable Camera Preview in the 3D editor. Do not use Left/Right Orthogonal view for placement. `FORWARD_minus_Z` marks the same forward axis used by the player camera. Long orange bones outside the arms are authored IK/control bones (`Head_Cam`, hand IK and pole targets), not detached deformation bones.
 
-The project includes user-provided animated first-person AK and pistol assets, five armed enemies in the main level, hitscan combat, bodycam movement, a test range, graphics menu, fog and wet late-evening environment. See `ASSET_CREDITS.md` and `USER_ASSET_REPORT.md` before redistribution.
+The project includes user-provided animated first-person AK and pistol assets, hitscan combat, bodycam movement, the dev test grid level, a graphics menu and a daytime HDRI environment. See `ASSET_CREDITS.md` and `USER_ASSET_REPORT.md` before redistribution.

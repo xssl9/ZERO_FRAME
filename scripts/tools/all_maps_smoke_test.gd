@@ -1,13 +1,7 @@
 extends SceneTree
 
 const MAPS: PackedStringArray = [
-	"res://scenes/levels/abandoned_building.tscn",
-	"res://scenes/levels/test_range.tscn",
-	"res://scenes/levels/maps/building_scan.tscn",
-	"res://scenes/levels/maps/hore_abbey.tscn",
-	"res://scenes/levels/maps/slade_green.tscn",
-	"res://scenes/levels/maps/brutalist_interior.tscn",
-	"res://scenes/levels/maps/squinch_domes.tscn",
+	"res://scenes/levels/dev_test_grid.tscn",
 ]
 
 func _initialize() -> void:

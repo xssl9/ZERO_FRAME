@@ -1,15 +1,14 @@
 # ZERO FRAME — план фотореализма
 
-## Статус на 13 июля 2026
+## Статус на 1 сентября 2026
 
-- [x] Семь основных карт запечены в статические `.tscn`; runtime `LevelBuilder` игрой не используется.
+- [x] Все прежние карты удалены вместе с `LevelBuilder`; единственный уровень — статический `scenes/levels/dev_test_grid.tscn` (greybox-грид для тестов, дневное HDRI-небо).
 - [x] `WeaponTuningCamera` каждого оружия является фактической current-камерой оружейного `SubViewport`.
 - [x] Единый HDR panorama sky, AgX, фиксированная экспозиция, мягкий bloom и нейтральный contrast.
 - [x] Performance/High/Ultra переключаются в главном меню; недоступные SSR/SSIL/probes не включаются в Compatibility.
-- [x] Сломанный alpha-dither меш заброшки заменён на статическую редактируемую модульную PBR-геометрию.
 - [x] Poly Haven `grass_medium_01` использует low-poly tuft + MultiMesh, без коллизии и без player-interaction physics.
-- [x] Все карты проходят CLI smoke-test: Player на полу, AK camera current, parser/runtime errors нет.
-- [ ] Последующий art-pass: уникальные декали протечек/ржавчины, ручные LOD для тяжёлых фотосканов и GPU-замер Forward+ на дискретной видеокарте.
+- [ ] Перезапустить CLI smoke-test на новой карте (Player на полу, AK camera current, parser/runtime errors нет).
+- [ ] Художественные карты: сделать заново с нуля, когда тестовый грид перестанет быть достаточным.
 
 ## 1. Стабильная база
 
