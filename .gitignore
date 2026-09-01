@@ -6,8 +6,10 @@
 export.cfg
 export_presets.cfg
 
-# Imported translations (Godot 4)
-*.import
+# NOTE: *.import must NOT be ignored. Those files carry the import settings and the
+# uid:// each scene references its assets by; the throwaway cache they point at lives
+# in .godot/ above, which is already ignored. Ignoring them makes every fresh clone
+# re-import with default settings under brand new uids.
 
 # Mono-specific ignores
 .mono/

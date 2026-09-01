@@ -1,2 +1,9 @@
-*.glb filter=lfs diff=lfs merge=lfs -text
-*.fbx filter=lfs diff=lfs merge=lfs -text
+# git-lfs is deliberately NOT used here. A plain `git clone` has to produce a
+# runnable project on a machine that has nothing but git and Godot installed.
+# With an lfs filter these files check out as 133-byte pointer text instead of
+# geometry, and Godot's ufbx importer fails with "Unrecognized file format",
+# which silently leaves the weapon viewmodel with no mesh at all.
+*.glb binary
+*.fbx binary
+*.gltf -text
+*.bin binary
