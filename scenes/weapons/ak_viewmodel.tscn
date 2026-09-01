@@ -4,24 +4,24 @@
 
 [node name="AKViewModel" type="Node3D" unique_id=1331583053]
 
-[node name="WeaponCameraControl" type="Node3D" parent="." unique_id=1437258982]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20849538, 0.15408157, 0.28547502)
-
-[node name="WeaponTuningCamera" type="Camera3D" parent="WeaponCameraControl" unique_id=1957415907]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.009369507, -0.0110731125)
+[node name="WeaponTuningCamera" type="Camera3D" parent="." unique_id=1957415907]
 keep_aspect = 0
+current = true
 fov = 86.49541
 near = 0.01
 far = 20.0
-current = true
 
-[node name="FORWARD_minus_Z" type="Marker3D" parent="." unique_id=818420890]
+[node name="FORWARD_minus_Z" type="Marker3D" parent="WeaponTuningCamera" unique_id=818420890]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
 
+[node name="MuzzlePoint" type="Marker3D" parent="." unique_id=1204518877]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002167, -0.128788, -1.070009)
+gizmo_extents = 0.1
+
 [node name="ModelAndArms" type="Node3D" parent="." unique_id=1665299975]
-transform = Transform3D(1, 0, 0, 0, 0.999953, -0.00972, 0, 0.01183, 0.99993, 0.18, -0.25, -0.9)
+transform = Transform3D(1, 0, 0, 0, 0.999953, 0.01183, 0, -0.00972, 0.99993, -0.0284954, -0.3947121, -1.1744019)
 
 [node name="FBXUnitNormalization_x1" type="Node3D" parent="ModelAndArms" unique_id=1472428153]
 
 [node name="SourceRig_SKINNED_DO_NOT_ROTATE_SKELETON" parent="ModelAndArms/FBXUnitNormalization_x1" unique_id=2088830814 instance=ExtResource("1_ak")]
-transform = Transform3D(-1, 1.4676785e-09, 1.5098867e-07, -1.4676798e-09, 0.99981093, -0.019439079, -1.5098881e-07, -0.019439094, -0.99981105, 0.0048828125, 0.1664516, 1.0962055)
+transform = Transform3D(-1, 1.4676785e-09, 1.5098867e-07, -1.4676794e-09, 0.99981105, -0.019439079, -1.5098884e-07, -0.019439097, -0.99981105, 0.0047183707, 0.16665132, 1.0968487)

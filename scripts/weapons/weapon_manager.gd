@@ -19,11 +19,28 @@ func _ready() -> void:
 	top_level = false
 	position = base_position
 	var ak := WeaponBase.new()
-	ak.configure("AK-74M", 30, 30, 650.0, 34.0, false, "res://scenes/weapons/ak_viewmodel.tscn", "Rig|AK_Idle", "Rig|AK_Reload")
+	# AUTO first: the AK spawns on full auto and V flips it to single shots.
+	var ak_modes: Array[int] = [WeaponBase.FireMode.AUTO, WeaponBase.FireMode.SEMI]
+	ak.configure("AK-74M", 30, 30, 650.0, 34.0, ak_modes, "res://scenes/weapons/ak_viewmodel.tscn", "Rig|AK_Idle", "Rig|AK_Reload", "Rig|AK_Shot")
 	add_child(ak)
 	weapons.append(ak)
 	var pistol := WeaponBase.new()
-	pistol.configure("PISTOL", 15, 15, 330.0, 25.0, false, "res://scenes/weapons/pistol_viewmodel.tscn", "Armature|FPS_Pistol_Idle", "Armature|FPS_Pistol_Reload_easy")
+	var pistol_modes: Array[int] = [WeaponBase.FireMode.SEMI]
+	pistol.configure("PISTOL", 15, 15, 330.0, 25.0, pistol_modes, "res://scenes/weapons/pistol_viewmodel.tscn", "Armature|FPS_Pistol_Idle", "Armature|FPS_Pistol_Reload_easy", "Armature|FPS_Pistol_Fire")
+	# A 9 mm sidearm snaps rather than climbs, so it gets a lighter profile than
+	# the rifle defaults declared on WeaponBase.
+	pistol.recoil_pitch_degrees = 0.72
+	pistol.recoil_pitch_climb_degrees = 0.45
+	pistol.recoil_yaw_bias_degrees = 0.12
+	pistol.recoil_yaw_spread_degrees = 0.4
+	pistol.recoil_kick_speed = 1.25
+	pistol.recoil_pitch_speed = 1.95
+	pistol.recoil_heat_per_shot = 0.14
+	pistol.recoil_heat_decay = 2.4
+	# Its muzzle sits about half as far from the camera as the rifle's, so an
+	# identically sized flame would swallow the whole screen.
+	pistol.muzzle_flash_size = 0.19
+	pistol.muzzle_flash_energy = 18.0
 	add_child(pistol)
 	weapons.append(pistol)
 	_select(1 if "--pistol" in OS.get_cmdline_user_args() else 0)
@@ -33,10 +50,12 @@ func _process(delta: float) -> void:
 		_select(0)
 	if Input.is_action_just_pressed("weapon_2"):
 		_select(1)
+	if Input.is_action_just_pressed("fire_mode"):
+		weapons[current_index].cycle_fire_mode()
 	if Input.is_action_just_pressed("reload"):
 		weapons[current_index].reload()
 	if not wall_blocked:
-		weapons[current_index].try_fire()
+		weapons[current_index].try_fire(delta)
 	weapons[current_index].set_aiming(Input.is_action_pressed("aim"))
 	var movement := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	sway_velocity += (-sway * 54.0 - sway_velocity * 13.0) * delta
@@ -74,15 +93,20 @@ func add_look_impulse(relative: Vector2) -> void:
 func _select(index: int) -> void:
 	current_index = clampi(index, 0, weapons.size() - 1)
 	for i: int in weapons.size():
-		weapons[i].visible = i == current_index
-		weapons[i].set_process(i == current_index)
-		weapons[i].set_authored_camera_active(i == current_index)
+		var weapon := weapons[i]
+		var active: bool = i == current_index
+		weapon.visible = active
+		# The holstered weapon stops processing, so its recoil springs would freeze
+		# mid-kick and reappear bent when it is drawn again.
+		weapon.reset_recoil()
+		weapon.set_process(active)
+		weapon.set_authored_camera_active(active)
 
 func get_hud_text() -> String:
 	if weapons.is_empty():
 		return ""
 	var weapon := weapons[current_index]
-	var mode: String = " SEMI" if weapon.weapon_name == "AK-74M" else ""
+	var mode: String = "  %s" % weapon.fire_mode_label() if weapon.has_selector() else ""
 	return "%s%s   %02d / %02d" % [weapon.weapon_name, mode, weapon.ammo, weapon.reserve]
 
 func get_status_text() -> String:

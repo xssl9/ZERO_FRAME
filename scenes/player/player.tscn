@@ -105,7 +105,7 @@ offset_left = 22.0
 offset_top = 685.0
 offset_right = 1100.0
 offset_bottom = 715.0
-text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
+text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  V режим огня  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
 
 [node name="BodycamOverlay" type="CanvasLayer" parent="."]
 layer = 90

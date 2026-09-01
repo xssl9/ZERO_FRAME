@@ -5,6 +5,8 @@ const WALK_SPEED: float = 4.2
 const SPRINT_SPEED: float = 7.0
 const CROUCH_SPEED: float = 2.2
 const GRAVITY: float = 20.0
+# Strides overlap at a run, so one player would clip its own tail every step.
+const FOOTSTEP_VOICE_COUNT: int = 4
 
 var camera: Camera3D
 var weapon_camera: Camera3D
@@ -20,6 +22,12 @@ var base_bodycam_position: Vector3 = Vector3(0.16, 1.5, 0.02)
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_transform: Transform3D = Transform3D.IDENTITY
 
+var _footstep_voices: Array[AudioStreamPlayer] = []
+var _footstep_voice_index: int = 0
+var _land_audio: AudioStreamPlayer
+var _stride_distance: float = 0.0
+var _was_on_floor: bool = true
+
 func _ready() -> void:
 	add_to_group("player")
 	_apply_authored_spawn_point()
@@ -29,6 +37,29 @@ func _ready() -> void:
 	else:
 		_build_body()
 	_configure_runtime_body()
+	# Built here rather than in _build_body so the authored player.tscn gets the
+	# movement audio too: the scene file has no audio nodes at all.
+	_build_movement_audio()
+
+func _build_movement_audio() -> void:
+	# Non-positional on purpose. The shooter's own boots are at the listener, and a
+	# positional player would be at the mercy of whichever camera is current.
+	var step_stream := load("res://assets/audio/footsteps/concrete.ogg") as AudioStream
+	if step_stream != null:
+		for index: int in FOOTSTEP_VOICE_COUNT:
+			var voice := AudioStreamPlayer.new()
+			voice.name = "FootstepVoice%d" % index
+			voice.stream = step_stream
+			add_child(voice)
+			_footstep_voices.append(voice)
+	# land.ogg averages -36 dBFS, so it is inaudible without a large lift.
+	var land_stream := load("res://assets/audio/land.ogg") as AudioStream
+	if land_stream != null:
+		_land_audio = AudioStreamPlayer.new()
+		_land_audio.name = "LandAudio"
+		_land_audio.stream = land_stream
+		_land_audio.volume_db = 16.0
+		add_child(_land_audio)
 
 func _apply_authored_spawn_point() -> void:
 	var spawn_point := get_parent().get_node_or_null("SpawnPoint3D") as Marker3D
@@ -173,7 +204,7 @@ func _build_hud() -> void:
 	hud_status.modulate = Color("d6b875")
 	layer.add_child(hud_status)
 	var controls := Label.new()
-	controls.text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
+	controls.text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  V режим огня  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
 	controls.position = Vector2(22.0, 685.0)
 	controls.modulate = Color(0.65, 0.72, 0.74, 0.75)
 	layer.add_child(controls)
@@ -219,9 +250,44 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, direction.x * speed, 24.0 * delta)
 	velocity.z = move_toward(velocity.z, direction.z * speed, 24.0 * delta)
 	move_and_slide()
+	_update_movement_audio(delta, speed)
 	_update_bodycam(delta)
 	hud_ammo.text = weapon_manager.get_hud_text()
 	hud_status.text = weapon_manager.get_status_text()
+
+func _update_movement_audio(delta: float, speed: float) -> void:
+	var grounded := is_on_floor()
+	if grounded and not _was_on_floor and _land_audio != null:
+		_land_audio.pitch_scale = randf_range(0.94, 1.06)
+		_land_audio.play()
+	_was_on_floor = grounded
+	if not grounded or _footstep_voices.is_empty():
+		return
+	var horizontal_speed: float = Vector2(velocity.x, velocity.z).length()
+	if horizontal_speed < 0.45:
+		# Standing still must not keep a partial stride banked, or the next step
+		# would fire the instant the player twitches.
+		_stride_distance = 0.0
+		return
+	# Distance-based instead of time-based: the cadence then follows the actual
+	# speed, and crouch-walking does not sound like a sprint in slow motion.
+	_stride_distance += horizontal_speed * delta
+	var stride_length: float = 1.62
+	var volume: float = 0.0
+	if is_equal_approx(speed, SPRINT_SPEED):
+		stride_length = 2.05
+		volume = 2.0
+	elif is_equal_approx(speed, CROUCH_SPEED):
+		stride_length = 1.05
+		volume = -9.0
+	if _stride_distance < stride_length:
+		return
+	_stride_distance -= stride_length
+	var voice := _footstep_voices[_footstep_voice_index]
+	_footstep_voice_index = (_footstep_voice_index + 1) % _footstep_voices.size()
+	voice.volume_db = volume
+	voice.pitch_scale = randf_range(0.9, 1.12)
+	voice.play()
 
 func _update_bodycam(delta: float) -> void:
 	bodycam.position = base_bodycam_position
@@ -232,6 +298,14 @@ func _update_bodycam(delta: float) -> void:
 func add_camera_impulse(pitch_impulse: float, yaw_impulse: float, roll_impulse: float = 0.0) -> void:
 	var physics_camera := camera as BodycamPhysics
 	physics_camera.add_trauma(Vector3(yaw_impulse, pitch_impulse, roll_impulse), clampf(absf(pitch_impulse) + absf(yaw_impulse) + absf(roll_impulse), 0.0, 1.0))
+
+# Weapons call this instead of add_camera_impulse: recoil moves the real aim, not
+# only the visual camera, so the burst has to be pulled back down by hand.
+func apply_weapon_recoil(pitch_degrees: float, yaw_degrees: float) -> void:
+	var physics_camera := camera as BodycamPhysics
+	if physics_camera == null:
+		return
+	physics_camera.add_recoil(pitch_degrees, yaw_degrees)
 
 func apply_damage(amount: float) -> void:
 	health -= amount

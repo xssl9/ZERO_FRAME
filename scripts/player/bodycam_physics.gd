@@ -35,6 +35,13 @@ extends Camera3D
 @export_range(0.0, 24.0, 0.1) var trauma_pitch_degrees: float = 14.5
 @export_range(0.0, 18.0, 0.1) var trauma_yaw_degrees: float = 7.0
 @export_range(0.0, 18.0, 0.1) var trauma_roll_degrees: float = 6.0
+# How hard the shot punches the view on top of the permanent aim kick. Kept modest
+# because the per-shot aim kick below is now large and the two add up.
+@export_range(0.0, 40.0, 0.5) var recoil_visual_gain: float = 11.0
+# Sustained fire must not recover between rounds, or the burst would never climb.
+@export_range(0.0, 1.0, 0.01) var recoil_recovery_delay: float = 0.16
+@export_range(0.0, 120.0, 1.0) var recoil_recovery_degrees_per_second: float = 34.0
+@export_range(0.0, 60.0, 0.5) var maximum_recoil_debt_degrees: float = 30.0
 
 var _base_position: Vector3
 var _base_rotation: Vector3
@@ -50,6 +57,11 @@ var _look_inertia: Vector3 = Vector3.ZERO
 var _look_inertia_velocity: Vector3 = Vector3.ZERO
 var _impact_rotation: Vector3 = Vector3.ZERO
 var _impact_velocity: Vector3 = Vector3.ZERO
+# Aim displacement the weapon owes back, in view space. Positive pitch debt means
+# the muzzle was pushed up; yaw debt is stored exactly as it was fed to rotate_y.
+var _recoil_pitch_debt: float = 0.0
+var _recoil_yaw_debt: float = 0.0
+var _recoil_recovery_timer: float = 0.0
 
 func _ready() -> void:
 	# This camera owns a render-frame procedural spring. Interpolating that result
@@ -108,6 +120,7 @@ func _process(delta: float) -> void:
 	var visual_delta: float = minf(delta, 0.1)
 	_time += visual_delta
 	_update_visual_springs_substepped(visual_delta)
+	_recover_recoil(visual_delta)
 	var local_velocity: Vector3 = character_body.global_transform.basis.inverse() * character_body.velocity
 	var speed_ratio: float = clampf(_smoothed_speed / 7.0, 0.0, 1.0)
 	var cycle_frequency: float = walk_frequency * lerpf(0.88, 1.32, speed_ratio)
@@ -115,6 +128,13 @@ func _process(delta: float) -> void:
 	_apply_body_transform(speed_ratio, local_velocity, _smoothed_acceleration, visual_delta)
 
 func _apply_view_rotation(angular_step: Vector2) -> void:
+	# Pulling the muzzle back down has to retire the recoil debt, otherwise the
+	# automatic recovery below would drag the view back up past the player's aim
+	# and every burst would end pointing at the sky.
+	if angular_step.y < 0.0 and _recoil_pitch_debt > 0.0:
+		_recoil_pitch_debt = maxf(_recoil_pitch_debt + angular_step.y, 0.0)
+	if not is_zero_approx(_recoil_yaw_debt) and signf(angular_step.x) != signf(_recoil_yaw_debt):
+		_recoil_yaw_debt = move_toward(_recoil_yaw_debt, 0.0, absf(angular_step.x))
 	character_body.rotate_y(angular_step.x)
 	var pitch_pivot := get_parent() as Node3D
 	if pitch_pivot == null:
@@ -191,3 +211,50 @@ func add_trauma(direction: Vector3, strength: float) -> void:
 		direction.x * deg_to_rad(trauma_yaw_degrees),
 		direction.z * deg_to_rad(trauma_roll_degrees)
 	) * impulse_strength * 4.5
+
+# Real recoil, not just a shake: the aim itself is displaced and stays displaced
+# until the player fights it down or the recovery below walks it back.
+func add_recoil(pitch_degrees: float, yaw_degrees: float) -> void:
+	if character_body == null:
+		return
+	var pitch_step: float = deg_to_rad(pitch_degrees)
+	var yaw_step: float = -deg_to_rad(yaw_degrees)
+	var debt_limit: float = deg_to_rad(maximum_recoil_debt_degrees)
+	# The full kick always reaches the aim - an uncompensated magazine is supposed to
+	# walk off target. Only the automatic recovery is capped, so the game never hands
+	# back more than maximum_recoil_debt_degrees for free.
+	character_body.rotate_y(yaw_step)
+	var pitch_pivot := get_parent() as Node3D
+	if pitch_pivot != null:
+		var pitch_limit: float = deg_to_rad(pitch_limit_degrees)
+		pitch_pivot.rotation.x = clampf(pitch_pivot.rotation.x + pitch_step, -pitch_limit, pitch_limit)
+	_recoil_pitch_debt = minf(_recoil_pitch_debt + pitch_step, debt_limit)
+	_recoil_yaw_debt = clampf(_recoil_yaw_debt + yaw_step, -debt_limit, debt_limit)
+	_recoil_recovery_timer = recoil_recovery_delay
+	# The visual punch rides on top so a single shot still snaps hard even when the
+	# permanent aim kick is deliberately small.
+	_impact_velocity += Vector3(
+		deg_to_rad(pitch_degrees),
+		-deg_to_rad(yaw_degrees),
+		deg_to_rad(pitch_degrees) * randf_range(-0.45, 0.45)
+	) * recoil_visual_gain
+
+func _recover_recoil(delta: float) -> void:
+	if _recoil_recovery_timer > 0.0:
+		_recoil_recovery_timer = maxf(_recoil_recovery_timer - delta, 0.0)
+		return
+	if _recoil_pitch_debt <= 0.0 and is_zero_approx(_recoil_yaw_debt):
+		return
+	var rate: float = deg_to_rad(recoil_recovery_degrees_per_second) * delta
+	var yaw_returned: float = _recoil_yaw_debt - move_toward(_recoil_yaw_debt, 0.0, rate)
+	if not is_zero_approx(yaw_returned):
+		_recoil_yaw_debt -= yaw_returned
+		character_body.rotate_y(-yaw_returned)
+	var pitch_returned: float = minf(_recoil_pitch_debt, rate)
+	if pitch_returned <= 0.0:
+		return
+	_recoil_pitch_debt -= pitch_returned
+	var pitch_pivot := get_parent() as Node3D
+	if pitch_pivot != null:
+		var pitch_limit: float = deg_to_rad(pitch_limit_degrees)
+		pitch_pivot.rotation.x = clampf(pitch_pivot.rotation.x - pitch_returned, -pitch_limit, pitch_limit)
