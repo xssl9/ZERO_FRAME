@@ -1,0 +1,617 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v3.3.32",
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "KHR_materials_transmission",
+    "KHR_materials_ior"
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "compost_bags_floorstacked",
+      "translation": [
+        -0.3957645297050476,
+        0.0703745186328888,
+        0
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "compost_bags_leaning",
+      "rotation": [
+        0.5431910753250122,
+        0.41769400238990784,
+        -0.35757339000701904,
+        0.6345205903053284
+      ],
+      "translation": [
+        0.6992377638816833,
+        0,
+        0.07745946198701859
+      ]
+    },
+    {
+      "mesh": 2,
+      "name": "compost_bags_floor",
+      "rotation": [
+        0.026090096682310104,
+        0,
+        0,
+        0.9996595978736877
+      ],
+      "translation": [
+        -0.3957645297050476,
+        0,
+        0
+      ]
+    },
+    {
+      "mesh": 3,
+      "name": "compost_bags_standing",
+      "translation": [
+        0.24523834884166718,
+        0,
+        -0.006528545171022415
+      ]
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 1,
+            "path": "translation"
+          }
+        },
+        {
+          "sampler": 1,
+          "target": {
+            "node": 1,
+            "path": "rotation"
+          }
+        },
+        {
+          "sampler": 2,
+          "target": {
+            "node": 1,
+            "path": "scale"
+          }
+        }
+      ],
+      "name": "compost_bags_leaning",
+      "samplers": [
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 17
+        },
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 18
+        },
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 19
+        }
+      ]
+    },
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 2,
+            "path": "translation"
+          }
+        },
+        {
+          "sampler": 1,
+          "target": {
+            "node": 2,
+            "path": "rotation"
+          }
+        },
+        {
+          "sampler": 2,
+          "target": {
+            "node": 2,
+            "path": "scale"
+          }
+        }
+      ],
+      "name": "compost_bags_floor",
+      "samplers": [
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 20
+        },
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 21
+        },
+        {
+          "input": 16,
+          "interpolation": "LINEAR",
+          "output": 22
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_transmission": {
+          "transmissionFactor": 1,
+          "transmissionTexture": {
+            "index": 0
+          }
+        },
+        "KHR_materials_ior": {
+          "ior": 1.4500000476837158
+        }
+      },
+      "name": "compost_bags",
+      "normalTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 2
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Cube.053",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Cube.055",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Cube.058",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Cube.059",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12,
+            "NORMAL": 13,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "compost_bags_sss",
+      "uri": "textures/compost_bags_sss_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "compost_bags_nor_gl",
+      "uri": "textures/compost_bags_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "compost_bags_diff",
+      "uri": "textures/compost_bags_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "compost_bags_metal-compost_bags_rough",
+      "uri": "textures/compost_bags_arm_1k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 2698,
+      "max": [
+        0.33503592014312744,
+        0.1697271764278412,
+        0.4489899277687073
+      ],
+      "min": [
+        -0.348467081785202,
+        -0.009316205978393555,
+        -0.43819326162338257
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2698,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2698,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 13824,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 2673,
+      "max": [
+        0.3371585011482239,
+        0.2918820083141327,
+        0.039543330669403076
+      ],
+      "min": [
+        -0.3421531915664673,
+        -0.1758446991443634,
+        -0.49750977754592896
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 2673,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 2673,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 13824,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2694,
+      "max": [
+        0.3093510866165161,
+        0.15136945247650146,
+        0.4308454394340515
+      ],
+      "min": [
+        -0.3242199122905731,
+        -0.02314799278974533,
+        -0.4218182861804962
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 2694,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 2694,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5123,
+      "count": 13824,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 2852,
+      "max": [
+        0.34074223041534424,
+        0.7018166184425354,
+        0.1960202306509018
+      ],
+      "min": [
+        -0.3499070405960083,
+        -0.005449920892715454,
+        -0.1918548047542572
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 2852,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 2852,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5123,
+      "count": 14652,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 140,
+      "max": [
+        5.833333333333333
+      ],
+      "min": [
+        0.041666666666666664
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 20,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 21,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 22,
+      "componentType": 5126,
+      "count": 140,
+      "type": "VEC3"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 32376,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32376,
+      "byteOffset": 32376,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 21584,
+      "byteOffset": 64752,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27648,
+      "byteOffset": 86336,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32076,
+      "byteOffset": 113984,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32076,
+      "byteOffset": 146060,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 21384,
+      "byteOffset": 178136,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27648,
+      "byteOffset": 199520,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32328,
+      "byteOffset": 227168,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32328,
+      "byteOffset": 259496,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 21552,
+      "byteOffset": 291824,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27648,
+      "byteOffset": 313376,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 34224,
+      "byteOffset": 341024,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 34224,
+      "byteOffset": 375248,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 22816,
+      "byteOffset": 409472,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 29304,
+      "byteOffset": 432288,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 560,
+      "byteOffset": 461592
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1680,
+      "byteOffset": 462152
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2240,
+      "byteOffset": 463832
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1680,
+      "byteOffset": 466072
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1680,
+      "byteOffset": 467752
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2240,
+      "byteOffset": 469432
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1680,
+      "byteOffset": 471672
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 473352,
+      "uri": "compost_bags.bin"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[gd_resource type="ShaderMaterial" load_steps=7 format=2]
+
+[ext_resource path="res://UnfinishedBuildings/Materials/VertexShadingBlend.tres" type="Shader" id=1]
+[ext_resource path="res://UnfinishedBuildings/Textures/UnfinishedAtlas_1k/UnfinishedAtlas_1k_Base Color.png" type="Texture" id=2]
+[ext_resource path="res://UnfinishedBuildings/Textures/UnfinishedAtlas_1k/UnfinishedAtlas_1k_NORMAL.png" type="Texture" id=3]
+[ext_resource path="res://UnfinishedBuildings/Textures/UnfinishedAtlas_1k/RGB_Grunges_2_Tiled.exr" type="Texture" id=4]
+[ext_resource path="res://UnfinishedBuildings/Textures/UnfinishedAtlas_1k/UnfinishedAtlas_1k_CHANNEL_TRANSFER.exr" type="Texture" id=5]
+[ext_resource path="res://UnfinishedBuildings/Textures/UnfinishedAtlas_1k/UnfinishedAtlas_1k_ALPHA.png" type="Texture" id=6]
+
+[resource]
+shader = ExtResource( 1 )
+shader_param/GrungeColor = Color( 0.00392157, 0.00392157, 0.00392157, 1 )
+shader_param/Metallic__Strength = 1.0
+shader_param/Roughness__Strength = 1.0
+shader_param/AO_Strength = 1.0
+shader_param/Normal_Strength = 1.0
+shader_param/AO_LightAffect = 1.0
+shader_param/ColorMap = ExtResource( 2 )
+shader_param/RGBGrunges = ExtResource( 4 )
+shader_param/AlphaMap = ExtResource( 6 )
+shader_param/AoRM = ExtResource( 5 )
+shader_param/Normal = ExtResource( 3 )

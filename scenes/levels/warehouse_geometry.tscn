@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://besh41dcxdxeg"]
+
+[ext_resource type="PackedScene" uid="uid://s5j6wpcuep2" path="res://assets/environment/warehouse/source/Warehouse.fbx" id="1_warehouse"]
+
+[node name="WarehouseGeometry" type="Node3D" unique_id=364032582]
+
+[node name="WarehouseModel" parent="." unique_id=324347089 instance=ExtResource("1_warehouse")]
+transform = Transform3D(1.0943907, 0, 0, 0, 1.0943907, 0, 0, 0, 1.0943907, -8.341852, 0.22852182, 6.1378345)

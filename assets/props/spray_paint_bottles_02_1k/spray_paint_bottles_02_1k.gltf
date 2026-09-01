@@ -1,0 +1,246 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v3.6.28",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "blend_export.001",
+      "nodes": [
+        0,
+        1
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "spray_paint_bottles_02",
+      "translation": [
+        -0.05000007897615433,
+        0,
+        0
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "spray_paint_bottles_02_dented",
+      "translation": [
+        0.05000007897615433,
+        0,
+        0
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "spray_paint_bottles_02",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "spray_paint_bottles_02",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "spray_paint_bottles_02_dented",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "spray_paint_bottles_02_nor_gl",
+      "uri": "textures/spray_paint_bottles_02_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "spray_paint_bottles_02_diff",
+      "uri": "textures/spray_paint_bottles_02_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "spray_paint_bottles_02_metal-spray_paint_bottles_02_rough",
+      "uri": "textures/spray_paint_bottles_02_arm_1k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 1805,
+      "max": [
+        0.03816251456737518,
+        0.21696586906909943,
+        0.038162585347890854
+      ],
+      "min": [
+        -0.038162510842084885,
+        -6.522417095311539e-8,
+        -0.038162585347890854
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1805,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1805,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 9504,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 1915,
+      "max": [
+        0.05736716464161873,
+        0.1882365643978119,
+        0.03912512958049774
+      ],
+      "min": [
+        -0.038018565624952316,
+        -0.0019451855914667249,
+        -0.03746691718697548
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 1915,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 1915,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 10224,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 21660,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 21660,
+      "byteOffset": 21660,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 14440,
+      "byteOffset": 43320,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 19008,
+      "byteOffset": 57760,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 22980,
+      "byteOffset": 76768,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 22980,
+      "byteOffset": 99748,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 15320,
+      "byteOffset": 122728,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 20448,
+      "byteOffset": 138048,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 158496,
+      "uri": "spray_paint_bottles_02.bin"
+    }
+  ]
+}

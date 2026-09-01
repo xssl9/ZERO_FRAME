@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ok2ejjk8m1hl"]
+
+[ext_resource type="PackedScene" uid="uid://ce03s2maiha6f" path="res://assets/weapons/pistol/scene.gltf" id="1_pistol"]
+
+[node name="PistolViewModel" type="Node3D" unique_id=1706195490]
+
+[node name="WeaponCameraControl" type="Node3D" parent="." unique_id=784079892]
+transform = Transform3D(0.998412, 0.054545395, -0.014072974, -0.05076306, 0.97948945, 0.19499601, 0.024420464, -0.193972, 0.9807031, 0.017771129, 0.012721181, -0.019154485)
+
+[node name="WeaponTuningCamera" type="Camera3D" parent="WeaponCameraControl" unique_id=386011095]
+transform = Transform3D(0.9998685, 0.006268653, 0.01496163, -0.001752293, 0.9586575, -0.28455728, -0.016126871, 0.2844936, 0.9585422, 0.026408808, -0.00032147206, 0.0084897615)
+fov = 113.07448
+near = 0.01
+far = 20.0
+current = true
+
+[node name="FORWARD_minus_Z" type="Marker3D" parent="." unique_id=240564740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+
+[node name="ModelAndArms" type="Node3D" parent="." unique_id=282389894]
+transform = Transform3D(0.9992049, 0.02839756, -0.027990567, -0.028148014, 0.9995608, 0.009272903, 0.028241532, -0.0084776655, 0.99956506, 0.1, -0.58, -0.28)
+
+[node name="SourceRig_SKINNED_DO_NOT_ROTATE_SKELETON" parent="ModelAndArms" unique_id=1569791376 instance=ExtResource("1_pistol")]
+transform = Transform3D(-0.988375, 0.14750709, -0.036775224, 0.14696164, 0.9889926, 0.017130129, 0.038897194, 0.011526477, -0.99917626, -0.12184049, 0.41855925, 0.32710478)

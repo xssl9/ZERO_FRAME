@@ -1,0 +1,393 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v1.6.16",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "cassette_player_body",
+      "rotation": [
+        0.7071068286895752,
+        0,
+        0,
+        0.7071068286895752
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "cassette_player_tape",
+      "rotation": [
+        0.7071068286895752,
+        0,
+        0,
+        0.7071068286895752
+      ],
+      "translation": [
+        0.0015952395042404532,
+        -0.02087916061282158,
+        0.04353120177984238
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "cassette_player_body",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "cassette_player_flap",
+      "normalTexture": {
+        "index": 3
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 4
+        },
+        "metallicRoughnessTexture": {
+          "index": 5
+        }
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "cassette_player_tape",
+      "normalTexture": {
+        "index": 6
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 7
+        },
+        "metallicRoughnessTexture": {
+          "index": 8
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Cube.001",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        },
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1
+        }
+      ]
+    },
+    {
+      "name": "Cube.006",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 2
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    },
+    {
+      "sampler": 0,
+      "source": 4
+    },
+    {
+      "sampler": 0,
+      "source": 5
+    },
+    {
+      "sampler": 0,
+      "source": 6
+    },
+    {
+      "sampler": 0,
+      "source": 7
+    },
+    {
+      "sampler": 0,
+      "source": 8
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_nor_gl",
+      "uri": "textures/cassette_player_body_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_diff",
+      "uri": "textures/cassette_player_body_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_metallic-cassette_player_body_roughness",
+      "uri": "textures/cassette_player_body_arm_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_nor_gl.png",
+      "uri": "textures/cassette_player_body_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_diff.png-cassette_player_body_opacity",
+      "uri": "textures/cassette_player_body_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_body_metallic.png-cassette_player_body_roughness.png",
+      "uri": "textures/cassette_player_body_arm_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_tape_nor_gl",
+      "uri": "textures/cassette_player_tape_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_tape_orangeblue_diff",
+      "uri": "textures/cassette_player_tape_orangeblue_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "cassette_player_tape_metallic-cassette_player_tape_roughness",
+      "uri": "textures/cassette_player_tape_arm_1k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 2649,
+      "max": [
+        0.06446599215269089,
+        0.04887987673282623,
+        0.11076042056083679
+      ],
+      "min": [
+        -0.0649944543838501,
+        -2.12662421006371e-8,
+        -0.12605740129947662
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2649,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2649,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 10422,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 282,
+      "max": [
+        0.053463999181985855,
+        0.047965746372938156,
+        0.055148664861917496
+      ],
+      "min": [
+        -0.050505977123975754,
+        0.040600571781396866,
+        -0.01773984171450138
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 282,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 282,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 960,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 772,
+      "max": [
+        0.050250012427568436,
+        0.003546199994161725,
+        0.03237982466816902
+      ],
+      "min": [
+        -0.050250012427568436,
+        -0.003546191845089197,
+        -0.03233935683965683
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 772,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 772,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5123,
+      "count": 3108,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 31788,
+      "byteOffset": 0
+    },
+    {
+      "buffer": 0,
+      "byteLength": 31788,
+      "byteOffset": 31788
+    },
+    {
+      "buffer": 0,
+      "byteLength": 21192,
+      "byteOffset": 63576
+    },
+    {
+      "buffer": 0,
+      "byteLength": 20844,
+      "byteOffset": 84768
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3384,
+      "byteOffset": 105612
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3384,
+      "byteOffset": 108996
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2256,
+      "byteOffset": 112380
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1920,
+      "byteOffset": 114636
+    },
+    {
+      "buffer": 0,
+      "byteLength": 9264,
+      "byteOffset": 116556
+    },
+    {
+      "buffer": 0,
+      "byteLength": 9264,
+      "byteOffset": 125820
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6176,
+      "byteOffset": 135084
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6216,
+      "byteOffset": 141260
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 147476,
+      "uri": "cassette_player.bin"
+    }
+  ]
+}

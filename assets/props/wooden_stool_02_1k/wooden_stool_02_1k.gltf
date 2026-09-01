@@ -1,0 +1,227 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v4.1.63",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "blend_export",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "wooden_stool_02"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "wooden_stool_02",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicFactor": 0,
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        },
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "wooden_stool_02_nor_gl",
+      "uri": "textures/wooden_stool_02_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "wooden_stool_02_diff",
+      "uri": "textures/wooden_stool_02_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "wooden_stool_02_rough",
+      "uri": "textures/wooden_stool_02_arm_1k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 5977,
+      "max": [
+        0.13161049783229828,
+        0.18209776282310486,
+        0.08744602650403976
+      ],
+      "min": [
+        -0.13356663286685944,
+        0.001375384978018701,
+        -0.09568127989768982
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 5977,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 5977,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 32235,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 322,
+      "max": [
+        0.09296837449073792,
+        0.006995363160967827,
+        0.08354391902685165
+      ],
+      "min": [
+        -0.08931396156549454,
+        0.00016927937394939363,
+        -0.0931180790066719
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 322,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 322,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 1203,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 71724,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 71724,
+      "byteOffset": 71724,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 47816,
+      "byteOffset": 143448,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 64470,
+      "byteOffset": 191264,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3864,
+      "byteOffset": 255736,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3864,
+      "byteOffset": 259600,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2576,
+      "byteOffset": 263464,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2406,
+      "byteOffset": 266040,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 268448,
+      "uri": "wooden_stool_02.bin"
+    }
+  ]
+}

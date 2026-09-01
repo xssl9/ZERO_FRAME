@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/level_builder.gd" id="1_builder"]
+
+[node name="AbandonedBuilding" type="Node3D"]
+script = ExtResource("1_builder")
+is_test_range = false
+visual_showcase = false
+
+[node name="SpawnPoint3D" type="Marker3D" parent="." groups=["player_spawn_point"]]
+editor_description = "Move and rotate this marker to set the player start and respawn transform."
+position = Vector3(0, 1.2, 0)
+rotation_degrees = Vector3(0, 0, 0)

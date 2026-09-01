@@ -1,0 +1,128 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/bodycam_physics.gd" id="2_bodycam"]
+[ext_resource type="Script" path="res://scripts/weapons/weapon_manager.gd" id="3_weapons"]
+[ext_resource type="Shader" path="res://shaders/bodycam.gdshader" id="4_bodycam_shader"]
+
+[sub_resource type="CapsuleShape3D" id="Capsule_player"]
+radius = 0.35
+height = 1.75
+
+[sub_resource type="Environment" id="Environment_weapon"]
+background_mode = 3
+ambient_light_source = 3
+ambient_light_color = Color(0.74, 0.76, 0.8, 1)
+ambient_light_energy = 1.1
+tonemap_mode = 3
+tonemap_exposure = 0.9
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bodycam"]
+shader = ExtResource("4_bodycam_shader")
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("Capsule_player")
+
+[node name="BodycamRig" type="Node3D" parent="."]
+position = Vector3(0.16, 1.5, 0.02)
+
+[node name="WorldCamera" type="Camera3D" parent="BodycamRig"]
+current = true
+fov = 96.0
+script = ExtResource("2_bodycam")
+
+[node name="Flashlight" type="SpotLight3D" parent="BodycamRig/WorldCamera"]
+visible = false
+light_energy = 7.0
+spot_range = 24.0
+spot_angle = 30.0
+
+[node name="WeaponLayer" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="WeaponViewportContainer" type="SubViewportContainer" parent="WeaponLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="WeaponViewport" type="SubViewport" parent="WeaponLayer/WeaponViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+msaa_3d = 2
+own_world_3d = true
+
+[node name="WeaponCamera" type="Camera3D" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport"]
+current = true
+near = 0.01
+far = 20.0
+fov = 96.0
+
+[node name="WeaponAimPivot" type="Node3D" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport/WeaponCamera"]
+
+[node name="ViewModelPivot" type="Node3D" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport/WeaponCamera/WeaponAimPivot"]
+
+[node name="WeaponManager" type="Node3D" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport/WeaponCamera/WeaponAimPivot/ViewModelPivot"]
+script = ExtResource("3_weapons")
+
+[node name="WeaponEnvironment" type="WorldEnvironment" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport"]
+environment = SubResource("Environment_weapon")
+
+[node name="WeaponKeyLight" type="DirectionalLight3D" parent="WeaponLayer/WeaponViewportContainer/WeaponViewport"]
+rotation_degrees = Vector3(-42, -38, 0)
+light_color = Color(1, 0.949, 0.875, 1)
+light_energy = 1.5
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Ammo" type="Label" parent="HUD"]
+offset_left = 1040.0
+offset_top = 635.0
+offset_right = 1260.0
+offset_bottom = 675.0
+theme_override_font_sizes/font_size = 25
+
+[node name="Status" type="Label" parent="HUD"]
+modulate = Color(0.839, 0.722, 0.459, 1)
+offset_left = 520.0
+offset_top = 610.0
+offset_right = 820.0
+offset_bottom = 640.0
+
+[node name="Controls" type="Label" parent="HUD"]
+modulate = Color(0.65, 0.72, 0.74, 0.75)
+offset_left = 22.0
+offset_top = 685.0
+offset_right = 1100.0
+offset_bottom = 715.0
+text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
+
+[node name="BodycamOverlay" type="CanvasLayer" parent="."]
+layer = 90
+
+[node name="Lens" type="ColorRect" parent="BodycamOverlay"]
+material = SubResource("ShaderMaterial_bodycam")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="REC" type="Label" parent="BodycamOverlay"]
+modulate = Color(0.85, 0.22, 0.18, 0.78)
+offset_left = 28.0
+offset_top = 22.0
+offset_right = 300.0
+offset_bottom = 52.0
+text = "● REC   ZERO FRAME"

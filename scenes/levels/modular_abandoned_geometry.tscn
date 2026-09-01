@@ -1,0 +1,181 @@
+[gd_scene load_steps=21 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/polyhaven/textures/concrete_wall_008/concrete_wall_008_diff_2k.jpg" id="1_diff"]
+[ext_resource type="Texture2D" path="res://assets/polyhaven/textures/concrete_wall_008/concrete_wall_008_arm_2k.jpg" id="2_arm"]
+[ext_resource type="Texture2D" path="res://assets/polyhaven/textures/concrete_wall_008/concrete_wall_008_nor_gl_2k.jpg" id="3_normal"]
+
+[sub_resource type="StandardMaterial3D" id="ConcretePBR"]
+resource_name = "ConcreteWall008_WorldTriplanar"
+albedo_color = Color(0.68, 0.66, 0.61, 1)
+albedo_texture = ExtResource("1_diff")
+metallic_texture = ExtResource("2_arm")
+metallic_texture_channel = 2
+roughness = 0.82
+roughness_texture = ExtResource("2_arm")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.9
+normal_texture = ExtResource("3_normal")
+ao_enabled = true
+ao_texture = ExtResource("2_arm")
+ao_texture_channel = 0
+uv1_scale = Vector3(0.55, 0.55, 0.55)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="FloorConcretePBR"]
+resource_name = "ConcreteFloor008_WorldTriplanar"
+albedo_color = Color(0.46, 0.45, 0.42, 1)
+albedo_texture = ExtResource("1_diff")
+roughness = 0.9
+roughness_texture = ExtResource("2_arm")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.7
+normal_texture = ExtResource("3_normal")
+uv1_scale = Vector3(0.48, 0.48, 0.48)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+size = Vector3(20, 0.22, 18)
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(20, 0.22, 18)
+[sub_resource type="BoxMesh" id="SideWallMesh"]
+size = Vector3(0.32, 4, 18)
+[sub_resource type="BoxShape3D" id="SideWallShape"]
+size = Vector3(0.32, 4, 18)
+[sub_resource type="BoxMesh" id="BackWallMesh"]
+size = Vector3(20, 4, 0.32)
+[sub_resource type="BoxShape3D" id="BackWallShape"]
+size = Vector3(20, 4, 0.32)
+[sub_resource type="BoxMesh" id="FrontSegmentMesh"]
+size = Vector3(7.5, 4, 0.32)
+[sub_resource type="BoxShape3D" id="FrontSegmentShape"]
+size = Vector3(7.5, 4, 0.32)
+[sub_resource type="BoxMesh" id="InteriorLongMesh"]
+size = Vector3(0.25, 3.6, 9)
+[sub_resource type="BoxShape3D" id="InteriorLongShape"]
+size = Vector3(0.25, 3.6, 9)
+[sub_resource type="BoxMesh" id="InteriorCrossMesh"]
+size = Vector3(6.5, 3.6, 0.25)
+[sub_resource type="BoxShape3D" id="InteriorCrossShape"]
+size = Vector3(6.5, 3.6, 0.25)
+[sub_resource type="BoxMesh" id="ColumnMesh"]
+size = Vector3(0.42, 4, 0.42)
+[sub_resource type="BoxShape3D" id="ColumnShape"]
+size = Vector3(0.42, 4, 0.42)
+[sub_resource type="BoxMesh" id="RoofLargeMesh"]
+size = Vector3(8, 0.18, 18)
+[sub_resource type="BoxShape3D" id="RoofLargeShape"]
+size = Vector3(8, 0.18, 18)
+[sub_resource type="BoxMesh" id="RoofSmallMesh"]
+size = Vector3(5, 0.18, 10)
+[sub_resource type="BoxShape3D" id="RoofSmallShape"]
+size = Vector3(5, 0.18, 10)
+
+[node name="ModularAbandonedGeometry" type="Node3D"]
+
+[node name="Floor" type="StaticBody3D" parent="."]
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+material_override = SubResource("FloorConcretePBR")
+mesh = SubResource("FloorMesh")
+[node name="Collision" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("FloorShape")
+
+[node name="LeftWall" type="StaticBody3D" parent="."]
+position = Vector3(-10, 2, 0)
+[node name="Mesh" type="MeshInstance3D" parent="LeftWall"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("SideWallMesh")
+[node name="Collision" type="CollisionShape3D" parent="LeftWall"]
+shape = SubResource("SideWallShape")
+
+[node name="RightWall" type="StaticBody3D" parent="."]
+position = Vector3(10, 2, 0)
+[node name="Mesh" type="MeshInstance3D" parent="RightWall"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("SideWallMesh")
+[node name="Collision" type="CollisionShape3D" parent="RightWall"]
+shape = SubResource("SideWallShape")
+
+[node name="BackWall" type="StaticBody3D" parent="."]
+position = Vector3(0, 2, -9)
+[node name="Mesh" type="MeshInstance3D" parent="BackWall"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("BackWallMesh")
+[node name="Collision" type="CollisionShape3D" parent="BackWall"]
+shape = SubResource("BackWallShape")
+
+[node name="FrontWallLeft" type="StaticBody3D" parent="."]
+position = Vector3(-6.25, 2, 9)
+[node name="Mesh" type="MeshInstance3D" parent="FrontWallLeft"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("FrontSegmentMesh")
+[node name="Collision" type="CollisionShape3D" parent="FrontWallLeft"]
+shape = SubResource("FrontSegmentShape")
+
+[node name="FrontWallRight" type="StaticBody3D" parent="."]
+position = Vector3(6.25, 2, 9)
+[node name="Mesh" type="MeshInstance3D" parent="FrontWallRight"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("FrontSegmentMesh")
+[node name="Collision" type="CollisionShape3D" parent="FrontWallRight"]
+shape = SubResource("FrontSegmentShape")
+
+[node name="InteriorWallA" type="StaticBody3D" parent="."]
+position = Vector3(-3.2, 1.8, -4.2)
+[node name="Mesh" type="MeshInstance3D" parent="InteriorWallA"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("InteriorLongMesh")
+[node name="Collision" type="CollisionShape3D" parent="InteriorWallA"]
+shape = SubResource("InteriorLongShape")
+
+[node name="InteriorWallB" type="StaticBody3D" parent="."]
+position = Vector3(4.8, 1.8, 1.5)
+[node name="Mesh" type="MeshInstance3D" parent="InteriorWallB"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("InteriorCrossMesh")
+[node name="Collision" type="CollisionShape3D" parent="InteriorWallB"]
+shape = SubResource("InteriorCrossShape")
+
+[node name="ColumnA" type="StaticBody3D" parent="."]
+position = Vector3(-6.5, 2, -4.5)
+[node name="Mesh" type="MeshInstance3D" parent="ColumnA"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("ColumnMesh")
+[node name="Collision" type="CollisionShape3D" parent="ColumnA"]
+shape = SubResource("ColumnShape")
+
+[node name="ColumnB" type="StaticBody3D" parent="."]
+position = Vector3(6.5, 2, -4.5)
+[node name="Mesh" type="MeshInstance3D" parent="ColumnB"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("ColumnMesh")
+[node name="Collision" type="CollisionShape3D" parent="ColumnB"]
+shape = SubResource("ColumnShape")
+
+[node name="ColumnC" type="StaticBody3D" parent="."]
+position = Vector3(-6.5, 2, 4.5)
+[node name="Mesh" type="MeshInstance3D" parent="ColumnC"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("ColumnMesh")
+[node name="Collision" type="CollisionShape3D" parent="ColumnC"]
+shape = SubResource("ColumnShape")
+
+[node name="RoofWest" type="StaticBody3D" parent="."]
+position = Vector3(-6, 4.05, 0)
+[node name="Mesh" type="MeshInstance3D" parent="RoofWest"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("RoofLargeMesh")
+[node name="Collision" type="CollisionShape3D" parent="RoofWest"]
+shape = SubResource("RoofLargeShape")
+
+[node name="RoofEastBroken" type="StaticBody3D" parent="."]
+position = Vector3(6.5, 4.12, -3.5)
+rotation_degrees = Vector3(0, 0, -2.5)
+[node name="Mesh" type="MeshInstance3D" parent="RoofEastBroken"]
+material_override = SubResource("ConcretePBR")
+mesh = SubResource("RoofSmallMesh")
+[node name="Collision" type="CollisionShape3D" parent="RoofEastBroken"]
+shape = SubResource("RoofSmallShape")
