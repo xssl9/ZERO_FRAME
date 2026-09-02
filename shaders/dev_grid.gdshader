@@ -1,6 +1,8 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
+#include "res://shaders/muzzle_flash_light.gdshaderinc"
+
 // Classic greybox dev surface: checkerboard cells plus a thin grid line every
 // cell and a thicker one every `major_cells`. World-space and triplanar, so one
 // material reads correctly on the floor and on every wall without UV work.
@@ -15,6 +17,22 @@ uniform float major_cells : hint_range(2.0, 16.0, 1.0) = 8.0;
 uniform float minor_line_width : hint_range(0.002, 0.1, 0.002) = 0.016;
 uniform float major_line_width : hint_range(0.004, 0.2, 0.002) = 0.04;
 uniform float surface_roughness : hint_range(0.0, 1.0, 0.01) = 0.72;
+// Rain. Wet concrete is both darker and far smoother than dry concrete, so one value
+// drives both, and the screen-space reflections then have something to reflect in.
+uniform float wetness : hint_range(0.0, 1.0, 0.01) = 0.0;
+
+group_uniforms PhotoTextures;
+// Real PBR maps on top of the greybox. World-space triplanar, so a 48 m box floor tiles
+// properly without UVs and the same material works on walls; `texture_blend` at 0.0 leaves
+// the procedural grid exactly as it was.
+uniform sampler2D albedo_texture : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_enable;
+// Poly Haven ARM packing: ambient occlusion in R, roughness in G, metallic in B.
+uniform sampler2D arm_texture : hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform float texture_blend : hint_range(0.0, 1.0, 0.01) = 0.0;
+// Texture repeats per metre. 0.5 puts one 2 m tile sheet every two metres.
+uniform float texture_scale : hint_range(0.05, 4.0, 0.01) = 0.5;
+uniform float normal_strength : hint_range(0.0, 3.0, 0.05) = 1.0;
 
 varying vec3 world_position;
 varying vec3 world_normal;
@@ -30,6 +48,42 @@ float boundary_mask(vec2 coordinate, float width) {
 	vec2 filter_width = max(fwidth(coordinate), vec2(0.00001));
 	vec2 mask = 1.0 - smoothstep(vec2(0.0), filter_width * 1.5, distance_to_edge - width);
 	return max(mask.x, mask.y);
+}
+
+// Triplanar: blend the three axis projections by how much the surface faces each of them.
+// The exponent decides how tight the seam is; 4.0 hides it on box geometry.
+vec3 triplanar_weights(vec3 surface_normal) {
+	vec3 weights = pow(abs(surface_normal), vec3(4.0));
+	return weights / max(weights.x + weights.y + weights.z, 0.0001);
+}
+
+vec3 triplanar_sample(sampler2D map, vec3 position, vec3 weights) {
+	return texture(map, position.zy).rgb * weights.x
+		+ texture(map, position.xz).rgb * weights.y
+		+ texture(map, position.xy).rgb * weights.z;
+}
+
+// Whiteout blend of three tangent-space normal samples straight into world space, which
+// sidesteps the mesh tangents entirely: they do not match world-projected UVs.
+//
+// The geometric normal is summed into each sample before the blend, which is what keeps the
+// result on the correct side of the surface. Without that term a vertical face ends up with
+// normals pointing into the wall, N dot L goes negative for every light and the face renders
+// black up close while distant mip levels flatten out and light correctly.
+vec3 triplanar_normal(sampler2D map, vec3 position, vec3 weights, vec3 surface_normal) {
+	vec3 tangent_x = texture(map, position.zy).rgb * 2.0 - 1.0;
+	vec3 tangent_y = texture(map, position.xz).rgb * 2.0 - 1.0;
+	vec3 tangent_z = texture(map, position.xy).rgb * 2.0 - 1.0;
+	vec3 world_x = vec3(tangent_x.xy + surface_normal.zy, abs(tangent_x.z) * surface_normal.x);
+	vec3 world_y = vec3(tangent_y.xy + surface_normal.xz, abs(tangent_y.z) * surface_normal.y);
+	vec3 world_z = vec3(tangent_z.xy + surface_normal.xy, abs(tangent_z.z) * surface_normal.z);
+	vec3 blended = normalize(world_x.zyx * weights.x + world_y.xzy * weights.y + world_z.xyz * weights.z);
+	// Safety rail: never let a map tip the shading normal more than ~65 degrees off the
+	// geometry, so no texture can ever black out a surface again.
+	if (dot(blended, surface_normal) < 0.42) {
+		blended = normalize(blended + surface_normal * 1.5);
+	}
+	return blended;
 }
 
 void fragment() {
@@ -61,8 +115,30 @@ void fragment() {
 	surface = mix(surface, minor_line_color, minor * detail);
 	surface = mix(surface, major_line_color, major * detail);
 
-	ALBEDO = surface;
-	ROUGHNESS = surface_roughness;
+	ALBEDO = surface * mix(1.0, 0.84, wetness);
+	ROUGHNESS = surface_roughness * mix(1.0, 0.45, wetness);
 	METALLIC = 0.0;
-	SPECULAR = 0.4;
+	SPECULAR = mix(0.4, 0.6, wetness);
+	vec3 shading_normal = normalize(world_normal);
+
+	if (texture_blend > 0.0) {
+		vec3 triplanar_position = world_position * texture_scale;
+		vec3 weights = triplanar_weights(shading_normal);
+		vec3 photo_albedo = triplanar_sample(albedo_texture, triplanar_position, weights);
+		vec3 arm = triplanar_sample(arm_texture, triplanar_position, weights);
+		ALBEDO = mix(ALBEDO, photo_albedo * mix(1.0, 0.84, wetness), texture_blend);
+		ROUGHNESS = mix(ROUGHNESS, arm.g * mix(1.0, 0.45, wetness), texture_blend);
+		METALLIC = mix(METALLIC, arm.b, texture_blend);
+		AO = mix(1.0, arm.r, texture_blend);
+		AO_LIGHT_AFFECT = 0.65;
+		float bump = normal_strength * texture_blend * (1.0 - 0.4 * wetness);
+		vec3 mapped = triplanar_normal(normal_texture, triplanar_position, weights, shading_normal);
+		shading_normal = normalize(mix(shading_normal, mapped, clamp(bump, 0.0, 1.0)));
+		// World space to view space: NORMAL is expected in view space in fragment().
+		NORMAL = normalize((VIEW_MATRIX * vec4(shading_normal, 0.0)).xyz);
+	}
+
+	// The muzzle flash goes in as emission rather than through a light, so its wet-ground
+	// smear can be shaped without touching how the sun and GI light this surface.
+	EMISSION = muzzle_flash_light(world_position, shading_normal, CAMERA_POSITION_WORLD, ROUGHNESS, wetness);
 }

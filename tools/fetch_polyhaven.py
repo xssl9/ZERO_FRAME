@@ -31,6 +31,17 @@ TEXTURES = {
 RES = "2k"
 FMT = "jpg"
 
+# slug -> resolution. HDRIs land in assets/environment/sky because that is where the
+# environment looks for them. Only true-HDR .hdr files are useful here: the sky has to
+# carry a real solar disc worth thousands of nits, or the DirectionalLight has nothing to
+# be matched to and the light shafts have no visible source.
+HDRIS = {
+    "kloofendal_43d_clear_puresky": "2k",
+}
+SKY_ROOT = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "environment", "sky"
+)
+
 
 def fetch_json(slug):
     req = urllib.request.Request(API + slug, headers=UA)
@@ -74,6 +85,20 @@ def main():
             dest = os.path.join(ROOT, "textures", slug, f"{slug}_{suffix}_{RES}.{FMT}")
             if download(node["url"], dest):
                 ok += 1
+    for slug, res in HDRIS.items():
+        print(f"[hdri] {slug}")
+        try:
+            info = fetch_json(slug)
+        except Exception as e:  # noqa: BLE001
+            print("   skip (api):", e)
+            continue
+        node = info.get("hdri", {}).get(res, {}).get("hdr")
+        if not node or "url" not in node:
+            print("   skip res", res)
+            continue
+        dest = os.path.join(SKY_ROOT, f"{slug}_{res}.hdr")
+        if download(node["url"], dest):
+            ok += 1
     print(f"\nDownloaded/verified {ok} files into {ROOT}")
 
 
