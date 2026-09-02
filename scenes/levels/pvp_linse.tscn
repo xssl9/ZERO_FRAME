@@ -1,0 +1,94 @@
+[gd_scene format=3 uid="uid://dse03f3y0aie"]
+
+[ext_resource type="ArrayMesh" uid="uid://bngkbuqv2fat3" path="res://assets/environment/linse/Linse_Reb_50k.obj" id="1_scan"]
+[ext_resource type="Script" uid="uid://d1r5f672sn6xm" path="res://scripts/environment/photoreal_environment.gd" id="2_env"]
+[ext_resource type="Script" uid="uid://bjhnqegsymu7x" path="res://scripts/environment/scan_collision_body.gd" id="3_body"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Texture2D" uid="uid://cqvk5fbm7fe1m" path="res://assets/environment/sky/kloofendal_43d_clear_puresky_2k.hdr" id="5_sky"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_3eng3"]
+panorama = ExtResource("5_sky")
+
+[sub_resource type="Sky" id="Sky_ace2b"]
+sky_material = SubResource("PanoramaSkyMaterial_3eng3")
+process_mode = 1
+radiance_size = 4
+
+[sub_resource type="Environment" id="Environment_pvp"]
+background_mode = 2
+background_energy_multiplier = 0.95
+sky = SubResource("Sky_ace2b")
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 1.6
+reflected_light_source = 2
+tonemap_mode = 4
+ssr_max_steps = 48
+ssr_depth_tolerance = 0.12
+ssao_radius = 0.9
+ssao_intensity = 1.35
+ssao_power = 1.25
+ssao_detail = 0.55
+ssao_horizon = 0.08
+ssao_light_affect = 0.35
+ssao_ao_channel_affect = 0.65
+sdfgi_use_occlusion = true
+sdfgi_bounce_feedback = 0.75
+sdfgi_min_cell_size = 0.15
+glow_enabled = true
+glow_intensity = 0.32
+glow_strength = 1.05
+glow_bloom = 0.06
+glow_blend_mode = 0
+glow_hdr_threshold = 1.05
+glow_hdr_scale = 2.2
+fog_density = 0.00065
+fog_sky_affect = 0.08
+fog_height_density = 0.012
+volumetric_fog_density = 0.01
+volumetric_fog_albedo = Color(1, 0.98, 0.95, 1)
+volumetric_fog_emission_energy = 0.0
+volumetric_fog_anisotropy = 0.42
+volumetric_fog_length = 72.0
+volumetric_fog_ambient_inject = 0.05
+volumetric_fog_sky_affect = 0.06
+
+[sub_resource type="CameraAttributesPhysical" id="CameraAttributesPhysical_pvp"]
+exposure_sensitivity = 160.0
+
+[node name="PvpLinse" type="Node3D" unique_id=1977679984]
+
+[node name="PhotorealEnvironment" type="WorldEnvironment" parent="." unique_id=1738835420]
+environment = SubResource("Environment_pvp")
+camera_attributes = SubResource("CameraAttributesPhysical_pvp")
+script = ExtResource("2_env")
+ambient_energy = 0.26
+exposure_multiplier = 0.62
+lighting_model = 1
+scan_ambient_energy = 1.6
+scan_sun_energy = 0.45
+fill_light_energy = null
+fill_light_color = null
+weather = 1
+
+[node name="PhysicalSun" type="DirectionalLight3D" parent="." unique_id=244699739]
+transform = Transform3D(1.0109357, 0.055506, -0.025239432, 0.016845677, -0.038957443, 1.7611712, 0.057353005, -0.96693677, -0.07240563, 0.9582894, 6.5053067, -1.2388779)
+light_energy = 2.267
+light_specular = 16.0
+shadow_enabled = true
+shadow_bias = 0.04
+directional_shadow_max_distance = 60.0
+
+[node name="Scan" type="StaticBody3D" parent="." unique_id=2070651176]
+transform = Transform3D(0.07498554, -0.00147246, -2.460888e-05, 0.00147246, 0.07494366, 0.002505973, -2.460888e-05, -0.002505973, 0.07495812, 12.105, 1.2, -0.8775)
+script = ExtResource("3_body")
+
+[node name="Mesh" type="MeshInstance3D" parent="Scan" unique_id=315073513]
+transform = Transform3D(0.99999964, 0, 0, 0, 0.022992002, 0.9997354, 0, -0.9997354, 0.022992002, 0, 0, 0)
+mesh = ExtResource("1_scan")
+
+[node name="SpawnPoint3D" type="Marker3D" parent="." unique_id=1764705696 groups=["player_spawn_point"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -1.59)
+
+[node name="Player" parent="." unique_id=141372011 instance=ExtResource("4_player")]
