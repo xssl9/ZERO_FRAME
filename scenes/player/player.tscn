@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/player/bodycam_physics.gd" id="2_bodycam"]
 [ext_resource type="Script" path="res://scripts/weapons/weapon_manager.gd" id="3_weapons"]
 [ext_resource type="Shader" path="res://shaders/bodycam.gdshader" id="4_bodycam_shader"]
+[ext_resource type="Texture2D" path="res://assets/textures/hud/axon_logo.png" id="5_axon"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_player"]
 radius = 0.35
@@ -16,6 +17,13 @@ ambient_light_color = Color(0.74, 0.76, 0.8, 1)
 ambient_light_energy = 1.1
 tonemap_mode = 3
 tonemap_exposure = 0.9
+glow_enabled = true
+glow_intensity = 0.45
+glow_strength = 1.0
+glow_bloom = 0.04
+glow_blend_mode = 0
+glow_hdr_threshold = 1.35
+glow_hdr_scale = 2.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_bodycam"]
 shader = ExtResource("4_bodycam_shader")
@@ -32,12 +40,13 @@ position = Vector3(0.16, 1.5, 0.02)
 
 [node name="WorldCamera" type="Camera3D" parent="BodycamRig"]
 current = true
-fov = 96.0
+fov = 97.0
 script = ExtResource("2_bodycam")
 
 [node name="Flashlight" type="SpotLight3D" parent="BodycamRig/WorldCamera"]
 visible = false
 light_energy = 7.0
+light_volumetric_fog_energy = 2.6
 spot_range = 24.0
 spot_angle = 30.0
 
@@ -83,29 +92,95 @@ light_color = Color(1, 0.949, 0.875, 1)
 light_energy = 1.5
 
 [node name="HUD" type="CanvasLayer" parent="."]
-layer = 10
+layer = 100
+
+[node name="StampTime" type="Label" parent="HUD"]
+modulate = Color(1, 1, 1, 0.78)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = 16.0
+offset_right = -26.0
+offset_bottom = 38.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="AxonLogo" type="TextureRect" parent="HUD"]
+modulate = Color(1, 1, 1, 0.85)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -204.0
+offset_top = 40.0
+offset_right = -186.0
+offset_bottom = 57.0
+grow_horizontal = 0
+texture = ExtResource("5_axon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StampId" type="Label" parent="HUD"]
+modulate = Color(1, 1, 1, 0.6)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = 39.0
+offset_right = -26.0
+offset_bottom = 58.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 12
+text = "AXON BODY 3 X07108B133"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Rec" type="Label" parent="HUD"]
+modulate = Color(0.88, 0.24, 0.2, 0.85)
+anchors_preset = 0
+offset_left = 26.0
+offset_top = 16.0
+offset_right = 160.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 15
+text = "● REC"
+vertical_alignment = 1
 
 [node name="Ammo" type="Label" parent="HUD"]
-offset_left = 1040.0
-offset_top = 635.0
-offset_right = 1260.0
-offset_bottom = 675.0
-theme_override_font_sizes/font_size = 25
+modulate = Color(1, 1, 1, 0.66)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -40.0
+offset_right = -26.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="Status" type="Label" parent="HUD"]
-modulate = Color(0.839, 0.722, 0.459, 1)
-offset_left = 520.0
-offset_top = 610.0
-offset_right = 820.0
-offset_bottom = 640.0
-
-[node name="Controls" type="Label" parent="HUD"]
-modulate = Color(0.65, 0.72, 0.74, 0.75)
-offset_left = 22.0
-offset_top = 685.0
-offset_right = 1100.0
-offset_bottom = 715.0
-text = "WASD движение  •  Shift бег  •  ПКМ прицел  •  V режим огня  •  R перезарядка  •  1/2 оружие  •  F фонарь  •  Esc меню"
+modulate = Color(1, 0.92, 0.78, 0.5)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -62.0
+offset_right = -26.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="BodycamOverlay" type="CanvasLayer" parent="."]
 layer = 90
@@ -118,11 +193,3 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-
-[node name="REC" type="Label" parent="BodycamOverlay"]
-modulate = Color(0.85, 0.22, 0.18, 0.78)
-offset_left = 28.0
-offset_top = 22.0
-offset_right = 300.0
-offset_bottom = 52.0
-text = "● REC   ZERO FRAME"

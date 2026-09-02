@@ -21,6 +21,40 @@
 
 ## Audio
 
+### User-supplied recordings (2026-09-01)
+
+- Source files: `~/game/sounds/ak.wav`, `pistol outside.wav`, `pistol room.wav`, `бег.wav`,
+  `отдышка после бега.wav`, `Промт_Ultra-realisti_#4-1788271076027.wav`.
+- Author/source/license: supplied by the user, not bundled with any licence text; the
+  filenames suggest prompt-generated material. Rights must be confirmed before
+  redistribution.
+- Use and changes (originals untouched, every edit is in the project copy):
+  - `ak.wav` → `assets/audio/weapons/ak_shot.ogg`. Trimmed to 1.35 s, +4 dB at 110 Hz,
+    compressed and limited so the body of the report is not 20 dB under its own
+    transient, peak -1 dBFS.
+  - `pistol outside.wav` → `assets/audio/weapons/pistol_shot.ogg`, and
+    `pistol room.wav` → `pistol_shot_room.ogg`. Resampled to 80 % rate, which drops the
+    pitch and stretches the tail, +4 dB at 150 Hz, -4 dB at 6 kHz, peak -3 dBFS. The
+    outdoor version is the one the dev grid uses.
+  - `бег.wav` → `assets/audio/footsteps/run_01.ogg` … `run_06.ogg`. The recorded run
+    cycle cut into its six individual strides, each normalised to -6 dBFS.
+  - `отдышка после бега.wav` → `assets/audio/player/breath_01.ogg` … `breath_05.ogg`.
+    The inhale and the gasp cut apart, with three of the five retimed between 90 % and
+    105 % rate so a long sprint never repeats the same breath.
+  - `Промт_Exactly_5_seco_#3-1788283034811.wav` → `assets/audio/weapons/ak_reload.ogg`.
+    Trimmed to the 4.24 s of actual mechanism (magazine out, magazine in, charging handle),
+    peak -3 dBFS. This recording is what defines how long an AK reload takes in game.
+  - `Continuous_heavy_aut_#3-1788285506411.wav` → `assets/audio/environment/rain_loop.ogg`.
+    Turned into a seamless 28.5 s loop by crossfading the last 1.5 s over the first 1.5 s,
+    peak -6 dBFS. Measured RMS varies by 0.2 dB across the whole 30 s, so the join lands
+    inside steady noise and cannot be heard.
+  - `Промт_Ultra-realisti_#4-1788271076027.wav` is not imported: it is a sub-bass boom
+    (six descending low hits and a three-second rumble, nothing above 4 kHz) and its
+    intended role is unconfirmed.
+- The earlier `ak_fire*.ogg`, `pistol_fire*.ogg` and `footsteps/concrete.ogg` samples are
+  no longer referenced, apart from `concrete.ogg` as a fallback if the run cycle is
+  missing.
+
 ### Firearm in a compact space 02
 
 - Source file: user-provided `~/Загрузки/firearm-in-a-compact-space-02.mp3`.
@@ -43,6 +77,24 @@
 - License: CC0 / public-domain dedication.
 - Use: AK/pistol shot placeholders, door, electrical/mechanical ambience, concrete/metal steps and metal impact.
 - Changes: selected individual OGG files and renamed by gameplay role; no waveform modification.
+
+## Shaders
+
+### Rain puddles with ripples using SSR
+
+- Author: shadecore_dev (2025), published on https://godotshaders.com
+- License: CC0.
+- Includes the SSR implementation by marcelb:
+  https://godotshaders.com/shader/transparent-water-shader-supporting-ssr/
+- Includes the rain ripple effect by Zavie: https://www.shadertoy.com/view/ldfyzl
+- Supplied by the user together with its `FullscreenMesh` helper script.
+- Use: `shaders/rain_puddles.gdshader` plus `scripts/environment/fullscreen_mesh.gd`, as the
+  `WetGround` fullscreen pass in the dev test grid. It rebuilds world position from the
+  depth buffer, so it wets and reflects whatever geometry is already there without any
+  authored water surfaces.
+- Changes: reformatted to the project's tab indentation, the unused
+  `surface_color_ssr_mix` local was dropped, and `FullscreenMesh` now also builds its
+  triangle from `_ready()` so a fresh clone works without pressing the tool button.
 
 ## Environment models and general sounds
 
@@ -94,13 +146,28 @@ Full license copies and bundled notices are in `third_party_licenses/`.
 - Source: supplied by the user for this project.
 - Changes: connected to the primary directional sun and configured for a moderate 128px radiance cubemap.
 
+### Kloofendal 43d Clear (Pure Sky) HDRI
+
+- Source: https://polyhaven.com/a/kloofendal_43d_clear_puresky
+- License: CC0.
+- File: `assets/environment/sky/kloofendal_43d_clear_puresky_2k.hdr`, fetched and verified
+  through the Poly Haven API by `tools/fetch_polyhaven.py`.
+- Use: the active visible panorama, radiance source and the reference the sun is aligned
+  to. Peak luminance is about 110 000 with the solar disc covering roughly eight pixels at
+  2K, so it is a real high-dynamic-range sky that can act as a light source.
+- The `PhysicalSun` transform in `scenes/levels/dev_test_grid.tscn` was computed from this
+  file by `scripts/tools/align_sun_to_sky.gd` (sun at 42.9° elevation, panorama azimuth
+  216.2°), so shadows and light shafts come from the sun that is visible in the sky.
+  `Environment.sky_rotation` has to stay at zero for that to hold.
+
 ### Mud Road (Pure Sky) HDRI
 
 - Source: https://polyhaven.com/a/mud_road_puresky
 - License: CC0.
 - File: `assets/environment/sky/mud_road_puresky_2k.hdr`.
-- Use: active visible panorama and radiance source for every playable map. This
-  pure-sky version contains no foreign ground or building geometry.
+- Use: previous panorama, now inactive. Measured peak luminance is only 0.8 with a median
+  of 0.31, i.e. the copy in this project has no high dynamic range left and contains no
+  solar disc at all, which is why it lit everything flat and had no sun to align to.
 
 ### Previous overcast industrial courtyard HDR
 

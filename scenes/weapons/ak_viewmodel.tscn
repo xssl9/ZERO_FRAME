@@ -5,9 +5,10 @@
 [node name="AKViewModel" type="Node3D" unique_id=1331583053]
 
 [node name="WeaponTuningCamera" type="Camera3D" parent="." unique_id=1957415907]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.023964435, 0.06833382, -0.0074122846)
 keep_aspect = 0
 current = true
-fov = 86.49541
+fov = 108.021774
 near = 0.01
 far = 20.0
 
@@ -24,4 +25,4 @@ transform = Transform3D(1, 0, 0, 0, 0.999953, 0.01183, 0, -0.00972, 0.99993, -0.
 [node name="FBXUnitNormalization_x1" type="Node3D" parent="ModelAndArms" unique_id=1472428153]
 
 [node name="SourceRig_SKINNED_DO_NOT_ROTATE_SKELETON" parent="ModelAndArms/FBXUnitNormalization_x1" unique_id=2088830814 instance=ExtResource("1_ak")]
-transform = Transform3D(-1, 1.4676785e-09, 1.5098867e-07, -1.4676794e-09, 0.99981105, -0.019439079, -1.5098884e-07, -0.019439097, -0.99981105, 0.0047183707, 0.16665132, 1.0968487)
+transform = Transform3D(-1, 1.4676785e-09, 1.5098867e-07, -1.4676788e-09, 0.9998113, -0.019439079, -1.509889e-07, -0.019439105, -0.99981105, 0.016992902, 0.16601193, 1.1048778)
