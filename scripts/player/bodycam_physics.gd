@@ -8,24 +8,26 @@ extends Camera3D
 @export_category("Body-mounted gait")
 @export_range(0.0, 2.0, 0.01) var idle_rotation_degrees: float = 0.16
 @export_range(0.0, 0.04, 0.001) var idle_position_meters: float = 0.003
-@export_range(0.0, 8.0, 0.1) var walk_rotation_degrees: float = 2.65
-@export_range(0.0, 0.08, 0.001) var walk_position_meters: float = 0.027
+@export_range(0.0, 8.0, 0.1) var walk_rotation_degrees: float = 3.3
+@export_range(0.0, 0.08, 0.001) var walk_position_meters: float = 0.036
 @export_range(0.2, 3.0, 0.05) var walk_frequency: float = 1.05
 @export_range(1.0, 40.0, 0.1) var response_speed: float = 18.0
 @export_range(0.0, 8.0, 0.1) var strafe_roll_degrees: float = 2.1
 @export_range(0.0, 8.0, 0.1) var acceleration_pitch_degrees: float = 1.7
 @export_range(0.0, 0.08, 0.001) var acceleration_lag_meters: float = 0.018
-@export_range(1.0, 2.0, 0.05) var sprint_motion_multiplier: float = 1.42
+@export_range(1.0, 2.0, 0.05) var sprint_motion_multiplier: float = 1.58
 
 @export_category("Responsive view and weapon lag")
 @export_range(0.0001, 0.02, 0.0001) var mouse_sensitivity: float = 0.0046
 @export_range(20.0, 89.0, 1.0) var pitch_limit_degrees: float = 78.0
-@export_range(0.0, 1.5, 0.01) var weapon_lag_multiplier: float = 0.48
-@export_range(0.1, 12.0, 0.1) var maximum_weapon_lag_degrees: float = 4.2
-@export_range(1.0, 240.0, 1.0) var weapon_lag_stiffness: float = 92.0
-@export_range(1.0, 40.0, 0.5) var weapon_lag_damping: float = 18.0
-@export_range(0.0, 1.0, 0.01) var look_inertia_strength: float = 0.14
-@export_range(0.0, 4.0, 0.1) var maximum_look_inertia_degrees: float = 0.85
+# The rifle is carried, not bolted to the view: it trails a turn by up to this much and, because
+# the spring below is deliberately underdamped, swings past its rest pose and settles back.
+@export_range(0.0, 1.5, 0.01) var weapon_lag_multiplier: float = 0.66
+@export_range(0.1, 12.0, 0.1) var maximum_weapon_lag_degrees: float = 6.8
+@export_range(1.0, 240.0, 1.0) var weapon_lag_stiffness: float = 64.0
+@export_range(1.0, 40.0, 0.5) var weapon_lag_damping: float = 9.5
+@export_range(0.0, 1.0, 0.01) var look_inertia_strength: float = 0.2
+@export_range(0.0, 4.0, 0.1) var maximum_look_inertia_degrees: float = 1.5
 @export_range(1.0, 240.0, 1.0) var look_inertia_stiffness: float = 105.0
 @export_range(1.0, 40.0, 0.5) var look_inertia_damping: float = 19.0
 
@@ -37,7 +39,7 @@ extends Camera3D
 @export_range(0.0, 18.0, 0.1) var trauma_roll_degrees: float = 6.0
 # How hard the shot punches the view on top of the permanent aim kick. Kept modest
 # because the per-shot aim kick below is now large and the two add up.
-@export_range(0.0, 40.0, 0.5) var recoil_visual_gain: float = 11.0
+@export_range(0.0, 40.0, 0.5) var recoil_visual_gain: float = 15.0
 # Sustained fire must not recover between rounds, or the burst would never climb.
 @export_range(0.0, 1.0, 0.01) var recoil_recovery_delay: float = 0.16
 @export_range(0.0, 120.0, 1.0) var recoil_recovery_degrees_per_second: float = 34.0
@@ -45,13 +47,13 @@ extends Camera3D
 # A chest-mounted camera does not only rotate when the rifle goes off: the whole housing is
 # shoved. This is the positional half of the kick, plus the tremble that builds during a
 # burst and decays a few tenths of a second after it stops.
-@export_range(0.0, 0.2, 0.001) var recoil_camera_kick_meters: float = 0.022
+@export_range(0.0, 0.2, 0.001) var recoil_camera_kick_meters: float = 0.034
 @export_range(1.0, 400.0, 1.0) var recoil_position_stiffness: float = 165.0
 @export_range(1.0, 40.0, 0.5) var recoil_position_damping: float = 12.5
-@export_range(0.0, 3.0, 0.05) var shake_per_shot: float = 0.6
+@export_range(0.0, 3.0, 0.05) var shake_per_shot: float = 0.85
 @export_range(0.1, 12.0, 0.1) var shake_decay: float = 3.4
-@export_range(0.0, 6.0, 0.05) var shake_rotation_degrees: float = 1.7
-@export_range(0.0, 0.06, 0.001) var shake_position_meters: float = 0.014
+@export_range(0.0, 6.0, 0.05) var shake_rotation_degrees: float = 2.3
+@export_range(0.0, 0.06, 0.001) var shake_position_meters: float = 0.019
 
 @export_category("Lean")
 # Q/E lean. The camera rolls, shifts sideways and drops a little, the way a shoulder does

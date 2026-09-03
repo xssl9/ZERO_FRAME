@@ -51,14 +51,20 @@ var authored_camera_keep_aspect: Camera3D.KeepAspect = Camera3D.KEEP_HEIGHT
 @export var recoil_yaw_bias_degrees: float = 0.32
 @export var recoil_yaw_spread_degrees: float = 0.62
 # Viewmodel kick: how far the gun slams back into the shoulder and how far the
-# muzzle flips up. Purely cosmetic, but it is what sells the weight.
-@export var recoil_kick_speed: float = 2.7
-@export var recoil_pitch_speed: float = 3.8
-@export var recoil_spring_stiffness: float = 380.0
-@export var recoil_spring_damping: float = 26.0
+# muzzle flips up. Purely cosmetic, but it is what sells the weight. The spring is
+# deliberately underdamped (ratio about 0.43), so the rifle snaps and then visibly
+# jerks back through its rest pose instead of easing home.
+@export var recoil_kick_speed: float = 4.2
+@export var recoil_pitch_speed: float = 6.0
+@export var recoil_spring_stiffness: float = 300.0
+@export var recoil_spring_damping: float = 15.0
 # Burst heat: sustained fire climbs harder and scatters wider than the first round.
 @export var recoil_heat_per_shot: float = 0.2
 @export var recoil_heat_decay: float = 1.7
+# How much of WeaponManager's free-aim envelope this weapon gets. A rifle carried at the shoulder
+# has room to wander; a pistol held out in front in two hands has much less, which is why a
+# sidearm nudges the view on every shot while a rifle absorbs its first few rounds.
+@export_range(0.1, 2.0, 0.05) var free_aim_envelope_scale: float = 1.0
 
 @export_category("Muzzle flash")
 # Metres across for the crossed flame petals. Scaled per weapon because the pistol
@@ -583,22 +589,29 @@ func _apply_recoil() -> void:
 	_kick_pitch_velocity += recoil_pitch_speed * heat_scale * control
 	# Twist and sideways walk, signed randomly per round, so a burst never repeats the same
 	# shape and the rifle looks like it is being fought rather than animated.
-	_kick_roll_velocity += randf_range(-1.0, 1.0) * recoil_pitch_speed * 0.55 * heat_scale * control
-	_kick_side_velocity += randf_range(-1.0, 1.0) * recoil_kick_speed * 0.22 * heat_scale * control
+	_kick_roll_velocity += randf_range(-1.0, 1.0) * recoil_pitch_speed * 0.7 * heat_scale * control
+	_kick_side_velocity += randf_range(-1.0, 1.0) * recoil_kick_speed * 0.3 * heat_scale * control
 	var player := get_tree().get_first_node_in_group("player") as PlayerController
 	if player == null:
 		return
 	# Random per round rather than a memorisable pattern: the climb grows with heat, the
 	# sideways component is signed noise around a small per-weapon bias.
 	var pitch_kick: float = (recoil_pitch_degrees + recoil_pitch_climb_degrees * _recoil_heat) * control * randf_range(0.85, 1.2)
-	var yaw_kick: float = (recoil_yaw_bias_degrees + randf_range(-recoil_yaw_spread_degrees, recoil_yaw_spread_degrees)) * control
+	var yaw_bias: float = recoil_yaw_bias_degrees * control
+	var yaw_scatter: float = randf_range(-recoil_yaw_spread_degrees, recoil_yaw_spread_degrees) * control
 	# Free aim first. The muzzle wanders inside its envelope while it has room, and only the
-	# part that no longer fits reaches the camera and the real aim.
+	# part that no longer fits reaches the camera and the real aim. The brake's constant
+	# sideways push is deliberately left out of that: wrists absorb a random jolt, they do not
+	# absorb a force that pulls the same way thirty times in a row, so the burst still walks.
+	var yaw_kick: float = yaw_bias
 	var manager := get_parent() as WeaponManager
 	if manager != null:
-		var spill := manager.add_free_aim(deg_to_rad(pitch_kick), deg_to_rad(-yaw_kick))
+		var spill := manager.add_free_aim(deg_to_rad(pitch_kick), deg_to_rad(-yaw_scatter),
+			free_aim_envelope_scale)
 		pitch_kick = rad_to_deg(spill.y)
-		yaw_kick = -rad_to_deg(spill.x)
+		yaw_kick = yaw_bias - rad_to_deg(spill.x)
+	else:
+		yaw_kick = yaw_bias + yaw_scatter
 	if is_zero_approx(pitch_kick) and is_zero_approx(yaw_kick):
 		return
 	player.apply_weapon_recoil(pitch_kick, yaw_kick)
@@ -629,12 +642,12 @@ func _process(delta: float) -> void:
 	var side_acceleration: float = -_kick_side * recoil_spring_stiffness * 0.7 - _kick_side_velocity * recoil_spring_damping * 0.85
 	_kick_side_velocity += side_acceleration * step
 	_kick_side += _kick_side_velocity * step
-	_kick_offset = clampf(_kick_offset, -0.02, 0.085)
-	_kick_pitch = clampf(_kick_pitch, -0.05, 0.16)
+	_kick_offset = clampf(_kick_offset, -0.03, 0.13)
+	_kick_pitch = clampf(_kick_pitch, -0.07, 0.27)
 	model_root.position.z = _kick_offset
-	model_root.position.x = _kick_side * 0.08
+	model_root.position.x = _kick_side * 0.12
 	model_root.rotation.x = _kick_pitch
-	model_root.rotation.z = _kick_roll * 0.5
+	model_root.rotation.z = _kick_roll * 0.7
 	# Frame-rate independent sights: the old fixed 0.14 lerp made aiming faster at 144 Hz
 	# than at 60.
 	position = position.lerp(_aim_pose, 1.0 - exp(-delta * 13.0))

@@ -5,9 +5,9 @@
 [node name="PistolViewModel" type="Node3D" unique_id=1706195490]
 
 [node name="WeaponTuningCamera" type="Camera3D" parent="." unique_id=386011095]
-transform = Transform3D(1, 0, 0, 0, 0.99408436, -0.108611085, 0, 0.108611085, 0.99408436, -0.00014574826, -0.025331974, 0.0134058)
+transform = Transform3D(1, 0, 0, 0, 0.99408436, -0.108611085, 0, 0.108611085, 0.99408436, 0.02863796, -0.067172095, 0.043425247)
 current = true
-fov = 125.15302
+fov = 104.44619
 near = 0.01
 far = 20.0
 

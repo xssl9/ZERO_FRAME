@@ -5,10 +5,10 @@
 [node name="AKViewModel" type="Node3D" unique_id=1331583053]
 
 [node name="WeaponTuningCamera" type="Camera3D" parent="." unique_id=1957415907]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.023964435, 0.06833382, -0.0074122846)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.022733793, -0.0027478784, 0.041121393)
 keep_aspect = 0
 current = true
-fov = 108.021774
+fov = 116.91116
 near = 0.01
 far = 20.0
 

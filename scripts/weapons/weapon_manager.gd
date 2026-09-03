@@ -20,14 +20,24 @@ var _sprint_blend: float = 0.0
 var _lean: float = 0.0
 # Free aim. The muzzle has this much room to wander inside the frame before recoil starts
 # dragging the actual view: the first rounds move the gun, not the world.
-@export_range(0.0, 12.0, 0.1) var free_aim_limit_degrees: float = 3.6
-@export_range(0.5, 20.0, 0.1) var free_aim_recentre: float = 5.5
+@export_range(0.0, 12.0, 0.1) var free_aim_limit_degrees: float = 6.2
+# How fast the shooter walks the muzzle back onto where he is holding it. Deliberately slow: at
+# 650 rounds a minute nobody drags a rifle back down between rounds, so the envelope fills in the
+# first few shots and everything after that reaches the real aim and the burst climbs. It is also
+# why the muzzle is still hanging off target when the trigger is released.
+@export_range(0.5, 20.0, 0.1) var free_aim_recentre: float = 1.3
+# The muzzle does not settle on the middle of the screen, it settles on wherever the shooter is
+# loosely holding it, and that point drifts while he walks. This is the most recognisable thing
+# about a body camera watching someone carry a rifle, and because free aim also steers the
+# hitscan, the rounds follow the muzzle rather than the crosshair that is not there.
+@export_range(0.0, 6.0, 0.1) var free_aim_wander_degrees: float = 1.5
 var _free_aim: Vector2 = Vector2.ZERO
+var _wander_noise: FastNoiseLite = FastNoiseLite.new()
 
 # Takes a kick in radians, keeps what fits inside the envelope and hands back the spill for
 # the camera and the real aim to deal with.
-func add_free_aim(pitch: float, yaw: float) -> Vector2:
-	var limit := deg_to_rad(free_aim_limit_degrees)
+func add_free_aim(pitch: float, yaw: float, envelope_scale: float = 1.0) -> Vector2:
+	var limit := deg_to_rad(free_aim_limit_degrees) * envelope_scale
 	var wanted := _free_aim + Vector2(yaw, pitch)
 	var clamped := Vector2(clampf(wanted.x, -limit, limit), clampf(wanted.y, -limit, limit))
 	_free_aim = clamped
@@ -46,6 +56,9 @@ func configure_weapon_collision(player: CharacterBody3D, player_camera: Camera3D
 func _ready() -> void:
 	top_level = false
 	position = base_position
+	_wander_noise.seed = 5711
+	_wander_noise.frequency = 0.5
+	_wander_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	var ak := WeaponBase.new()
 	# AUTO first: the AK spawns on full auto and V flips it to single shots.
 	var ak_modes: Array[int] = [WeaponBase.FireMode.AUTO, WeaponBase.FireMode.SEMI]
@@ -73,10 +86,13 @@ func _ready() -> void:
 	pistol.recoil_pitch_climb_degrees = 0.45
 	pistol.recoil_yaw_bias_degrees = 0.12
 	pistol.recoil_yaw_spread_degrees = 0.4
-	pistol.recoil_kick_speed = 1.85
-	pistol.recoil_pitch_speed = 2.7
+	pistol.recoil_kick_speed = 2.7
+	pistol.recoil_pitch_speed = 4.0
 	pistol.recoil_heat_per_shot = 0.14
 	pistol.recoil_heat_decay = 2.4
+	# Held out in front in two hands: much less room for the muzzle to wander than a rifle at
+	# the shoulder, so every round of it reaches the view instead of being absorbed.
+	pistol.free_aim_envelope_scale = 0.3
 	# Its muzzle sits about half as far from the camera as the rifle's, so an
 	# identically sized flame would swallow the whole screen.
 	pistol.muzzle_flash_size = 0.19
@@ -106,12 +122,14 @@ func _process(delta: float) -> void:
 	weapons[current_index].set_aiming(Input.is_action_pressed("aim"))
 	var movement := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var aiming: bool = Input.is_action_pressed("aim")
-	# Rotational sway: where the muzzle trails to when the view turns.
-	sway_velocity += (-sway * 54.0 - sway_velocity * 13.0) * delta
+	# Rotational sway: where the muzzle trails to when the view turns. Deliberately underdamped
+	# (damping ratio about 0.45) so the rifle overshoots and swings back instead of gliding into
+	# place - a carried weapon has mass and the shooter is correcting it, not tracking with it.
+	sway_velocity += (-sway * 54.0 - sway_velocity * 6.6) * delta
 	sway += sway_velocity * delta
 	# Positional trail on the same impulse, but slower and softer, so the gun visibly swings
 	# through the frame on a fast turn instead of only tilting.
-	_drag_velocity += (-_drag * 38.0 - _drag_velocity * 10.0) * delta
+	_drag_velocity += (-_drag * 38.0 - _drag_velocity * 5.2) * delta
 	_drag += _drag_velocity * delta
 
 	var horizontal_speed := 0.0
@@ -128,21 +146,28 @@ func _process(delta: float) -> void:
 	_breath_time += delta
 	var breath_scale := 0.4 if aiming else 1.0
 
-	# The shooter is always pulling the gun back onto the target, so the envelope drains
-	# whether or not the trigger is held.
-	_free_aim = _free_aim.lerp(Vector2.ZERO, 1.0 - exp(-free_aim_recentre * delta))
+	# The shooter is always pulling the gun back onto the target, but onto where he is holding it
+	# rather than onto the centre of the screen: the envelope drains towards a slowly drifting
+	# point, and how far that point wanders follows how hard he is moving.
+	var wander_scale := deg_to_rad(free_aim_wander_degrees) \
+		* weapons[current_index].free_aim_envelope_scale \
+		* (0.3 + 0.7 * clampf(horizontal_speed / 4.2, 0.0, 1.0)) * (0.3 if aiming else 1.0)
+	var wander := Vector2(
+		_wander_noise.get_noise_2d(_breath_time * 0.62, 13.0),
+		_wander_noise.get_noise_2d(41.0, _breath_time * 0.51)) * wander_scale
+	_free_aim = _free_aim.lerp(wander, 1.0 - exp(-free_aim_recentre * delta))
 
 	var sway_scale := 0.4 if aiming else 1.0
 	rotation = Vector3(
-		_free_aim.y + (sway.y * 0.018 + sin(_breath_time * 1.7) * 0.0045 * breath_scale) * sway_scale - wall_pushback * 0.46 + _sprint_blend * 0.26,
-		_free_aim.x + (sway.x * 0.025 + sin(_breath_time * 1.15) * 0.0055 * breath_scale) * sway_scale,
+		_free_aim.y + (sway.y * 0.027 + sin(_breath_time * 1.7) * 0.0045 * breath_scale) * sway_scale - wall_pushback * 0.46 + _sprint_blend * 0.26,
+		_free_aim.x + (sway.x * 0.036 + sin(_breath_time * 1.15) * 0.0055 * breath_scale) * sway_scale,
 		lerpf(rotation.z, -movement.x * 0.018 + wall_pushback * 0.08 + _lean * 0.12 - _sprint_blend * 0.12 + sin(_walk_phase) * 0.012 * gait, 1.0 - exp(-delta * 9.0))
 	)
 	var collision_offset := Vector3(0.0, wall_pushback * 0.16, wall_pushback)
 	var sprint_offset := Vector3(0.03, -0.075, 0.05) * _sprint_blend
 	var lean_offset := Vector3(-_lean * 0.03, 0.0, 0.0)
-	var gait_offset := Vector3(sin(_walk_phase) * 0.006, -absf(cos(_walk_phase)) * 0.008, 0.0) * gait
-	var drag_offset := Vector3(_drag.x, _drag.y, 0.0) * 0.0022 * sway_scale
+	var gait_offset := Vector3(sin(_walk_phase) * 0.009, -absf(cos(_walk_phase)) * 0.012, 0.0) * gait
+	var drag_offset := Vector3(_drag.x, _drag.y, 0.0) * 0.0034 * sway_scale
 	var target := base_position + collision_offset + sprint_offset + lean_offset + gait_offset + drag_offset
 	position = position.lerp(target, 1.0 - exp(-delta * 18.0))
 
@@ -165,10 +190,10 @@ func _physics_process(delta: float) -> void:
 	wall_pushback = move_toward(wall_pushback, target_pushback, speed * delta)
 
 func add_look_impulse(relative: Vector2) -> void:
-	sway_velocity += Vector2(clampf(-relative.x, -35.0, 35.0), clampf(-relative.y, -35.0, 35.0)) * 0.35
+	sway_velocity += Vector2(clampf(-relative.x, -35.0, 35.0), clampf(-relative.y, -35.0, 35.0)) * 0.5
 	# The same impulse feeds the heavier positional spring, clamped harder so a flick of the
 	# mouse cannot throw the rifle out of frame.
-	_drag_velocity += Vector2(clampf(-relative.x, -24.0, 24.0), clampf(relative.y, -24.0, 24.0)) * 0.5
+	_drag_velocity += Vector2(clampf(-relative.x, -24.0, 24.0), clampf(relative.y, -24.0, 24.0)) * 0.7
 
 func _select(index: int) -> void:
 	current_index = clampi(index, 0, weapons.size() - 1)
