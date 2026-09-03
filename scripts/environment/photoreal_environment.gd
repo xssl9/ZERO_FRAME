@@ -71,6 +71,11 @@ const RAIN_SUN_FOG_ENERGY := 4.0
 
 @export_category("Weather")
 @export var weather: Weather = Weather.AUTO
+# Standing water without rainfall. An underground garage has wet concrete and puddles but no
+# downpour, no drops falling past the hands and no sky to darken, and weather alone cannot say
+# that: CLEAR dries the floor out and RAIN starts a storm indoors. Negative follows the weather,
+# which is what every outdoor level wants.
+@export_range(-1.0, 1.0, 0.01) var standing_water: float = -1.0
 
 # Resolved grade for the weather in effect, so the exports above are never overwritten and
 # toggling weather in the menu is repeatable.
@@ -82,6 +87,10 @@ var _shaft_density: float = 0.022
 var _fog_albedo: Color = RAIN_FOG_ALBEDO
 # Materials that draw the muzzle flash themselves through shaders/muzzle_flash_light.gdshaderinc.
 var _flash_receivers: Array[ShaderMaterial] = []
+# How much water each surface can hold at all, read from the scene once and kept, because the
+# wetness pass overwrites the value it would otherwise read back. The weather only scales this,
+# so a level can author a soaked floor next to dry plaster and keep the difference.
+var _authored_wetness: Dictionary = {}
 
 func _ready() -> void:
 	# WeaponBase looks the environment up by group to push flash state at it.
@@ -111,7 +120,7 @@ func apply_preset() -> void:
 func _resolve_weather() -> void:
 	var effective := weather
 	if effective == Weather.AUTO:
-		var requested := int(ProjectSettings.get_setting(WEATHER_SETTING, WEATHER_SETTING_RAIN))
+		var requested := int(ProjectSettings.get_setting(WEATHER_SETTING, WEATHER_SETTING_CLEAR))
 		effective = Weather.RAIN if requested == WEATHER_SETTING_RAIN else Weather.CLEAR
 	_rain = effective == Weather.RAIN
 	_sky_energy = sky_energy if _rain else CLEAR_SKY_ENERGY
@@ -299,8 +308,9 @@ func _configure_weather_nodes(scene_root: Node) -> void:
 	var wet_ground := scene_root.find_child("WetGround", true, false) as MeshInstance3D
 	if wet_ground != null:
 		# No puddles at all in clear weather: the pass is fullscreen, so switching it off
-		# is also the single biggest thing the clear preset saves.
-		wet_ground.visible = _rain
+		# is also the single biggest thing the clear preset saves. An interior that asked for
+		# standing water keeps it, since its water does not come from the sky.
+		wet_ground.visible = _rain or standing_water > 0.0
 		var water := wet_ground.material_override as ShaderMaterial
 		if water != null and not _flash_receivers.has(water):
 			_flash_receivers.append(water)
@@ -352,12 +362,16 @@ func _ensure_fill_light(fill_name: String) -> DirectionalLight3D:
 	return light
 
 func _configure_surface_wetness(scene_root: Node) -> void:
-	var wetness := 1.0 if _rain else 0.0
+	var factor := standing_water if standing_water >= 0.0 else (1.0 if _rain else 0.0)
 	for node: Node in scene_root.find_children("*", "MeshInstance3D", true, false):
 		var material := (node as MeshInstance3D).material_override as ShaderMaterial
 		if material == null or material.shader != GRID_SHADER or _flash_receivers.has(material):
 			continue
 		_flash_receivers.append(material)
 	for material: ShaderMaterial in _flash_receivers:
-		if material.shader == GRID_SHADER:
-			material.set_shader_parameter("wetness", wetness)
+		if material.shader != GRID_SHADER:
+			continue
+		if not _authored_wetness.has(material):
+			var authored: Variant = material.get_shader_parameter("wetness")
+			_authored_wetness[material] = float(authored) if authored != null else 1.0
+		material.set_shader_parameter("wetness", float(_authored_wetness[material]) * factor)

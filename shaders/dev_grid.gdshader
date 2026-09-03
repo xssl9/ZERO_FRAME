@@ -34,6 +34,21 @@ uniform float texture_blend : hint_range(0.0, 1.0, 0.01) = 0.0;
 uniform float texture_scale : hint_range(0.05, 4.0, 0.01) = 0.5;
 uniform float normal_strength : hint_range(0.0, 3.0, 0.05) = 1.0;
 
+group_uniforms PhotoTextures.Variation;
+// A second material blended in over large patches. One tiling sheet across a 26 m storeroom
+// reads as one surface no matter how good the sheet is, and a building does not: the pour was
+// patched, the plaster came off over brick, someone tiled one room and not the next. The mask is
+// two octaves of world-space value noise, so the patches follow the building and not the UVs,
+// and it costs nothing on a material that leaves `variant_amount` at zero.
+uniform sampler2D variant_albedo_texture : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform sampler2D variant_normal_texture : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform sampler2D variant_arm_texture : hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform float variant_amount : hint_range(0.0, 1.0, 0.01) = 0.0;
+// Metres across for a patch. Smaller than a room and larger than a tile sheet.
+uniform float variant_patch_size : hint_range(0.5, 40.0, 0.5) = 9.0;
+uniform float variant_edge : hint_range(0.01, 0.5, 0.01) = 0.14;
+uniform float variant_scale : hint_range(0.05, 4.0, 0.01) = 0.5;
+
 varying vec3 world_position;
 varying vec3 world_normal;
 
@@ -86,6 +101,26 @@ vec3 triplanar_normal(sampler2D map, vec3 position, vec3 weights, vec3 surface_n
 	return blended;
 }
 
+// Value noise in world space, used only for the large patch mask, so smooth beats cheap here:
+// a hash straight off the world position would band the patches into visible cubes.
+float hash13(vec3 point) {
+	point = fract(point * 0.1031);
+	point += dot(point, point.yzx + 33.33);
+	return fract((point.x + point.y) * point.z);
+}
+
+float value_noise(vec3 point) {
+	vec3 cell = floor(point);
+	vec3 offset = fract(point);
+	offset = offset * offset * (3.0 - 2.0 * offset);
+	return mix(
+		mix(mix(hash13(cell), hash13(cell + vec3(1.0, 0.0, 0.0)), offset.x),
+			mix(hash13(cell + vec3(0.0, 1.0, 0.0)), hash13(cell + vec3(1.0, 1.0, 0.0)), offset.x), offset.y),
+		mix(mix(hash13(cell + vec3(0.0, 0.0, 1.0)), hash13(cell + vec3(1.0, 0.0, 1.0)), offset.x),
+			mix(hash13(cell + vec3(0.0, 1.0, 1.0)), hash13(cell + vec3(1.0, 1.0, 1.0)), offset.x), offset.y),
+		offset.z);
+}
+
 void fragment() {
 	// Project onto the plane the surface actually faces. Using only XZ would
 	// smear the pattern into vertical stripes on every wall.
@@ -126,13 +161,27 @@ void fragment() {
 		vec3 weights = triplanar_weights(shading_normal);
 		vec3 photo_albedo = triplanar_sample(albedo_texture, triplanar_position, weights);
 		vec3 arm = triplanar_sample(arm_texture, triplanar_position, weights);
+		vec3 mapped = triplanar_normal(normal_texture, triplanar_position, weights, shading_normal);
+		if (variant_amount > 0.0) {
+			float patch = mix(value_noise(world_position / variant_patch_size),
+				value_noise(world_position / (variant_patch_size * 0.42)), 0.35);
+			float variant = smoothstep(0.5 - variant_edge, 0.5 + variant_edge, patch) * variant_amount;
+			if (variant > 0.001) {
+				vec3 variant_position = world_position * variant_scale;
+				photo_albedo = mix(photo_albedo,
+					triplanar_sample(variant_albedo_texture, variant_position, weights), variant);
+				arm = mix(arm, triplanar_sample(variant_arm_texture, variant_position, weights), variant);
+				mapped = normalize(mix(mapped,
+					triplanar_normal(variant_normal_texture, variant_position, weights, shading_normal),
+					variant));
+			}
+		}
 		ALBEDO = mix(ALBEDO, photo_albedo * mix(1.0, 0.84, wetness), texture_blend);
 		ROUGHNESS = mix(ROUGHNESS, arm.g * mix(1.0, 0.45, wetness), texture_blend);
 		METALLIC = mix(METALLIC, arm.b, texture_blend);
 		AO = mix(1.0, arm.r, texture_blend);
 		AO_LIGHT_AFFECT = 0.65;
 		float bump = normal_strength * texture_blend * (1.0 - 0.4 * wetness);
-		vec3 mapped = triplanar_normal(normal_texture, triplanar_position, weights, shading_normal);
 		shading_normal = normalize(mix(shading_normal, mapped, clamp(bump, 0.0, 1.0)));
 		// World space to view space: NORMAL is expected in view space in fragment().
 		NORMAL = normalize((VIEW_MATRIX * vec4(shading_normal, 0.0)).xyz);

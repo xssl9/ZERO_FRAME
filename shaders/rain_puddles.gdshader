@@ -81,6 +81,12 @@ vec2 hash22(vec2 p) {
 }
 
 vec2 get_ripple_offset(vec2 input_uv) {
+	// Zero means no rain hitting the water at all - an underground garage has standing water but
+	// nothing falling into it. Without this the loop below still runs its centre cell once and
+	// keeps animating rings, which is not what "no ripples" is supposed to look like.
+	if (ripple_max_radius < 0.5) {
+		return vec2(0.0);
+	}
 	float resolution = 10.0 * exp2(-3.0);
 	vec2 uv = input_uv / ripple_scale * resolution;
 	vec2 p0 = floor(uv);
