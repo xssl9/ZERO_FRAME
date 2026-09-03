@@ -7,6 +7,7 @@ func _capture() -> void:
 	var scene_path := "res://scenes/levels/dev_test_grid.tscn"
 	var output_path := "/tmp/zero_frame_capture.png"
 	var override_position := Vector3.INF
+	var override_yaw := INF
 	var override_exposure := -1.0
 	var override_sun := -1.0
 	var disable_probes := false
@@ -21,6 +22,8 @@ func _capture() -> void:
 			var parts := argument.trim_prefix("--position=").split(",")
 			if parts.size() == 3:
 				override_position = Vector3(parts[0].to_float(), parts[1].to_float(), parts[2].to_float())
+		elif argument.begins_with("--yaw="):
+			override_yaw = argument.trim_prefix("--yaw=").to_float()
 		elif argument.begins_with("--exposure="):
 			override_exposure = argument.trim_prefix("--exposure=").to_float()
 		elif argument.begins_with("--sun="):
@@ -66,6 +69,13 @@ func _capture() -> void:
 			player.global_position = override_position
 			player.velocity = Vector3.ZERO
 			player.reset_physics_interpolation()
+	# Degrees, and the body's own yaw: the spawn marker decides where the camera looks otherwise,
+	# which is not much use when the thing to photograph is behind you.
+	if override_yaw != INF:
+		var aimed := get_first_node_in_group("player") as PlayerController
+		if aimed != null:
+			aimed.rotation.y = deg_to_rad(override_yaw)
+			aimed.reset_physics_interpolation()
 	for frame: int in 60:
 		await process_frame
 	var image := root.get_texture().get_image()

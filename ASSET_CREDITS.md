@@ -131,10 +131,35 @@ Full license copies and bundled notices are in `third_party_licenses/`.
 - Source: https://polyhaven.com/
 - License: CC0.
 - Use: 2K brick, concrete, plaster, worn wood, rusty/corrugated metal and rocky-ground PBR maps. `concrete_wall_008` is used on architectural concrete and interior safety floors.
+  The parking garage adds `concrete_floor_damaged_01`, `concrete_layers` and `worn_plaster_wall`
+  as base surfaces, with `worn_tile_floor`, `brick_wall_006` and `concrete_wall_008` blended in
+  over large patches by `shaders/dev_grid.gdshader`.
 - Download: each slug and file URL is validated by `tools/fetch_polyhaven.py` through the Poly Haven API.
 
-### Poly Haven Grass Medium 01
+### Poly Haven props for the parking garage
 
+- Source: https://polyhaven.com/models
+- License: CC0.
+- Use: 1K glTF models with their own textures, downloaded and validated through the Poly Haven API
+  by `tools/fetch_polyhaven_models.py`, placed by `tools/build_parking_scene.py`:
+  `covered_car`, `cardboard_box_01`, `barrel_03`, `cement_bag`, `ladder_sectioned_01`,
+  `metal_tool_chest`, `industrial_pastic_container`, `industrial_storage_cart`,
+  `old_military_crate`, `concrete_road_barrier`, `modular_chainlink_fence`,
+  `painted_wooden_shelves`, `korean_fire_extinguisher_01`.
+- Changes: none to the meshes. Each one is wrapped in a `StaticBody3D` with a measured box
+  collider (`scripts/environment/prop_body.gd`) where it is big enough to hide behind.
+
+### Poly Haven Rollershutter Window 01
+
+- Source: https://polyhaven.com/a/rollershutter_window_01
+- License: CC0.
+- Use: the vehicle entrance of the parking garage. The file carries two variants three metres
+  apart - a clean shutter and the same shutter tagged - and both are used: eight panels, scaled
+  to 2.00 x 2.20 m each, fill the 16 x 2.2 m opening exactly, three of them the tagged variant.
+  Assembled in Blender and exported as part of `parking_garage.gltf`, so the graffiti in the
+  garage is Poly Haven's own artwork rather than a photograph of somebody else's wall.
+
+### Poly Haven Grass Medium 01
 - Source: https://polyhaven.com/a/grass_medium_01
 - License: CC0.
 - Use: official 1K glTF tuft and albedo, OpenGL normal, ARM and alpha maps for the abandoned-complex grass cover.
