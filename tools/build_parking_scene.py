@@ -336,7 +336,47 @@ omni_attenuation = 1.5
     nodes.append(lamp % ("ExitParking", 0.0, 2.45, -20.0, "1, 0.15, 0.1, 1", 3.0, 2.0, "false", 5.0))
     nodes.append(lamp % ("ExitAnnex", CORRIDOR_X, 2.4, 19.0, "1, 0.15, 0.1, 1", 2.6, 1.8, "false", 4.5))
 
-    # ---- everything that stands on the floor -------------------------------------------
+    # ---- reflection probes ----------------------------------------------------------------
+    # Screen-space reflections can only reflect what is already on screen, which is why the wet
+    # floor lost the lamps as soon as they left the frame and banded at grazing angles. A grid of
+    # box-projected probes gives the floor something to reflect everywhere; SSR then only refines
+    # it up close. `interior` keeps the near-black sky out of the capture, and PhotorealEnvironment
+    # hides every probe on the PERFORMANCE preset, so this costs nothing there.
+    nodes.append('[node name="Reflections" type="Node3D" parent="."]\n')
+    probe = """[node name="%s" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, %.2f, %.2f, %.2f)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(%.2f, %.2f, %.2f)
+box_projection = true
+interior = true
+enable_shadows = true
+"""
+    probes = 0
+    # Deck: overlapping boxes on a 15 x 13 m grid, sized larger than their spacing so the blend
+    # bands meet instead of leaving seams between them.
+    for column, centre_x in enumerate((-22.5, -7.5, 7.5, 22.5)):
+        for row, centre_z in enumerate((-13.3, 0.0, 13.3)):
+            probes += 1
+            nodes.append(probe % ("Deck%d_%d" % (column, row), centre_x, PARK_H * 0.5, centre_z,
+                                  17.0, PARK_H, 16.0))
+    for index, centre_z in enumerate((-10.0, 10.0)):
+        probes += 1
+        nodes.append(probe % ("Hall%d" % index, 32.6, ANNEX_H * 0.5, centre_z, 5.0, ANNEX_H, 22.0))
+        probes += 1
+        nodes.append(probe % ("Corridor%d" % index, CORRIDOR_X, ANNEX_H * 0.5, centre_z,
+                              2.6, ANNEX_H, 22.0))
+    for index, room in enumerate(ROOMS):
+        probes += 1
+        centre_z = (room[2] + room[3]) * 0.5
+        depth = room[3] - room[2] + 3.0
+        nodes.append(probe % ("Room%d" % index, 47.0, ANNEX_H * 0.5, centre_z,
+                              19.5, ANNEX_H, depth))
+    print("placed %d reflection probes" % probes)
+
+    # ---- cars, then everything else that stands on the floor ------------------------------
     layout = Layout(layout_boxes)
     shapes = {key: PropShape(*blockout_boxes.bounds(ROOT / path)) for key, path in PROPS.items()}
     placer = Placer(layout, rng)

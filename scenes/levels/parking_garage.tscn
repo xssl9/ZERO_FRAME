@@ -3121,6 +3121,228 @@ light_bake_mode = 1
 omni_range = 4.5
 omni_attenuation = 1.5
 
+[node name="Reflections" type="Node3D" parent="."]
+
+[node name="Deck0_0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.50, 1.55, -13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck0_1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.50, 1.55, 0.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck0_2" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.50, 1.55, 13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.50, 1.55, -13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.50, 1.55, 0.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_2" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.50, 1.55, 13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.50, 1.55, -13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.50, 1.55, 0.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_2" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.50, 1.55, 13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.50, 1.55, -13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.50, 1.55, 0.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_2" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.50, 1.55, 13.30)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17.00, 3.10, 16.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Hall0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.60, 1.50, -10.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(5.00, 3.00, 22.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Corridor0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.30, 1.50, -10.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(2.60, 3.00, 22.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Hall1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.60, 1.50, 10.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(5.00, 3.00, 22.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Corridor1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.30, 1.50, 10.00)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(2.60, 3.00, 22.00)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room0" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.00, 1.50, -13.95)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.50, 3.00, 13.50)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room1" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.00, 1.50, -4.10)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.50, 3.00, 9.60)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room2" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.00, 1.50, 4.10)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.50, 3.00, 9.60)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room3" type="ReflectionProbe" parent="Reflections"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.00, 1.50, 12.15)
+update_mode = 0
+intensity = 1.0
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.50, 3.00, 9.70)
+box_projection = true
+interior = true
+enable_shadows = true
+
 [node name="Cars" type="Node3D" parent="."]
 
 [node name="Car00" type="StaticBody3D" parent="Cars"]
