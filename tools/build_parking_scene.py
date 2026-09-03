@@ -144,12 +144,19 @@ def main(seed: int = 7) -> int:
                      "%s_%s" % (key, suffix))
     for key, path in PROPS.items():
         resource("PackedScene", path, "prop_" + key)
+    # Ambient occlusion baked per mesh in Blender against the level's own geometry. This is the
+    # unique layer the tiling can never have: the dark line in a wall/floor junction and the dirt
+    # behind a pillar belong to that pillar and nowhere else.
+    for mesh_name in ("Floor_Parking", "Floor_Annex", "Walls_Concrete", "Walls_Plaster", "Ceiling"):
+        resource("Texture2D", "assets/environment/parking/ao/%s_ao.png" % mesh_name,
+                 "ao_" + mesh_name.lower())
 
     subs: list[str] = []
 
     def surface(name: str, texture_key: str, scale: float, roughness: float, wetness: float,
                 variant: str | None = None, amount: float = 0.0, patch: float = 9.0,
-                variant_scale: float | None = None) -> str:
+                variant_scale: float | None = None, occlusion: str | None = None,
+                ao_strength: float = 0.8) -> str:
         subs.append("""[sub_resource type="ShaderMaterial" id="Material_%s"]
 shader = ExtResource("%s")
 shader_parameter/cell_color_a = Color(0.32, 0.32, 0.33, 1)
@@ -181,19 +188,29 @@ shader_parameter/variant_normal_texture = ExtResource("%s")
 shader_parameter/variant_arm_texture = ExtResource("%s")
 """ % (amount, patch, variant_scale if variant_scale is not None else scale,
                 ids[variant + "_diff"], ids[variant + "_nor_gl"], ids[variant + "_arm"])
+        if occlusion is not None:
+            subs[-1] += """shader_parameter/unique_ao_strength = %s
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("%s")
+""" % (ao_strength, ids["ao_" + occlusion.lower()])
         return "Material_" + name
 
     # The second texture is what stops one tiling sheet from being the whole surface: patched
     # concrete on the deck, tiling left over in the back rooms, brick where the plaster came off.
     floor_material = surface("floor", "floor_damaged", 0.35, 0.72, 1.0,
-                             variant="concrete_layers", amount=0.45, patch=11.0, variant_scale=0.4)
+                             variant="concrete_layers", amount=0.45, patch=11.0, variant_scale=0.4,
+                             occlusion="Floor_Parking", ao_strength=0.85)
     annex_material = surface("annexfloor", "floor_damaged", 0.5, 0.75, 0.35,
-                             variant="tile", amount=0.7, patch=6.5, variant_scale=0.55)
+                             variant="tile", amount=0.7, patch=6.5, variant_scale=0.55,
+                             occlusion="Floor_Annex", ao_strength=0.85)
     concrete_material = surface("concrete", "concrete_layers", 0.4, 0.8, 0.15,
-                                variant="concrete_wall", amount=0.5, patch=9.0, variant_scale=0.45)
+                                variant="concrete_wall", amount=0.5, patch=9.0, variant_scale=0.45,
+                                occlusion="Walls_Concrete", ao_strength=0.8)
     plaster_material = surface("plaster", "plaster", 0.45, 0.85, 0.0,
-                               variant="brick", amount=0.4, patch=5.0, variant_scale=0.5)
-    ceiling_material = surface("ceiling", "concrete_layers", 0.5, 0.85, 0.0)
+                               variant="brick", amount=0.4, patch=5.0, variant_scale=0.5,
+                               occlusion="Walls_Plaster", ao_strength=0.8)
+    ceiling_material = surface("ceiling", "concrete_layers", 0.5, 0.85, 0.0,
+                               occlusion="Ceiling", ao_strength=0.75)
 
     subs.append("""[sub_resource type="Environment" id="Environment_garage"]
 background_mode = 0

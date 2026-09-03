@@ -347,14 +347,6 @@
 					},
 					"indices":31,
 					"material":7
-				},
-				{
-					"attributes":{
-						"POSITION":32,
-						"NORMAL":33,
-						"TEXCOORD_0":34
-					},
-					"indices":35
 				}
 			]
 		},
@@ -363,11 +355,11 @@
 			"primitives":[
 				{
 					"attributes":{
-						"POSITION":36,
-						"NORMAL":37,
-						"TEXCOORD_0":38
+						"POSITION":32,
+						"NORMAL":33,
+						"TEXCOORD_0":34
 					},
-					"indices":39,
+					"indices":35,
 					"material":8
 				}
 			]
@@ -663,7 +655,7 @@
 		{
 			"bufferView":28,
 			"componentType":5126,
-			"count":3648,
+			"count":7104,
 			"max":[
 				30.299999237060547,
 				1.5500001907348633,
@@ -679,57 +671,23 @@
 		{
 			"bufferView":29,
 			"componentType":5126,
-			"count":3648,
+			"count":7104,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":30,
 			"componentType":5126,
-			"count":3648,
+			"count":7104,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":31,
 			"componentType":5123,
-			"count":5016,
+			"count":9768,
 			"type":"SCALAR"
 		},
 		{
 			"bufferView":32,
-			"componentType":5126,
-			"count":3456,
-			"max":[
-				30,
-				-1.3299999237060547,
-				-0.14999908208847046
-			],
-			"min":[
-				-30,
-				-1.5499999523162842,
-				-40.150001525878906
-			],
-			"type":"VEC3"
-		},
-		{
-			"bufferView":33,
-			"componentType":5126,
-			"count":3456,
-			"type":"VEC3"
-		},
-		{
-			"bufferView":34,
-			"componentType":5126,
-			"count":3456,
-			"type":"VEC2"
-		},
-		{
-			"bufferView":35,
-			"componentType":5123,
-			"count":4752,
-			"type":"SCALAR"
-		},
-		{
-			"bufferView":36,
 			"componentType":5126,
 			"count":2784,
 			"max":[
@@ -745,19 +703,19 @@
 			"type":"VEC3"
 		},
 		{
-			"bufferView":37,
+			"bufferView":33,
 			"componentType":5126,
 			"count":2784,
 			"type":"VEC3"
 		},
 		{
-			"bufferView":38,
+			"bufferView":34,
 			"componentType":5126,
 			"count":2784,
 			"type":"VEC2"
 		},
 		{
-			"bufferView":39,
+			"bufferView":35,
 			"componentType":5123,
 			"count":3840,
 			"type":"SCALAR"
@@ -934,50 +892,26 @@
 		},
 		{
 			"buffer":0,
-			"byteLength":43776,
+			"byteLength":85248,
 			"byteOffset":574008,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":43776,
-			"byteOffset":617784,
+			"byteLength":85248,
+			"byteOffset":659256,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":29184,
-			"byteOffset":661560,
+			"byteLength":56832,
+			"byteOffset":744504,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":10032,
-			"byteOffset":690744,
-			"target":34963
-		},
-		{
-			"buffer":0,
-			"byteLength":41472,
-			"byteOffset":700776,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":41472,
-			"byteOffset":742248,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":27648,
-			"byteOffset":783720,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":9504,
-			"byteOffset":811368,
+			"byteLength":19536,
+			"byteOffset":801336,
 			"target":34963
 		},
 		{

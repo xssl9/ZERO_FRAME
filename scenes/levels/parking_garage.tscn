@@ -1,4 +1,4 @@
-[gd_scene load_steps=301 format=3]
+[gd_scene load_steps=346 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/environment/parking/parking_garage.gltf" id="1_garage"]
 [ext_resource type="Script" path="res://scripts/environment/photoreal_environment.gd" id="2_env"]
@@ -42,6 +42,11 @@
 [ext_resource type="PackedScene" path="res://assets/props/modular_chainlink_fence_1k/modular_chainlink_fence_1k.gltf" id="40_prop_fence"]
 [ext_resource type="PackedScene" path="res://assets/props/painted_wooden_shelves_1k/painted_wooden_shelves_1k.gltf" id="41_prop_shelves"]
 [ext_resource type="PackedScene" path="res://assets/props/korean_fire_extinguisher_01_1k/korean_fire_extinguisher_01_1k.gltf" id="42_prop_extinguisher"]
+[ext_resource type="Texture2D" path="res://assets/environment/parking/ao/Floor_Parking_ao.png" id="43_ao_floor_parking"]
+[ext_resource type="Texture2D" path="res://assets/environment/parking/ao/Floor_Annex_ao.png" id="44_ao_floor_annex"]
+[ext_resource type="Texture2D" path="res://assets/environment/parking/ao/Walls_Concrete_ao.png" id="45_ao_walls_concrete"]
+[ext_resource type="Texture2D" path="res://assets/environment/parking/ao/Walls_Plaster_ao.png" id="46_ao_walls_plaster"]
+[ext_resource type="Texture2D" path="res://assets/environment/parking/ao/Ceiling_ao.png" id="47_ao_ceiling"]
 
 [sub_resource type="ShaderMaterial" id="Material_floor"]
 shader = ExtResource("6_grid")
@@ -67,6 +72,9 @@ shader_parameter/variant_scale = 0.4
 shader_parameter/variant_albedo_texture = ExtResource("15_concrete_layers_diff")
 shader_parameter/variant_normal_texture = ExtResource("16_concrete_layers_nor_gl")
 shader_parameter/variant_arm_texture = ExtResource("17_concrete_layers_arm")
+shader_parameter/unique_ao_strength = 0.85
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("43_ao_floor_parking")
 
 [sub_resource type="ShaderMaterial" id="Material_annexfloor"]
 shader = ExtResource("6_grid")
@@ -92,6 +100,9 @@ shader_parameter/variant_scale = 0.55
 shader_parameter/variant_albedo_texture = ExtResource("21_tile_diff")
 shader_parameter/variant_normal_texture = ExtResource("22_tile_nor_gl")
 shader_parameter/variant_arm_texture = ExtResource("23_tile_arm")
+shader_parameter/unique_ao_strength = 0.85
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("44_ao_floor_annex")
 
 [sub_resource type="ShaderMaterial" id="Material_concrete"]
 shader = ExtResource("6_grid")
@@ -117,6 +128,9 @@ shader_parameter/variant_scale = 0.45
 shader_parameter/variant_albedo_texture = ExtResource("27_concrete_wall_diff")
 shader_parameter/variant_normal_texture = ExtResource("28_concrete_wall_nor_gl")
 shader_parameter/variant_arm_texture = ExtResource("29_concrete_wall_arm")
+shader_parameter/unique_ao_strength = 0.8
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("45_ao_walls_concrete")
 
 [sub_resource type="ShaderMaterial" id="Material_plaster"]
 shader = ExtResource("6_grid")
@@ -142,6 +156,9 @@ shader_parameter/variant_scale = 0.5
 shader_parameter/variant_albedo_texture = ExtResource("24_brick_diff")
 shader_parameter/variant_normal_texture = ExtResource("25_brick_nor_gl")
 shader_parameter/variant_arm_texture = ExtResource("26_brick_arm")
+shader_parameter/unique_ao_strength = 0.8
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("46_ao_walls_plaster")
 
 [sub_resource type="ShaderMaterial" id="Material_ceiling"]
 shader = ExtResource("6_grid")
@@ -161,6 +178,9 @@ shader_parameter/normal_strength = 1.0
 shader_parameter/albedo_texture = ExtResource("15_concrete_layers_diff")
 shader_parameter/normal_texture = ExtResource("16_concrete_layers_nor_gl")
 shader_parameter/arm_texture = ExtResource("17_concrete_layers_arm")
+shader_parameter/unique_ao_strength = 0.75
+shader_parameter/unique_ao_albedo = 0.3
+shader_parameter/unique_ao_texture = ExtResource("47_ao_ceiling")
 
 [sub_resource type="Environment" id="Environment_garage"]
 background_mode = 0
@@ -223,11 +243,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay0"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 35.21
+shader_parameter/mark_seed = 59.29
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.50
-shader_parameter/patchiness = 0.42
+shader_parameter/wear = 0.66
+shader_parameter/patchiness = 0.57
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -237,11 +257,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay1"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 18.03
+shader_parameter/mark_seed = 18.55
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.52
+shader_parameter/wear = 0.56
+shader_parameter/patchiness = 0.42
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -251,11 +271,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay2"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 41.78
+shader_parameter/mark_seed = 63.92
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.57
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.63
+shader_parameter/patchiness = 0.41
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -265,11 +285,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay3"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 30.92
+shader_parameter/mark_seed = 27.40
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.65
-shader_parameter/patchiness = 0.34
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -279,11 +299,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay4"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 41.17
+shader_parameter/mark_seed = 6.51
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.39
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -293,11 +313,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay5"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 51.96
+shader_parameter/mark_seed = 59.88
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.62
-shader_parameter/patchiness = 0.44
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.38
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -307,11 +327,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay6"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 21.30
+shader_parameter/mark_seed = 32.70
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.68
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.41
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -321,11 +341,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay7"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 35.06
+shader_parameter/mark_seed = 61.19
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.52
-shader_parameter/patchiness = 0.35
+shader_parameter/wear = 0.72
+shader_parameter/patchiness = 0.54
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -335,11 +355,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay8"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 35.58
+shader_parameter/mark_seed = 40.38
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.55
-shader_parameter/patchiness = 0.41
+shader_parameter/wear = 0.72
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -349,10 +369,10 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay9"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 51.80
+shader_parameter/mark_seed = 35.15
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.51
+shader_parameter/wear = 0.67
 shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
@@ -363,11 +383,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay10"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 55.72
+shader_parameter/mark_seed = 46.87
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.56
-shader_parameter/patchiness = 0.52
+shader_parameter/wear = 0.59
+shader_parameter/patchiness = 0.53
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -377,11 +397,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay11"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 13.44
+shader_parameter/mark_seed = 41.25
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.54
+shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -391,11 +411,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay12"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 31.88
+shader_parameter/mark_seed = 59.31
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.62
-shader_parameter/patchiness = 0.41
+shader_parameter/wear = 0.49
+shader_parameter/patchiness = 0.44
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -405,11 +425,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay13"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 43.95
+shader_parameter/mark_seed = 21.99
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.61
-shader_parameter/patchiness = 0.54
+shader_parameter/wear = 0.54
+shader_parameter/patchiness = 0.52
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -419,11 +439,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay14"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 54.31
+shader_parameter/mark_seed = 62.48
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.48
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.50
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -433,11 +453,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay15"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 24.61
+shader_parameter/mark_seed = 19.25
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.62
+shader_parameter/patchiness = 0.42
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -447,11 +467,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay16"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 19.97
+shader_parameter/mark_seed = 10.71
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.69
-shader_parameter/patchiness = 0.59
+shader_parameter/wear = 0.50
+shader_parameter/patchiness = 0.36
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -461,11 +481,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay17"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 8.14
+shader_parameter/mark_seed = 57.98
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.58
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.60
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -475,11 +495,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay18"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 51.47
+shader_parameter/mark_seed = 58.00
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.74
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.75
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -489,11 +509,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay19"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 4.68
+shader_parameter/mark_seed = 8.93
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.73
-shader_parameter/patchiness = 0.58
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.33
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -503,11 +523,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay20"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 33.78
+shader_parameter/mark_seed = 21.89
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.59
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.48
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -517,11 +537,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay21"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 50.12
+shader_parameter/mark_seed = 16.53
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.52
-shader_parameter/patchiness = 0.35
+shader_parameter/wear = 0.62
+shader_parameter/patchiness = 0.57
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -531,11 +551,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay22"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 62.20
+shader_parameter/mark_seed = 47.98
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.48
-shader_parameter/patchiness = 0.55
+shader_parameter/wear = 0.57
+shader_parameter/patchiness = 0.42
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -545,11 +565,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay23"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 44.86
+shader_parameter/mark_seed = 33.55
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.70
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.56
+shader_parameter/patchiness = 0.40
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -559,11 +579,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay24"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 5.44
+shader_parameter/mark_seed = 3.97
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.68
-shader_parameter/patchiness = 0.30
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -573,11 +593,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay25"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 8.04
+shader_parameter/mark_seed = 8.06
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.62
-shader_parameter/patchiness = 0.31
+shader_parameter/wear = 0.60
+shader_parameter/patchiness = 0.49
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -587,11 +607,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay26"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 45.76
+shader_parameter/mark_seed = 55.22
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.74
-shader_parameter/patchiness = 0.49
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.38
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -601,11 +621,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay27"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 33.81
+shader_parameter/mark_seed = 15.90
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.58
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.57
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -615,11 +635,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay28"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 6.36
+shader_parameter/mark_seed = 61.05
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.58
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.56
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -629,11 +649,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay29"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 12.27
+shader_parameter/mark_seed = 1.40
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.54
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.51
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -643,11 +663,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay30"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 0.07
+shader_parameter/mark_seed = 57.32
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.61
-shader_parameter/patchiness = 0.60
+shader_parameter/wear = 0.59
+shader_parameter/patchiness = 0.48
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -657,11 +677,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay31"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 17.83
+shader_parameter/mark_seed = 0.01
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.55
+shader_parameter/wear = 0.57
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -671,11 +691,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay32"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 15.51
+shader_parameter/mark_seed = 52.84
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.61
-shader_parameter/patchiness = 0.46
+shader_parameter/wear = 0.71
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -685,11 +705,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay33"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 1.87
+shader_parameter/mark_seed = 15.90
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.57
-shader_parameter/patchiness = 0.49
+shader_parameter/wear = 0.48
+shader_parameter/patchiness = 0.35
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -699,11 +719,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay34"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 3.54
+shader_parameter/mark_seed = 33.43
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.51
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.65
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -713,11 +733,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay35"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 41.42
+shader_parameter/mark_seed = 46.19
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.64
+shader_parameter/patchiness = 0.53
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -727,11 +747,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay36"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 27.16
+shader_parameter/mark_seed = 29.27
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.56
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.62
+shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -741,11 +761,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay37"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 44.53
+shader_parameter/mark_seed = 50.07
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.67
-shader_parameter/patchiness = 0.41
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -755,11 +775,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay38"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 25.37
+shader_parameter/mark_seed = 41.31
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.45
-shader_parameter/patchiness = 0.39
+shader_parameter/wear = 0.54
+shader_parameter/patchiness = 0.34
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -769,11 +789,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay39"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 54.09
+shader_parameter/mark_seed = 16.11
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.64
+shader_parameter/patchiness = 0.51
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -783,11 +803,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay40"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 12.83
+shader_parameter/mark_seed = 7.18
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.68
-shader_parameter/patchiness = 0.36
+shader_parameter/wear = 0.47
+shader_parameter/patchiness = 0.46
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -797,11 +817,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay41"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.77
+shader_parameter/mark_seed = 37.31
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.57
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -811,11 +831,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay42"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 6.98
+shader_parameter/mark_seed = 38.47
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.48
+shader_parameter/wear = 0.45
+shader_parameter/patchiness = 0.39
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -825,11 +845,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay43"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 57.37
+shader_parameter/mark_seed = 29.48
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.60
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.74
+shader_parameter/patchiness = 0.49
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -839,11 +859,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay44"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 3.61
+shader_parameter/mark_seed = 56.56
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.63
-shader_parameter/patchiness = 0.58
+shader_parameter/wear = 0.59
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -853,11 +873,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay45"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 3.48
+shader_parameter/mark_seed = 15.81
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.46
-shader_parameter/patchiness = 0.48
+shader_parameter/wear = 0.74
+shader_parameter/patchiness = 0.51
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -867,11 +887,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay46"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 26.58
+shader_parameter/mark_seed = 19.67
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.66
-shader_parameter/patchiness = 0.36
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.45
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -881,11 +901,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay47"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 28.78
+shader_parameter/mark_seed = 43.17
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.66
-shader_parameter/patchiness = 0.39
+shader_parameter/wear = 0.58
+shader_parameter/patchiness = 0.38
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -895,11 +915,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay48"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 7.25
+shader_parameter/mark_seed = 42.71
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.35
+shader_parameter/wear = 0.73
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -909,11 +929,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay49"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 12.20
+shader_parameter/mark_seed = 2.18
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.65
-shader_parameter/patchiness = 0.46
+shader_parameter/wear = 0.55
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -923,11 +943,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay50"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.93
+shader_parameter/mark_seed = 43.68
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.52
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.54
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -937,11 +957,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay51"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 53.70
+shader_parameter/mark_seed = 47.30
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.75
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.60
+shader_parameter/patchiness = 0.36
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -951,11 +971,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay52"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 6.97
+shader_parameter/mark_seed = 62.07
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.32
+shader_parameter/wear = 0.54
+shader_parameter/patchiness = 0.55
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -965,11 +985,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay53"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 26.89
+shader_parameter/mark_seed = 14.77
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.72
-shader_parameter/patchiness = 0.47
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.53
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -979,11 +999,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay54"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 48.56
+shader_parameter/mark_seed = 18.88
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.56
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.74
+shader_parameter/patchiness = 0.45
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -993,11 +1013,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay55"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 19.76
+shader_parameter/mark_seed = 11.99
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.69
-shader_parameter/patchiness = 0.33
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1007,11 +1027,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay56"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 45.14
+shader_parameter/mark_seed = 42.58
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.51
-shader_parameter/patchiness = 0.46
+shader_parameter/wear = 0.73
+shader_parameter/patchiness = 0.34
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1021,11 +1041,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay57"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 28.57
+shader_parameter/mark_seed = 25.18
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.55
-shader_parameter/patchiness = 0.52
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1035,11 +1055,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay58"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 30.37
+shader_parameter/mark_seed = 9.08
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.47
+shader_parameter/patchiness = 0.32
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1049,11 +1069,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay59"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 40.03
+shader_parameter/mark_seed = 25.17
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.57
-shader_parameter/patchiness = 0.41
+shader_parameter/wear = 0.72
+shader_parameter/patchiness = 0.57
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1063,11 +1083,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay60"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.70
+shader_parameter/mark_seed = 46.89
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.69
-shader_parameter/patchiness = 0.32
+shader_parameter/wear = 0.75
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1077,11 +1097,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay61"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 12.48
+shader_parameter/mark_seed = 21.07
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.48
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1091,11 +1111,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay62"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 23.23
+shader_parameter/mark_seed = 47.76
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.55
-shader_parameter/patchiness = 0.59
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.50
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1105,11 +1125,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay63"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 2.79
+shader_parameter/mark_seed = 24.23
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.67
-shader_parameter/patchiness = 0.51
+shader_parameter/wear = 0.56
+shader_parameter/patchiness = 0.40
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1119,11 +1139,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay64"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 59.15
+shader_parameter/mark_seed = 10.83
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.52
+shader_parameter/wear = 0.45
+shader_parameter/patchiness = 0.38
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1133,11 +1153,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay65"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 38.12
+shader_parameter/mark_seed = 22.49
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.69
-shader_parameter/patchiness = 0.58
+shader_parameter/wear = 0.74
+shader_parameter/patchiness = 0.34
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1147,11 +1167,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay66"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 4.18
+shader_parameter/mark_seed = 61.71
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.70
-shader_parameter/patchiness = 0.33
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.41
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1161,11 +1181,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay67"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 45.80
+shader_parameter/mark_seed = 52.58
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.59
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1175,11 +1195,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay68"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 50.55
+shader_parameter/mark_seed = 3.15
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.72
-shader_parameter/patchiness = 0.54
+shader_parameter/wear = 0.59
+shader_parameter/patchiness = 0.41
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1189,11 +1209,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay69"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 8.49
+shader_parameter/mark_seed = 58.85
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.60
-shader_parameter/patchiness = 0.30
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.41
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1203,11 +1223,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay70"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 59.59
+shader_parameter/mark_seed = 57.41
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.51
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.42
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1217,11 +1237,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay71"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 9.68
+shader_parameter/mark_seed = 51.96
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.52
-shader_parameter/patchiness = 0.56
+shader_parameter/wear = 0.68
+shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1231,11 +1251,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay72"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.49
+shader_parameter/mark_seed = 2.23
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.69
-shader_parameter/patchiness = 0.48
+shader_parameter/wear = 0.47
+shader_parameter/patchiness = 0.58
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1245,11 +1265,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay73"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 32.76
+shader_parameter/mark_seed = 16.45
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.57
-shader_parameter/patchiness = 0.35
+shader_parameter/wear = 0.67
+shader_parameter/patchiness = 0.57
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1259,11 +1279,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay74"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 26.10
+shader_parameter/mark_seed = 21.70
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.44
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1273,11 +1293,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay75"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 34.86
+shader_parameter/mark_seed = 39.49
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.50
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.51
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1287,11 +1307,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay76"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 6.73
+shader_parameter/mark_seed = 20.25
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.49
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.30
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1301,11 +1321,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay77"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 13.33
+shader_parameter/mark_seed = 48.36
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.58
-shader_parameter/patchiness = 0.60
+shader_parameter/wear = 0.72
+shader_parameter/patchiness = 0.49
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1315,11 +1335,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay78"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 62.22
+shader_parameter/mark_seed = 60.37
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.50
-shader_parameter/patchiness = 0.34
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1329,11 +1349,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay79"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.50
+shader_parameter/mark_seed = 30.41
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.72
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.74
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1343,11 +1363,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay80"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 34.47
+shader_parameter/mark_seed = 24.74
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.68
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.53
+shader_parameter/patchiness = 0.43
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1357,11 +1377,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay81"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 49.90
+shader_parameter/mark_seed = 31.58
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.54
-shader_parameter/patchiness = 0.38
+shader_parameter/wear = 0.73
+shader_parameter/patchiness = 0.35
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1371,11 +1391,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay82"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 17.13
+shader_parameter/mark_seed = 51.36
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.38
+shader_parameter/wear = 0.67
+shader_parameter/patchiness = 0.55
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1385,11 +1405,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay83"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 28.12
+shader_parameter/mark_seed = 49.46
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.51
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.63
+shader_parameter/patchiness = 0.40
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1399,11 +1419,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay84"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 18.01
+shader_parameter/mark_seed = 20.45
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.72
-shader_parameter/patchiness = 0.36
+shader_parameter/wear = 0.56
+shader_parameter/patchiness = 0.53
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1413,11 +1433,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay85"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 4.15
+shader_parameter/mark_seed = 5.06
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.53
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.53
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1427,11 +1447,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay86"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 33.68
+shader_parameter/mark_seed = 15.83
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.33
+shader_parameter/wear = 0.47
+shader_parameter/patchiness = 0.31
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1441,11 +1461,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay87"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 29.69
+shader_parameter/mark_seed = 35.37
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.46
-shader_parameter/patchiness = 0.30
+shader_parameter/wear = 0.55
+shader_parameter/patchiness = 0.59
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1455,11 +1475,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay88"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 56.50
+shader_parameter/mark_seed = 56.54
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.52
-shader_parameter/patchiness = 0.43
+shader_parameter/wear = 0.75
+shader_parameter/patchiness = 0.38
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1469,11 +1489,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay89"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 23.93
+shader_parameter/mark_seed = 5.38
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.71
-shader_parameter/patchiness = 0.37
+shader_parameter/wear = 0.48
+shader_parameter/patchiness = 0.45
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1483,11 +1503,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay90"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 3.23
+shader_parameter/mark_seed = 45.43
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.63
-shader_parameter/patchiness = 0.55
+shader_parameter/wear = 0.58
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1497,11 +1517,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay91"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 12.43
+shader_parameter/mark_seed = 26.68
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.47
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.64
+shader_parameter/patchiness = 0.50
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1511,11 +1531,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay92"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 11.38
+shader_parameter/mark_seed = 47.87
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.63
-shader_parameter/patchiness = 0.53
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.50
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1525,11 +1545,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay93"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 42.54
+shader_parameter/mark_seed = 7.75
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.45
-shader_parameter/patchiness = 0.49
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.39
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1539,11 +1559,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay94"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 45.42
+shader_parameter/mark_seed = 36.28
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.55
-shader_parameter/patchiness = 0.31
+shader_parameter/wear = 0.56
+shader_parameter/patchiness = 0.52
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1553,11 +1573,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay95"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 21.76
+shader_parameter/mark_seed = 12.75
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.46
-shader_parameter/patchiness = 0.60
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.37
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1567,11 +1587,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay96"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 2.45
+shader_parameter/mark_seed = 9.81
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.67
-shader_parameter/patchiness = 0.57
+shader_parameter/wear = 0.72
+shader_parameter/patchiness = 0.47
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1581,11 +1601,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay97"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 52.14
+shader_parameter/mark_seed = 20.89
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.70
-shader_parameter/patchiness = 0.42
+shader_parameter/wear = 0.57
+shader_parameter/patchiness = 0.60
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1595,11 +1615,11 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay98"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 23.80
+shader_parameter/mark_seed = 32.47
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.64
-shader_parameter/patchiness = 0.32
+shader_parameter/wear = 0.52
+shader_parameter/patchiness = 0.54
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
@@ -1609,207 +1629,453 @@ orientation = 1
 
 [sub_resource type="ShaderMaterial" id="Material_bay99"]
 shader = ExtResource("10_baypaint")
-shader_parameter/mark_seed = 2.01
+shader_parameter/mark_seed = 41.81
 shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
 shader_parameter/line_width = 0.6
-shader_parameter/wear = 0.60
-shader_parameter/patchiness = 0.45
+shader_parameter/wear = 0.75
+shader_parameter/patchiness = 0.33
 shader_parameter/dirt = 0.4
 shader_parameter/opacity = 0.95
 
-[sub_resource type="QuadMesh" id="Mesh_tag_100"]
-size = Vector2(1.701, 1.337)
+[sub_resource type="PlaneMesh" id="Mesh_bay_100"]
+size = Vector2(0.220, 5.000)
+orientation = 1
 
-[sub_resource type="ShaderMaterial" id="Material_tag100"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 5.83
-shader_parameter/primary_color = Color(0.68, 0.44, 0.12, 1)
-shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 5
-shader_parameter/stroke_thickness = 0.031
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.08
-shader_parameter/drip_amount = 0.32
+[sub_resource type="ShaderMaterial" id="Material_bay100"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 30.38
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.70
+shader_parameter/patchiness = 0.55
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_101"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay101"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 58.52
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.46
+shader_parameter/patchiness = 0.39
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_102"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay102"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 7.63
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.59
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_103"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay103"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 37.32
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.73
+shader_parameter/patchiness = 0.41
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_104"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay104"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 55.43
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.58
+shader_parameter/patchiness = 0.38
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_105"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay105"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 49.78
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.73
+shader_parameter/patchiness = 0.33
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_106"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay106"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 38.15
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.64
+shader_parameter/patchiness = 0.37
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_107"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay107"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 23.60
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.49
+shader_parameter/patchiness = 0.36
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_108"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay108"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 16.31
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.63
+shader_parameter/patchiness = 0.50
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_109"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay109"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 13.02
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.45
+shader_parameter/patchiness = 0.40
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_110"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay110"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 43.41
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.39
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_111"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay111"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 13.02
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.69
+shader_parameter/patchiness = 0.46
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_112"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay112"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 4.05
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
 shader_parameter/wear = 0.48
-shader_parameter/opacity = 0.78
+shader_parameter/patchiness = 0.42
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
 
-[sub_resource type="QuadMesh" id="Mesh_tag_101"]
-size = Vector2(2.014, 1.111)
+[sub_resource type="PlaneMesh" id="Mesh_bay_113"]
+size = Vector2(0.220, 5.000)
+orientation = 1
 
-[sub_resource type="ShaderMaterial" id="Material_tag101"]
+[sub_resource type="ShaderMaterial" id="Material_bay113"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 35.21
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.64
+shader_parameter/patchiness = 0.33
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_114"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay114"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 10.48
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.66
+shader_parameter/patchiness = 0.42
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_115"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay115"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 18.13
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.54
+shader_parameter/patchiness = 0.59
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_116"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay116"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 19.99
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.62
+shader_parameter/patchiness = 0.41
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_117"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay117"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 26.65
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.71
+shader_parameter/patchiness = 0.60
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_118"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay118"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 23.28
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.51
+shader_parameter/patchiness = 0.52
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="PlaneMesh" id="Mesh_bay_119"]
+size = Vector2(0.220, 5.000)
+orientation = 1
+
+[sub_resource type="ShaderMaterial" id="Material_bay119"]
+shader = ExtResource("10_baypaint")
+shader_parameter/mark_seed = 13.03
+shader_parameter/paint_color = Color(0.82, 0.81, 0.76, 1)
+shader_parameter/line_width = 0.6
+shader_parameter/wear = 0.45
+shader_parameter/patchiness = 0.57
+shader_parameter/dirt = 0.4
+shader_parameter/opacity = 0.95
+
+[sub_resource type="QuadMesh" id="Mesh_tag_120"]
+size = Vector2(1.714, 1.154)
+
+[sub_resource type="ShaderMaterial" id="Material_tag120"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 41.25
-shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
-shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 4
-shader_parameter/stroke_thickness = 0.044
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.10
-shader_parameter/drip_amount = 0.24
-shader_parameter/wear = 0.19
-shader_parameter/opacity = 0.74
-
-[sub_resource type="QuadMesh" id="Mesh_tag_102"]
-size = Vector2(2.061, 1.198)
-
-[sub_resource type="ShaderMaterial" id="Material_tag102"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 41.00
-shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
-shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 5
-shader_parameter/stroke_thickness = 0.039
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.07
-shader_parameter/drip_amount = 0.34
-shader_parameter/wear = 0.21
-shader_parameter/opacity = 0.75
-
-[sub_resource type="QuadMesh" id="Mesh_tag_103"]
-size = Vector2(1.709, 1.394)
-
-[sub_resource type="ShaderMaterial" id="Material_tag103"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 12.63
+shader_parameter/mark_seed = 49.48
 shader_parameter/primary_color = Color(0.68, 0.44, 0.12, 1)
 shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 6
-shader_parameter/stroke_thickness = 0.029
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.12
-shader_parameter/drip_amount = 0.50
-shader_parameter/wear = 0.18
-shader_parameter/opacity = 0.86
-
-[sub_resource type="QuadMesh" id="Mesh_tag_104"]
-size = Vector2(2.240, 1.614)
-
-[sub_resource type="ShaderMaterial" id="Material_tag104"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 12.55
-shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
-shader_parameter/secondary_color = Color(0.66, 0.60, 0.24, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 4
-shader_parameter/stroke_thickness = 0.023
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.15
-shader_parameter/drip_amount = 0.24
-shader_parameter/wear = 0.28
-shader_parameter/opacity = 0.75
-
-[sub_resource type="QuadMesh" id="Mesh_tag_105"]
-size = Vector2(1.641, 1.437)
-
-[sub_resource type="ShaderMaterial" id="Material_tag105"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 53.65
-shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
-shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 6
+shader_parameter/stroke_count = 3
 shader_parameter/stroke_thickness = 0.035
 shader_parameter/outline_width = 0.026
 shader_parameter/overspray = 0.12
-shader_parameter/drip_amount = 0.32
-shader_parameter/wear = 0.30
+shader_parameter/drip_amount = 0.65
+shader_parameter/wear = 0.18
 shader_parameter/opacity = 0.84
 
-[sub_resource type="QuadMesh" id="Mesh_tag_106"]
-size = Vector2(1.989, 1.320)
+[sub_resource type="QuadMesh" id="Mesh_tag_121"]
+size = Vector2(2.337, 1.203)
 
-[sub_resource type="ShaderMaterial" id="Material_tag106"]
+[sub_resource type="ShaderMaterial" id="Material_tag121"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 0.22
-shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
-shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
+shader_parameter/mark_seed = 10.99
+shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
+shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 6
+shader_parameter/stroke_thickness = 0.033
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.14
+shader_parameter/drip_amount = 0.68
+shader_parameter/wear = 0.22
+shader_parameter/opacity = 0.75
+
+[sub_resource type="QuadMesh" id="Mesh_tag_122"]
+size = Vector2(2.576, 1.390)
+
+[sub_resource type="ShaderMaterial" id="Material_tag122"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 24.83
+shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/secondary_color = Color(0.66, 0.60, 0.24, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
 shader_parameter/stroke_count = 4
-shader_parameter/stroke_thickness = 0.032
+shader_parameter/stroke_thickness = 0.036
 shader_parameter/outline_width = 0.026
 shader_parameter/overspray = 0.12
-shader_parameter/drip_amount = 0.60
-shader_parameter/wear = 0.44
-shader_parameter/opacity = 0.88
+shader_parameter/drip_amount = 0.26
+shader_parameter/wear = 0.32
+shader_parameter/opacity = 0.83
 
-[sub_resource type="QuadMesh" id="Mesh_tag_107"]
-size = Vector2(1.707, 1.177)
+[sub_resource type="QuadMesh" id="Mesh_tag_123"]
+size = Vector2(2.000, 1.411)
 
-[sub_resource type="ShaderMaterial" id="Material_tag107"]
+[sub_resource type="ShaderMaterial" id="Material_tag123"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 28.29
-shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/mark_seed = 15.81
+shader_parameter/primary_color = Color(0.68, 0.44, 0.12, 1)
 shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
 shader_parameter/stroke_count = 3
 shader_parameter/stroke_thickness = 0.037
 shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.06
-shader_parameter/drip_amount = 0.55
-shader_parameter/wear = 0.42
-shader_parameter/opacity = 0.82
+shader_parameter/overspray = 0.09
+shader_parameter/drip_amount = 0.36
+shader_parameter/wear = 0.31
+shader_parameter/opacity = 0.89
 
-[sub_resource type="QuadMesh" id="Mesh_tag_108"]
-size = Vector2(2.352, 1.637)
+[sub_resource type="QuadMesh" id="Mesh_tag_124"]
+size = Vector2(2.249, 1.285)
 
-[sub_resource type="ShaderMaterial" id="Material_tag108"]
+[sub_resource type="ShaderMaterial" id="Material_tag124"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 1.65
-shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
-shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
+shader_parameter/mark_seed = 23.52
+shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
 shader_parameter/stroke_count = 4
-shader_parameter/stroke_thickness = 0.025
+shader_parameter/stroke_thickness = 0.023
 shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.15
-shader_parameter/drip_amount = 0.31
-shader_parameter/wear = 0.43
-shader_parameter/opacity = 0.88
+shader_parameter/overspray = 0.12
+shader_parameter/drip_amount = 0.42
+shader_parameter/wear = 0.23
+shader_parameter/opacity = 0.87
 
-[sub_resource type="QuadMesh" id="Mesh_tag_109"]
-size = Vector2(0.720, 1.218)
+[sub_resource type="QuadMesh" id="Mesh_tag_125"]
+size = Vector2(2.437, 1.586)
 
-[sub_resource type="ShaderMaterial" id="Material_tag109"]
+[sub_resource type="ShaderMaterial" id="Material_tag125"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 20.98
-shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
+shader_parameter/mark_seed = 22.95
+shader_parameter/primary_color = Color(0.24, 0.50, 0.28, 1)
+shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 6
+shader_parameter/stroke_thickness = 0.034
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.12
+shader_parameter/drip_amount = 0.17
+shader_parameter/wear = 0.20
+shader_parameter/opacity = 0.90
+
+[sub_resource type="QuadMesh" id="Mesh_tag_126"]
+size = Vector2(2.378, 1.407)
+
+[sub_resource type="ShaderMaterial" id="Material_tag126"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 24.18
+shader_parameter/primary_color = Color(0.68, 0.44, 0.12, 1)
+shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 3
+shader_parameter/stroke_thickness = 0.045
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.13
+shader_parameter/drip_amount = 0.60
+shader_parameter/wear = 0.22
+shader_parameter/opacity = 0.92
+
+[sub_resource type="QuadMesh" id="Mesh_tag_127"]
+size = Vector2(1.888, 1.587)
+
+[sub_resource type="ShaderMaterial" id="Material_tag127"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 46.15
+shader_parameter/primary_color = Color(0.68, 0.44, 0.12, 1)
+shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 5
+shader_parameter/stroke_thickness = 0.036
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.08
+shader_parameter/drip_amount = 0.33
+shader_parameter/wear = 0.36
+shader_parameter/opacity = 0.90
+
+[sub_resource type="QuadMesh" id="Mesh_tag_128"]
+size = Vector2(1.744, 1.401)
+
+[sub_resource type="ShaderMaterial" id="Material_tag128"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 16.82
+shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
 shader_parameter/secondary_color = Color(0.66, 0.60, 0.24, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
 shader_parameter/stroke_count = 5
-shader_parameter/stroke_thickness = 0.025
+shader_parameter/stroke_thickness = 0.031
 shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.11
-shader_parameter/drip_amount = 0.50
-shader_parameter/wear = 0.28
-shader_parameter/opacity = 0.89
+shader_parameter/overspray = 0.07
+shader_parameter/drip_amount = 0.37
+shader_parameter/wear = 0.37
+shader_parameter/opacity = 0.78
 
-[sub_resource type="QuadMesh" id="Mesh_tag_110"]
-size = Vector2(0.720, 1.026)
+[sub_resource type="QuadMesh" id="Mesh_tag_129"]
+size = Vector2(0.720, 0.988)
 
-[sub_resource type="ShaderMaterial" id="Material_tag110"]
+[sub_resource type="ShaderMaterial" id="Material_tag129"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 54.82
-shader_parameter/primary_color = Color(0.24, 0.50, 0.28, 1)
-shader_parameter/secondary_color = Color(0.58, 0.22, 0.20, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 6
-shader_parameter/stroke_thickness = 0.045
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.11
-shader_parameter/drip_amount = 0.35
-shader_parameter/wear = 0.42
-shader_parameter/opacity = 0.81
-
-[sub_resource type="QuadMesh" id="Mesh_tag_111"]
-size = Vector2(0.720, 1.208)
-
-[sub_resource type="ShaderMaterial" id="Material_tag111"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 18.97
+shader_parameter/mark_seed = 3.09
 shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
 shader_parameter/secondary_color = Color(0.58, 0.22, 0.20, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
@@ -1821,10 +2087,10 @@ shader_parameter/drip_amount = 0.47
 shader_parameter/wear = 0.38
 shader_parameter/opacity = 0.78
 
-[sub_resource type="QuadMesh" id="Mesh_tag_112"]
+[sub_resource type="QuadMesh" id="Mesh_tag_130"]
 size = Vector2(0.720, 1.274)
 
-[sub_resource type="ShaderMaterial" id="Material_tag112"]
+[sub_resource type="ShaderMaterial" id="Material_tag130"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 18.62
 shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
@@ -1838,10 +2104,10 @@ shader_parameter/drip_amount = 0.27
 shader_parameter/wear = 0.38
 shader_parameter/opacity = 0.72
 
-[sub_resource type="QuadMesh" id="Mesh_tag_113"]
+[sub_resource type="QuadMesh" id="Mesh_tag_131"]
 size = Vector2(0.720, 1.184)
 
-[sub_resource type="ShaderMaterial" id="Material_tag113"]
+[sub_resource type="ShaderMaterial" id="Material_tag131"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 33.48
 shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
@@ -1855,10 +2121,10 @@ shader_parameter/drip_amount = 0.26
 shader_parameter/wear = 0.37
 shader_parameter/opacity = 0.81
 
-[sub_resource type="QuadMesh" id="Mesh_tag_114"]
+[sub_resource type="QuadMesh" id="Mesh_tag_132"]
 size = Vector2(0.720, 0.907)
 
-[sub_resource type="ShaderMaterial" id="Material_tag114"]
+[sub_resource type="ShaderMaterial" id="Material_tag132"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 45.28
 shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
@@ -1872,10 +2138,10 @@ shader_parameter/drip_amount = 0.58
 shader_parameter/wear = 0.29
 shader_parameter/opacity = 0.77
 
-[sub_resource type="QuadMesh" id="Mesh_tag_115"]
+[sub_resource type="QuadMesh" id="Mesh_tag_133"]
 size = Vector2(0.720, 0.928)
 
-[sub_resource type="ShaderMaterial" id="Material_tag115"]
+[sub_resource type="ShaderMaterial" id="Material_tag133"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 57.13
 shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
@@ -1889,10 +2155,10 @@ shader_parameter/drip_amount = 0.17
 shader_parameter/wear = 0.34
 shader_parameter/opacity = 0.80
 
-[sub_resource type="QuadMesh" id="Mesh_tag_116"]
+[sub_resource type="QuadMesh" id="Mesh_tag_134"]
 size = Vector2(0.720, 0.980)
 
-[sub_resource type="ShaderMaterial" id="Material_tag116"]
+[sub_resource type="ShaderMaterial" id="Material_tag134"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 6.71
 shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
@@ -1906,10 +2172,10 @@ shader_parameter/drip_amount = 0.50
 shader_parameter/wear = 0.38
 shader_parameter/opacity = 0.80
 
-[sub_resource type="QuadMesh" id="Mesh_tag_117"]
+[sub_resource type="QuadMesh" id="Mesh_tag_135"]
 size = Vector2(0.720, 1.154)
 
-[sub_resource type="ShaderMaterial" id="Material_tag117"]
+[sub_resource type="ShaderMaterial" id="Material_tag135"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 40.06
 shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
@@ -1923,10 +2189,10 @@ shader_parameter/drip_amount = 0.41
 shader_parameter/wear = 0.41
 shader_parameter/opacity = 0.81
 
-[sub_resource type="QuadMesh" id="Mesh_tag_118"]
+[sub_resource type="QuadMesh" id="Mesh_tag_136"]
 size = Vector2(0.720, 1.398)
 
-[sub_resource type="ShaderMaterial" id="Material_tag118"]
+[sub_resource type="ShaderMaterial" id="Material_tag136"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 41.22
 shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
@@ -1940,10 +2206,10 @@ shader_parameter/drip_amount = 0.45
 shader_parameter/wear = 0.30
 shader_parameter/opacity = 0.88
 
-[sub_resource type="QuadMesh" id="Mesh_tag_119"]
+[sub_resource type="QuadMesh" id="Mesh_tag_137"]
 size = Vector2(0.720, 1.048)
 
-[sub_resource type="ShaderMaterial" id="Material_tag119"]
+[sub_resource type="ShaderMaterial" id="Material_tag137"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 57.23
 shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
@@ -1957,13 +2223,13 @@ shader_parameter/drip_amount = 0.56
 shader_parameter/wear = 0.48
 shader_parameter/opacity = 0.87
 
-[sub_resource type="QuadMesh" id="Mesh_tag_120"]
-size = Vector2(1.354, 1.194)
+[sub_resource type="QuadMesh" id="Mesh_tag_138"]
+size = Vector2(0.720, 0.996)
 
-[sub_resource type="ShaderMaterial" id="Material_tag120"]
+[sub_resource type="ShaderMaterial" id="Material_tag138"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 54.52
-shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/mark_seed = 38.48
+shader_parameter/primary_color = Color(0.70, 0.70, 0.68, 1)
 shader_parameter/secondary_color = Color(0.12, 0.12, 0.14, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
 shader_parameter/stroke_count = 6
@@ -1974,44 +2240,44 @@ shader_parameter/drip_amount = 0.62
 shader_parameter/wear = 0.30
 shader_parameter/opacity = 0.86
 
-[sub_resource type="QuadMesh" id="Mesh_tag_121"]
-size = Vector2(1.831, 1.196)
+[sub_resource type="QuadMesh" id="Mesh_tag_139"]
+size = Vector2(0.720, 1.295)
 
-[sub_resource type="ShaderMaterial" id="Material_tag121"]
+[sub_resource type="ShaderMaterial" id="Material_tag139"]
 shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 10.98
+shader_parameter/mark_seed = 37.46
+shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/secondary_color = Color(0.66, 0.60, 0.24, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 4
+shader_parameter/stroke_thickness = 0.023
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.06
+shader_parameter/drip_amount = 0.49
+shader_parameter/wear = 0.21
+shader_parameter/opacity = 0.92
+
+[sub_resource type="QuadMesh" id="Mesh_tag_140"]
+size = Vector2(1.225, 1.069)
+
+[sub_resource type="ShaderMaterial" id="Material_tag140"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 4.34
 shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
 shader_parameter/secondary_color = Color(0.18, 0.44, 0.55, 1)
 shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 3
-shader_parameter/stroke_thickness = 0.024
+shader_parameter/stroke_count = 5
+shader_parameter/stroke_thickness = 0.027
 shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.15
-shader_parameter/drip_amount = 0.34
-shader_parameter/wear = 0.20
-shader_parameter/opacity = 0.73
+shader_parameter/overspray = 0.16
+shader_parameter/drip_amount = 0.44
+shader_parameter/wear = 0.38
+shader_parameter/opacity = 0.90
 
-[sub_resource type="QuadMesh" id="Mesh_tag_122"]
-size = Vector2(1.311, 1.322)
-
-[sub_resource type="ShaderMaterial" id="Material_tag122"]
-shader = ExtResource("9_graffiti")
-shader_parameter/mark_seed = 2.99
-shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
-shader_parameter/secondary_color = Color(0.58, 0.22, 0.20, 1)
-shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
-shader_parameter/stroke_count = 4
-shader_parameter/stroke_thickness = 0.041
-shader_parameter/outline_width = 0.026
-shader_parameter/overspray = 0.14
-shader_parameter/drip_amount = 0.64
-shader_parameter/wear = 0.17
-shader_parameter/opacity = 0.89
-
-[sub_resource type="QuadMesh" id="Mesh_tag_123"]
+[sub_resource type="QuadMesh" id="Mesh_tag_141"]
 size = Vector2(1.286, 1.103)
 
-[sub_resource type="ShaderMaterial" id="Material_tag123"]
+[sub_resource type="ShaderMaterial" id="Material_tag141"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 54.25
 shader_parameter/primary_color = Color(0.62, 0.16, 0.32, 1)
@@ -2025,10 +2291,10 @@ shader_parameter/drip_amount = 0.57
 shader_parameter/wear = 0.22
 shader_parameter/opacity = 0.78
 
-[sub_resource type="QuadMesh" id="Mesh_tag_124"]
+[sub_resource type="QuadMesh" id="Mesh_tag_142"]
 size = Vector2(1.409, 1.175)
 
-[sub_resource type="ShaderMaterial" id="Material_tag124"]
+[sub_resource type="ShaderMaterial" id="Material_tag142"]
 shader = ExtResource("9_graffiti")
 shader_parameter/mark_seed = 48.63
 shader_parameter/primary_color = Color(0.24, 0.50, 0.28, 1)
@@ -2041,6 +2307,40 @@ shader_parameter/overspray = 0.05
 shader_parameter/drip_amount = 0.38
 shader_parameter/wear = 0.30
 shader_parameter/opacity = 0.87
+
+[sub_resource type="QuadMesh" id="Mesh_tag_143"]
+size = Vector2(1.575, 1.024)
+
+[sub_resource type="ShaderMaterial" id="Material_tag143"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 52.98
+shader_parameter/primary_color = Color(0.40, 0.22, 0.55, 1)
+shader_parameter/secondary_color = Color(0.58, 0.22, 0.20, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 4
+shader_parameter/stroke_thickness = 0.032
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.11
+shader_parameter/drip_amount = 0.31
+shader_parameter/wear = 0.41
+shader_parameter/opacity = 0.73
+
+[sub_resource type="QuadMesh" id="Mesh_tag_144"]
+size = Vector2(1.593, 1.246)
+
+[sub_resource type="ShaderMaterial" id="Material_tag144"]
+shader = ExtResource("9_graffiti")
+shader_parameter/mark_seed = 31.65
+shader_parameter/primary_color = Color(0.24, 0.50, 0.28, 1)
+shader_parameter/secondary_color = Color(0.58, 0.22, 0.20, 1)
+shader_parameter/outline_color = Color(0.04, 0.04, 0.05, 1)
+shader_parameter/stroke_count = 4
+shader_parameter/stroke_thickness = 0.029
+shader_parameter/outline_width = 0.026
+shader_parameter/overspray = 0.07
+shader_parameter/drip_amount = 0.53
+shader_parameter/wear = 0.32
+shader_parameter/opacity = 0.74
 
 [node name="ParkingGarage" type="Node3D"]
 
@@ -3102,76 +3402,88 @@ script = ExtResource("5_propbody")
 [node name="Model" parent="Cars/Car05" instance=ExtResource("30_prop_car")]
 
 [node name="Car06" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9972, 0, -0.0744, 0, 1.0000, 0, 0.0744, 0, -0.9972, -24.751, -0.000, 16.714)
+transform = Transform3D(0.9999, 0, -0.0161, 0, 1.0000, 0, 0.0161, 0, 0.9999, 16.029, -0.000, -17.107)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car06" instance=ExtResource("30_prop_car")]
 
 [node name="Car07" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9978, 0, 0.0662, 0, 1.0000, 0, -0.0662, 0, -0.9978, -20.275, -0.000, 16.772)
+transform = Transform3D(0.9955, 0, 0.0948, 0, 1.0000, 0, -0.0948, 0, 0.9955, 24.374, -0.000, -16.732)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car07" instance=ExtResource("30_prop_car")]
 
 [node name="Car08" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9996, 0, 0.0291, 0, 1.0000, 0, -0.0291, 0, -0.9996, -11.595, -0.000, 16.923)
+transform = Transform3D(-0.9972, 0, -0.0744, 0, 1.0000, 0, 0.0744, 0, -0.9972, -24.751, -0.000, 16.714)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car08" instance=ExtResource("30_prop_car")]
 
 [node name="Car09" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9958, 0, -0.0914, 0, 1.0000, 0, 0.0914, 0, -0.9958, -4.187, -0.000, 16.667)
+transform = Transform3D(-0.9978, 0, 0.0662, 0, 1.0000, 0, -0.0662, 0, -0.9978, -20.275, -0.000, 16.772)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car09" instance=ExtResource("30_prop_car")]
 
 [node name="Car10" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9993, 0, 0.0378, 0, 1.0000, 0, -0.0378, 0, -0.9993, 2.463, -0.000, 16.968)
+transform = Transform3D(-0.9996, 0, 0.0291, 0, 1.0000, 0, -0.0291, 0, -0.9996, -11.595, -0.000, 16.923)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car10" instance=ExtResource("30_prop_car")]
 
 [node name="Car11" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9998, 0, 0.0179, 0, 1.0000, 0, -0.0179, 0, -0.9998, 11.755, -0.000, 16.987)
+transform = Transform3D(-0.9958, 0, -0.0914, 0, 1.0000, 0, 0.0914, 0, -0.9958, -4.187, -0.000, 16.667)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car11" instance=ExtResource("30_prop_car")]
 
 [node name="Car12" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9981, 0, 0.0616, 0, 1.0000, 0, -0.0616, 0, -0.9981, 16.213, -0.000, 17.186)
+transform = Transform3D(-0.9993, 0, 0.0378, 0, 1.0000, 0, -0.0378, 0, -0.9993, 2.463, -0.000, 16.968)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car12" instance=ExtResource("30_prop_car")]
 
 [node name="Car13" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.9999, 0, 0.0156, 0, 1.0000, 0, -0.0156, 0, -0.9999, 22.951, -0.000, 17.045)
+transform = Transform3D(-0.9998, 0, 0.0179, 0, 1.0000, 0, -0.0179, 0, -0.9998, 11.755, -0.000, 16.987)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car13" instance=ExtResource("30_prop_car")]
 
 [node name="Car14" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(-0.1910, 0, -0.9816, 0, 1.0000, 0, 0.9816, 0, -0.1910, -3.883, -0.000, -12.611)
+transform = Transform3D(-0.9981, 0, 0.0616, 0, 1.0000, 0, -0.0616, 0, -0.9981, 16.213, -0.000, 17.186)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car14" instance=ExtResource("30_prop_car")]
 
 [node name="Car15" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(0.3465, 0, -0.9380, 0, 1.0000, 0, 0.9380, 0, 0.3465, -7.988, -0.000, -4.923)
+transform = Transform3D(-0.9999, 0, 0.0156, 0, 1.0000, 0, -0.0156, 0, -0.9999, 22.951, -0.000, 17.045)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car15" instance=ExtResource("30_prop_car")]
 
 [node name="Car16" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(0.0028, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0028, -21.538, -0.000, 3.821)
+transform = Transform3D(-0.1910, 0, -0.9816, 0, 1.0000, 0, 0.9816, 0, -0.1910, -3.883, -0.000, -12.611)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car16" instance=ExtResource("30_prop_car")]
 
 [node name="Car17" type="StaticBody3D" parent="Cars"]
-transform = Transform3D(0.1915, 0, -0.9815, 0, 1.0000, 0, 0.9815, 0, 0.1915, -10.756, -0.000, 13.143)
+transform = Transform3D(0.3465, 0, -0.9380, 0, 1.0000, 0, 0.9380, 0, 0.3465, -7.988, -0.000, -4.923)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Cars/Car17" instance=ExtResource("30_prop_car")]
+
+[node name="Car18" type="StaticBody3D" parent="Cars"]
+transform = Transform3D(0.0028, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0028, -21.538, -0.000, 3.821)
+script = ExtResource("5_propbody")
+
+[node name="Model" parent="Cars/Car18" instance=ExtResource("30_prop_car")]
+
+[node name="Car19" type="StaticBody3D" parent="Cars"]
+transform = Transform3D(0.1915, 0, -0.9815, 0, 1.0000, 0, 0.9815, 0, 0.1915, -10.756, -0.000, 13.143)
+script = ExtResource("5_propbody")
+
+[node name="Model" parent="Cars/Car19" instance=ExtResource("30_prop_car")]
 
 [node name="Props" type="Node3D" parent="."]
 
@@ -3572,205 +3884,205 @@ script = ExtResource("5_propbody")
 [node name="Model" parent="Props/Prop82_crate" instance=ExtResource("38_prop_crate")]
 
 [node name="Prop83_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 21.763, 0.008, 6.615)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 19.817, 0.008, -18.872)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop83_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop84_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 5.806, 0.008, 7.501)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 21.763, 0.008, 6.615)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop84_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop85_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.212, 0.008, -5.273)
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 5.806, 0.008, 7.501)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop85_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop86_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 27.788, 0.008, 1.851)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.212, 0.008, -5.273)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop86_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop87_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -27.350, 0.008, 14.839)
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 27.788, 0.008, 1.851)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop87_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop88_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -24.492, 0.008, -8.580)
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -27.350, 0.008, 14.839)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop88_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop89_barrier" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -14.782, 0.008, 10.720)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -24.492, 0.008, -8.580)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop89_barrier" instance=ExtResource("39_prop_barrier")]
 
 [node name="Prop90_fence" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 6.104, 0.000, -6.096)
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -15.807, 0.000, 12.701)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop90_fence" instance=ExtResource("40_prop_fence")]
 
 [node name="Prop91_fence" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 16.542, 0.000, 6.580)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 6.104, 0.000, -6.096)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop91_fence" instance=ExtResource("40_prop_fence")]
 
 [node name="Prop92_fence" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 23.101, 0.000, 11.794)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 16.542, 0.000, 6.580)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop92_fence" instance=ExtResource("40_prop_fence")]
 
 [node name="Prop93_crate" type="StaticBody3D" parent="Props"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 19.198, 0.000, 3.443)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -20.431, 0.000, 8.692)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop93_crate" instance=ExtResource("38_prop_crate")]
 
 [node name="Prop94_crate" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 3.622, 0.000, 4.952)
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -27.006, 0.000, 13.015)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop94_crate" instance=ExtResource("38_prop_crate")]
 
 [node name="Prop95_crate" type="StaticBody3D" parent="Props"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 14.603, 0.000, 0.296)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 13.931, 0.000, 12.109)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop95_crate" instance=ExtResource("38_prop_crate")]
 
 [node name="Prop96_crate" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -14.390, 0.000, -16.517)
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 23.920, 0.000, 9.817)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop96_crate" instance=ExtResource("38_prop_crate")]
 
 [node name="Prop97_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.7399, 0, -0.6727, 0, 1.0000, 0, 0.6727, 0, -0.7399, -1.234, 0.000, 7.127)
+transform = Transform3D(0.9622, 0, 0.2725, 0, 1.0000, 0, -0.2725, 0, 0.9622, 8.402, 0.000, -16.098)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop97_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop98_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.1064, 0, 0.9943, 0, 1.0000, 0, -0.9943, 0, 0.1064, 6.878, 0.000, 5.539)
+transform = Transform3D(-0.7143, 0, -0.6999, 0, 1.0000, 0, 0.6999, 0, -0.7143, -2.858, 0.000, -17.430)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop98_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop99_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.8838, 0, -0.4678, 0, 1.0000, 0, 0.4678, 0, 0.8838, -20.731, 0.000, -9.547)
+transform = Transform3D(0.9930, 0, -0.1181, 0, 1.0000, 0, 0.1181, 0, 0.9930, 1.849, 0.000, -9.911)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop99_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop100_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.0426, 0, 0.9991, 0, 1.0000, 0, -0.9991, 0, -0.0426, -11.500, 0.000, 2.629)
+transform = Transform3D(-0.9867, 0, 0.1626, 0, 1.0000, 0, -0.1626, 0, -0.9867, 14.449, 0.000, -1.014)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop100_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop101_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.9969, 0, -0.0783, 0, 1.0000, 0, 0.0783, 0, 0.9969, -25.833, 0.000, -8.972)
+transform = Transform3D(0.3636, 0, 0.9316, 0, 1.0000, 0, -0.9316, 0, 0.3636, 20.353, 0.000, -10.290)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop101_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop102_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.4707, 0, 0.8823, 0, 1.0000, 0, -0.8823, 0, -0.4707, 11.300, 0.000, 6.817)
+transform = Transform3D(0.0405, 0, 0.9992, 0, 1.0000, 0, -0.9992, 0, 0.0405, -15.833, 0.000, 5.817)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop102_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop103_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.2539, 0, -0.9672, 0, 1.0000, 0, 0.9672, 0, -0.2539, 0.972, 0.000, -1.371)
+transform = Transform3D(-0.9691, 0, -0.2466, 0, 1.0000, 0, 0.2466, 0, -0.9691, 20.317, 0.000, -16.422)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop103_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop104_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.9777, 0, -0.2099, 0, 1.0000, 0, 0.2099, 0, -0.9777, -22.432, 0.000, 15.274)
+transform = Transform3D(-0.6717, 0, 0.7409, 0, 1.0000, 0, -0.7409, 0, -0.6717, -17.741, 0.000, 3.869)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop104_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop105_barrel" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.3135, 0, -0.9496, 0, 1.0000, 0, 0.9496, 0, 0.3135, 28.114, 0.000, 16.927)
+transform = Transform3D(-0.4915, 0, -0.8709, 0, 1.0000, 0, 0.8709, 0, -0.4915, 8.910, 0.000, 7.484)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop105_barrel" instance=ExtResource("32_prop_barrel")]
 
 [node name="Prop106_container" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.9940, 0, -0.1098, 0, 1.0000, 0, 0.1098, 0, 0.9940, -2.413, 0.000, 12.412)
+transform = Transform3D(-0.7240, 0, 0.6898, 0, 1.0000, 0, -0.6898, 0, -0.7240, -21.553, 0.000, -0.682)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop106_container" instance=ExtResource("36_prop_container")]
 
 [node name="Prop107_container" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.9800, 0, 0.1990, 0, 1.0000, 0, -0.1990, 0, 0.9800, -2.973, 0.000, -8.975)
+transform = Transform3D(-0.9960, 0, -0.0891, 0, 1.0000, 0, 0.0891, 0, -0.9960, 27.784, 0.000, -15.539)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop107_container" instance=ExtResource("36_prop_container")]
 
 [node name="Prop108_container" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.8718, 0, 0.4898, 0, 1.0000, 0, -0.4898, 0, -0.8718, -21.065, 0.000, 0.934)
+transform = Transform3D(-0.2215, 0, -0.9752, 0, 1.0000, 0, 0.9752, 0, -0.2215, -2.006, 0.000, 10.365)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop108_container" instance=ExtResource("36_prop_container")]
 
 [node name="Prop109_container" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.9562, 0, 0.2926, 0, 1.0000, 0, -0.2926, 0, 0.9562, -21.603, 0.000, 12.425)
+transform = Transform3D(0.9991, 0, 0.0421, 0, 1.0000, 0, -0.0421, 0, 0.9991, 2.885, 0.000, -7.306)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop109_container" instance=ExtResource("36_prop_container")]
 
 [node name="Prop110_cart" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.1167, 0, -0.9932, 0, 1.0000, 0, 0.9932, 0, 0.1167, 23.385, -0.002, -0.538)
+transform = Transform3D(0.8580, 0, -0.5137, 0, 1.0000, 0, 0.5137, 0, 0.8580, -1.591, -0.002, -8.164)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop110_cart" instance=ExtResource("37_prop_cart")]
 
 [node name="Prop111_cart" type="StaticBody3D" parent="Props"]
-transform = Transform3D(0.8148, 0, 0.5798, 0, 1.0000, 0, -0.5798, 0, 0.8148, -12.358, -0.002, -4.958)
+transform = Transform3D(0.9993, 0, 0.0379, 0, 1.0000, 0, -0.0379, 0, 0.9993, -6.653, -0.002, 16.162)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop111_cart" instance=ExtResource("37_prop_cart")]
 
 [node name="Prop112_toolchest" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.7820, 0, -0.6233, 0, 1.0000, 0, 0.6233, 0, -0.7820, 29.312, -0.001, 3.482)
+transform = Transform3D(-0.0158, 0, 0.9999, 0, 1.0000, 0, -0.9999, 0, -0.0158, -14.012, -0.001, -5.476)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop112_toolchest" instance=ExtResource("35_prop_toolchest")]
 
 [node name="Prop113_toolchest" type="StaticBody3D" parent="Props"]
-transform = Transform3D(-0.6409, 0, -0.7677, 0, 1.0000, 0, 0.7677, 0, -0.6409, -4.243, -0.001, -8.700)
+transform = Transform3D(-0.7964, 0, 0.6048, 0, 1.0000, 0, -0.6048, 0, -0.7964, 7.717, -0.001, -8.564)
 script = ExtResource("5_propbody")
 
 [node name="Model" parent="Props/Prop113_toolchest" instance=ExtResource("35_prop_toolchest")]
 
 [node name="Prop114_ladder" parent="Props" instance=ExtResource("34_prop_ladder")]
-transform = Transform3D(0.9998, 0, 0.0219, 0, 1.0000, 0, -0.0219, 0, 0.9998, -29.057, 0.000, -17.389)
+transform = Transform3D(0.9998, 0, -0.0203, 0, 1.0000, 0, 0.0203, 0, 0.9998, -29.058, 0.000, -10.416)
 
 [node name="Prop115_ladder" parent="Props" instance=ExtResource("34_prop_ladder")]
-transform = Transform3D(0.9995, 0, -0.0312, 0, 1.0000, 0, 0.0312, 0, 0.9995, -29.057, 0.000, 5.085)
+transform = Transform3D(0.0182, 0, 0.9998, 0, 1.0000, 0, -0.9998, 0, 0.0182, -5.555, 0.000, 19.058)
 
 [node name="Prop116_ladder" parent="Props" instance=ExtResource("34_prop_ladder")]
-transform = Transform3D(-0.0220, 0, -0.9998, 0, 1.0000, 0, 0.9998, 0, -0.0220, -26.497, 0.000, -19.057)
+transform = Transform3D(0.0084, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0084, -7.293, 0.000, -19.058)
 
 [node name="Prop117_ladder" parent="Props" instance=ExtResource("34_prop_ladder")]
-transform = Transform3D(-0.0049, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0049, 14.864, 0.000, 19.059)
+transform = Transform3D(0.9994, 0, -0.0340, 0, 1.0000, 0, 0.0340, 0, 0.9994, -29.057, 0.000, -19.326)
 
 [node name="Prop118_ladder" parent="Props" instance=ExtResource("34_prop_ladder")]
-transform = Transform3D(-1.0000, 0, -0.0014, 0, 1.0000, 0, 0.0014, 0, -1.0000, 55.259, 0.000, 14.902)
+transform = Transform3D(-0.9994, 0, 0.0339, 0, 1.0000, 0, -0.0339, 0, -0.9994, 55.257, 0.000, 9.598)
 
 [node name="Extinguisher0" parent="Props" instance=ExtResource("42_prop_extinguisher")]
 transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -29.540, 1.100, 6.000)
@@ -3784,877 +4096,1017 @@ transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 3
 [node name="Paint" type="Node3D" parent="."]
 
 [node name="Bay00" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_0")
 material_override = SubResource("Material_bay0")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay01" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_1")
 material_override = SubResource("Material_bay1")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay02" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_2")
 material_override = SubResource("Material_bay2")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay03" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_3")
 material_override = SubResource("Material_bay3")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay04" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_4")
 material_override = SubResource("Material_bay4")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay05" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_5")
 material_override = SubResource("Material_bay5")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay06" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_6")
 material_override = SubResource("Material_bay6")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay07" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_7")
 material_override = SubResource("Material_bay7")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay08" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_8")
 material_override = SubResource("Material_bay8")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay09" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_9")
 material_override = SubResource("Material_bay9")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay10" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_10")
 material_override = SubResource("Material_bay10")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay11" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_11")
 material_override = SubResource("Material_bay11")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay12" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_12")
 material_override = SubResource("Material_bay12")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay13" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_13")
 material_override = SubResource("Material_bay13")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay14" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_14")
 material_override = SubResource("Material_bay14")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay15" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_15")
 material_override = SubResource("Material_bay15")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay16" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_16")
 material_override = SubResource("Material_bay16")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay17" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_17")
 material_override = SubResource("Material_bay17")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay18" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_18")
 material_override = SubResource("Material_bay18")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay19" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 17.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, -17.500)
 mesh = SubResource("Mesh_bay_19")
 material_override = SubResource("Material_bay19")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay20" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_20")
 material_override = SubResource("Material_bay20")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay21" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_21")
 material_override = SubResource("Material_bay21")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay22" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_22")
 material_override = SubResource("Material_bay22")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay23" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_23")
 material_override = SubResource("Material_bay23")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay24" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_24")
 material_override = SubResource("Material_bay24")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay25" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_25")
 material_override = SubResource("Material_bay25")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay26" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_26")
 material_override = SubResource("Material_bay26")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay27" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_27")
 material_override = SubResource("Material_bay27")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay28" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_28")
 material_override = SubResource("Material_bay28")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay29" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_29")
 material_override = SubResource("Material_bay29")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay30" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_30")
 material_override = SubResource("Material_bay30")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay31" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_31")
 material_override = SubResource("Material_bay31")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay32" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_32")
 material_override = SubResource("Material_bay32")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay33" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_33")
 material_override = SubResource("Material_bay33")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay34" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_34")
 material_override = SubResource("Material_bay34")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay35" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_35")
 material_override = SubResource("Material_bay35")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay36" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_36")
 material_override = SubResource("Material_bay36")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay37" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_37")
 material_override = SubResource("Material_bay37")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay38" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_38")
 material_override = SubResource("Material_bay38")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay39" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, -6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 17.500)
 mesh = SubResource("Mesh_bay_39")
 material_override = SubResource("Material_bay39")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay40" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_40")
 material_override = SubResource("Material_bay40")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay41" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_41")
 material_override = SubResource("Material_bay41")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay42" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_42")
 material_override = SubResource("Material_bay42")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay43" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_43")
 material_override = SubResource("Material_bay43")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay44" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_44")
 material_override = SubResource("Material_bay44")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay45" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_45")
 material_override = SubResource("Material_bay45")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay46" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_46")
 material_override = SubResource("Material_bay46")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay47" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_47")
 material_override = SubResource("Material_bay47")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay48" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_48")
 material_override = SubResource("Material_bay48")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay49" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_49")
 material_override = SubResource("Material_bay49")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay50" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_50")
 material_override = SubResource("Material_bay50")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay51" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_51")
 material_override = SubResource("Material_bay51")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay52" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_52")
 material_override = SubResource("Material_bay52")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay53" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_53")
 material_override = SubResource("Material_bay53")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay54" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_54")
 material_override = SubResource("Material_bay54")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay55" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_55")
 material_override = SubResource("Material_bay55")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay56" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_56")
 material_override = SubResource("Material_bay56")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay57" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_57")
 material_override = SubResource("Material_bay57")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay58" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_58")
 material_override = SubResource("Material_bay58")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay59" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, -11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, -6.500)
 mesh = SubResource("Mesh_bay_59")
 material_override = SubResource("Material_bay59")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay60" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_60")
 material_override = SubResource("Material_bay60")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay61" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_61")
 material_override = SubResource("Material_bay61")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay62" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_62")
 material_override = SubResource("Material_bay62")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay63" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_63")
 material_override = SubResource("Material_bay63")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay64" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_64")
 material_override = SubResource("Material_bay64")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay65" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_65")
 material_override = SubResource("Material_bay65")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay66" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_66")
 material_override = SubResource("Material_bay66")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay67" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_67")
 material_override = SubResource("Material_bay67")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay68" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_68")
 material_override = SubResource("Material_bay68")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay69" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_69")
 material_override = SubResource("Material_bay69")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay70" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_70")
 material_override = SubResource("Material_bay70")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay71" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_71")
 material_override = SubResource("Material_bay71")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay72" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_72")
 material_override = SubResource("Material_bay72")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay73" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_73")
 material_override = SubResource("Material_bay73")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay74" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_74")
 material_override = SubResource("Material_bay74")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay75" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_75")
 material_override = SubResource("Material_bay75")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay76" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_76")
 material_override = SubResource("Material_bay76")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay77" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_77")
 material_override = SubResource("Material_bay77")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay78" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_78")
 material_override = SubResource("Material_bay78")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay79" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 11.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, -11.500)
 mesh = SubResource("Mesh_bay_79")
 material_override = SubResource("Material_bay79")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay80" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_80")
 material_override = SubResource("Material_bay80")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay81" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_81")
 material_override = SubResource("Material_bay81")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay82" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_82")
 material_override = SubResource("Material_bay82")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay83" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_83")
 material_override = SubResource("Material_bay83")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay84" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_84")
 material_override = SubResource("Material_bay84")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay85" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_85")
 material_override = SubResource("Material_bay85")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay86" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_86")
 material_override = SubResource("Material_bay86")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay87" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_87")
 material_override = SubResource("Material_bay87")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay88" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_88")
 material_override = SubResource("Material_bay88")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay89" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_89")
 material_override = SubResource("Material_bay89")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay90" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_90")
 material_override = SubResource("Material_bay90")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay91" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_91")
 material_override = SubResource("Material_bay91")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay92" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_92")
 material_override = SubResource("Material_bay92")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay93" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_93")
 material_override = SubResource("Material_bay93")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay94" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_94")
 material_override = SubResource("Material_bay94")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay95" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_95")
 material_override = SubResource("Material_bay95")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay96" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_96")
 material_override = SubResource("Material_bay96")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay97" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_97")
 material_override = SubResource("Material_bay97")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay98" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_98")
 material_override = SubResource("Material_bay98")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Bay99" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 6.500)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 11.500)
 mesh = SubResource("Mesh_bay_99")
 material_override = SubResource("Material_bay99")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag100" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 2.707, 1.547, 19.960)
-mesh = SubResource("Mesh_tag_100")
-material_override = SubResource("Material_tag100")
+[node name="Bay100" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -28.700, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_100")
+material_override = SubResource("Material_bay100")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag101" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 14.400, 1.662, -19.960)
-mesh = SubResource("Mesh_tag_101")
-material_override = SubResource("Material_tag101")
+[node name="Bay101" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.100, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_101")
+material_override = SubResource("Material_bay101")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag102" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -26.199, 1.486, -19.960)
-mesh = SubResource("Mesh_tag_102")
-material_override = SubResource("Material_tag102")
+[node name="Bay102" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -23.500, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_102")
+material_override = SubResource("Material_bay102")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag103" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.960, 1.777, 10.973)
-mesh = SubResource("Mesh_tag_103")
-material_override = SubResource("Material_tag103")
+[node name="Bay103" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -20.900, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_103")
+material_override = SubResource("Material_bay103")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag104" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 29.960, 1.530, 4.358)
-mesh = SubResource("Mesh_tag_104")
-material_override = SubResource("Material_tag104")
+[node name="Bay104" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -15.700, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_104")
+material_override = SubResource("Material_bay104")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag105" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 29.960, 1.127, 9.269)
-mesh = SubResource("Mesh_tag_105")
-material_override = SubResource("Material_tag105")
+[node name="Bay105" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.100, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_105")
+material_override = SubResource("Material_bay105")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag106" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 0.193, 1.225, 19.960)
-mesh = SubResource("Mesh_tag_106")
-material_override = SubResource("Material_tag106")
+[node name="Bay106" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -10.500, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_106")
+material_override = SubResource("Material_bay106")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag107" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, -3.748, 1.164, 19.960)
-mesh = SubResource("Mesh_tag_107")
-material_override = SubResource("Material_tag107")
+[node name="Bay107" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -7.900, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_107")
+material_override = SubResource("Material_bay107")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag108" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.960, 1.649, 5.499)
-mesh = SubResource("Mesh_tag_108")
-material_override = SubResource("Material_tag108")
+[node name="Bay108" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -5.300, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_108")
+material_override = SubResource("Material_bay108")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag109" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 27.420, 1.195, -18.000)
-mesh = SubResource("Mesh_tag_109")
-material_override = SubResource("Material_tag109")
+[node name="Bay109" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -2.700, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_109")
+material_override = SubResource("Material_bay109")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag110" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -0.420, 1.375, 18.000)
-mesh = SubResource("Mesh_tag_110")
-material_override = SubResource("Material_tag110")
+[node name="Bay110" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 2.500, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_110")
+material_override = SubResource("Material_bay110")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag111" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 9.420, 1.671, -18.000)
-mesh = SubResource("Mesh_tag_111")
-material_override = SubResource("Material_tag111")
+[node name="Bay111" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 5.100, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_111")
+material_override = SubResource("Material_bay111")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag112" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -27.420, 1.155, 9.000)
-mesh = SubResource("Mesh_tag_112")
-material_override = SubResource("Material_tag112")
+[node name="Bay112" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 7.700, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_112")
+material_override = SubResource("Material_bay112")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag113" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -27.420, 1.213, 18.000)
-mesh = SubResource("Mesh_tag_113")
-material_override = SubResource("Material_tag113")
+[node name="Bay113" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 10.300, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_113")
+material_override = SubResource("Material_bay113")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag114" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -17.580, 1.561, 9.000)
-mesh = SubResource("Mesh_tag_114")
-material_override = SubResource("Material_tag114")
+[node name="Bay114" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 12.900, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_114")
+material_override = SubResource("Material_bay114")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag115" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 26.580, 1.575, -9.000)
-mesh = SubResource("Mesh_tag_115")
-material_override = SubResource("Material_tag115")
+[node name="Bay115" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 15.500, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_115")
+material_override = SubResource("Material_bay115")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag116" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -8.580, 1.638, -18.000)
-mesh = SubResource("Mesh_tag_116")
-material_override = SubResource("Material_tag116")
+[node name="Bay116" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 20.700, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_116")
+material_override = SubResource("Material_bay116")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag117" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 9.420, 1.045, 18.000)
-mesh = SubResource("Mesh_tag_117")
-material_override = SubResource("Material_tag117")
+[node name="Bay117" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 23.300, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_117")
+material_override = SubResource("Material_bay117")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag118" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 18.420, 1.183, -18.000)
-mesh = SubResource("Mesh_tag_118")
-material_override = SubResource("Material_tag118")
+[node name="Bay118" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 25.900, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_118")
+material_override = SubResource("Material_bay118")
 cast_shadow = 0
 gi_mode = 2
 
-[node name="Tag119" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 0.000, 1.650, -18.420)
-mesh = SubResource("Mesh_tag_119")
-material_override = SubResource("Material_tag119")
+[node name="Bay119" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 28.500, 0.012, 6.500)
+mesh = SubResource("Mesh_bay_119")
+material_override = SubResource("Material_bay119")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Tag120" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.521, -4.340)
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 4.201, 1.355, 19.960)
 mesh = SubResource("Mesh_tag_120")
 material_override = SubResource("Material_tag120")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Tag121" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.510, 2.347)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -8.211, 1.213, -19.960)
 mesh = SubResource("Mesh_tag_121")
 material_override = SubResource("Material_tag121")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Tag122" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 35.200, 1.130, -15.558)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.960, 1.748, -16.079)
 mesh = SubResource("Mesh_tag_122")
 material_override = SubResource("Material_tag122")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Tag123" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.178, -16.761)
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -29.960, 1.186, -4.191)
 mesh = SubResource("Mesh_tag_123")
 material_override = SubResource("Material_tag123")
 cast_shadow = 0
 gi_mode = 2
 
 [node name="Tag124" type="MeshInstance3D" parent="Paint"]
-transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.751, -16.257)
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -13.540, 1.372, -19.960)
 mesh = SubResource("Mesh_tag_124")
 material_override = SubResource("Material_tag124")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag125" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, -5.382, 1.147, 19.960)
+mesh = SubResource("Mesh_tag_125")
+material_override = SubResource("Material_tag125")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag126" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, -24.070, 1.453, -19.960)
+mesh = SubResource("Mesh_tag_126")
+material_override = SubResource("Material_tag126")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag127" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 15.929, 1.580, 19.960)
+mesh = SubResource("Mesh_tag_127")
+material_override = SubResource("Material_tag127")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag128" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, -1.0000, 22.675, 1.246, 19.960)
+mesh = SubResource("Mesh_tag_128")
+material_override = SubResource("Material_tag128")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag129" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 0.420, 1.521, -9.000)
+mesh = SubResource("Mesh_tag_129")
+material_override = SubResource("Material_tag129")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag130" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -18.420, 1.155, -9.000)
+mesh = SubResource("Mesh_tag_130")
+material_override = SubResource("Material_tag130")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag131" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -27.420, 1.213, 18.000)
+mesh = SubResource("Mesh_tag_131")
+material_override = SubResource("Material_tag131")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag132" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 0.420, 1.561, 18.000)
+mesh = SubResource("Mesh_tag_132")
+material_override = SubResource("Material_tag132")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag133" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, -27.420, 1.575, 0.000)
+mesh = SubResource("Mesh_tag_133")
+material_override = SubResource("Material_tag133")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag134" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 18.420, 1.638, 18.000)
+mesh = SubResource("Mesh_tag_134")
+material_override = SubResource("Material_tag134")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag135" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, -8.580, 1.045, 18.000)
+mesh = SubResource("Mesh_tag_135")
+material_override = SubResource("Material_tag135")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag136" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 27.420, 1.183, 0.000)
+mesh = SubResource("Mesh_tag_136")
+material_override = SubResource("Material_tag136")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag137" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 9.000, 1.650, -9.420)
+mesh = SubResource("Mesh_tag_137")
+material_override = SubResource("Material_tag137")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag138" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 9.000, 1.272, 8.580)
+mesh = SubResource("Mesh_tag_138")
+material_override = SubResource("Material_tag138")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag139" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(1.0000, 0, -0.0000, 0, 1.0000, 0, 0.0000, 0, 1.0000, 27.000, 1.274, 8.580)
+mesh = SubResource("Mesh_tag_139")
+material_override = SubResource("Material_tag139")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag140" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(0.0000, 0, -1.0000, 0, 1.0000, 0, 1.0000, 0, 0.0000, 35.200, 1.550, -16.465)
+mesh = SubResource("Mesh_tag_140")
+material_override = SubResource("Material_tag140")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag141" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.178, -16.761)
+mesh = SubResource("Mesh_tag_141")
+material_override = SubResource("Material_tag141")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag142" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.751, -16.257)
+mesh = SubResource("Mesh_tag_142")
+material_override = SubResource("Material_tag142")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag143" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.496, 7.718)
+mesh = SubResource("Mesh_tag_143")
+material_override = SubResource("Material_tag143")
+cast_shadow = 0
+gi_mode = 2
+
+[node name="Tag144" type="MeshInstance3D" parent="Paint"]
+transform = Transform3D(-0.0000, 0, 1.0000, 0, 1.0000, 0, -1.0000, 0, -0.0000, 37.400, 1.658, -11.357)
+mesh = SubResource("Mesh_tag_144")
+material_override = SubResource("Material_tag144")
 cast_shadow = 0
 gi_mode = 2
 

@@ -49,6 +49,17 @@ uniform float variant_patch_size : hint_range(0.5, 40.0, 0.5) = 9.0;
 uniform float variant_edge : hint_range(0.01, 0.5, 0.01) = 0.14;
 uniform float variant_scale : hint_range(0.05, 4.0, 0.01) = 0.5;
 
+group_uniforms PhotoTextures.Unique;
+// Grime that belongs to this exact corner of this exact building. A tiling sheet cannot have it:
+// no matter how good the sheet is, it repeats, so the dark line where a wall meets a floor and the
+// dirt gathered behind a pillar have to come from somewhere unique. This is ambient occlusion
+// baked per mesh in Blender against the level's own geometry, sampled through the mesh's own UV
+// rather than the triplanar projection, and multiplied on top of everything else.
+uniform sampler2D unique_ao_texture : hint_default_white, filter_linear_mipmap;
+uniform float unique_ao_strength : hint_range(0.0, 1.0, 0.01) = 0.0;
+// How much of it also darkens albedo rather than only the AO term. Dirt is not just shadow.
+uniform float unique_ao_albedo : hint_range(0.0, 1.0, 0.01) = 0.45;
+
 varying vec3 world_position;
 varying vec3 world_normal;
 
@@ -190,4 +201,13 @@ void fragment() {
 	// The muzzle flash goes in as emission rather than through a light, so its wet-ground
 	// smear can be shaped without touching how the sun and GI light this surface.
 	EMISSION = muzzle_flash_light(world_position, shading_normal, CAMERA_POSITION_WORLD, ROUGHNESS, wetness);
+
+	// Baked occlusion last, so nothing above can brighten a corner back up.
+	if (unique_ao_strength > 0.0) {
+		float baked = texture(unique_ao_texture, UV).r;
+		float occlusion = mix(1.0, baked, unique_ao_strength);
+		AO = min(AO, occlusion);
+		AO_LIGHT_AFFECT = 0.65;
+		ALBEDO *= mix(1.0, occlusion, unique_ao_albedo);
+	}
 }
