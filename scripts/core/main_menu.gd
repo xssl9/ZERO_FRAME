@@ -2,11 +2,14 @@ extends Control
 
 const MAPS: Array[Array] = [
 	["DEV TEST GRID", "res://scenes/levels/dev_test_grid.tscn"],
-	["PVP — LINSE", "res://scenes/levels/pvp_linse.tscn"]
+	["PVP — LINSE", "res://scenes/levels/pvp_linse.tscn"],
+	["ПАРКИНГ", "res://scenes/levels/parking_garage.tscn"]
 ]
 
 const GRAPHICS_NAMES: PackedStringArray = ["AUTO", "PERFORMANCE", "HIGH", "ULTRA"]
-# Plain 0/1 is what PhotorealEnvironment reads back out of the setting: 0 clear, 1 rain.
+# Plain 0/1 is what PhotorealEnvironment reads back out of the setting: 0 clear, 1 rain, and
+# clear is what the game starts on - rain is the heavier grade and the one that costs a
+# fullscreen water pass, so it is opted into rather than out of.
 const WEATHER_NAMES: PackedStringArray = ["ЯСНО", "ДОЖДЬ"]
 const WEATHER_SETTING := "zero_frame/weather"
 # The menu shows the PvP map behind the buttons: a camera standing in the middle of it,
@@ -153,12 +156,12 @@ func _refresh_graphics_button() -> void:
 	graphics_button.text = "ГРАФИКА: %s" % GRAPHICS_NAMES[current]
 
 func _cycle_weather() -> void:
-	var current := int(ProjectSettings.get_setting(WEATHER_SETTING, 1))
+	var current := int(ProjectSettings.get_setting(WEATHER_SETTING, 0))
 	ProjectSettings.set_setting(WEATHER_SETTING, (current + 1) % WEATHER_NAMES.size())
 	_refresh_weather_button()
 
 func _refresh_weather_button() -> void:
-	var current := clampi(int(ProjectSettings.get_setting(WEATHER_SETTING, 1)), 0, WEATHER_NAMES.size() - 1)
+	var current := clampi(int(ProjectSettings.get_setting(WEATHER_SETTING, 0)), 0, WEATHER_NAMES.size() - 1)
 	weather_button.text = "ПОГОДА: %s" % WEATHER_NAMES[current]
 
 func _start_map(scene_path: String) -> void:

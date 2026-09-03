@@ -22,6 +22,10 @@ window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 
+[filesystem]
+
+import/blender/enabled=false
+
 [input]
 
 move_forward={
@@ -134,4 +138,4 @@ environment/screen_space_reflection/roughness_quality=2
 
 graphics_quality=0
 fov=96.0
-weather=1
+weather=0
