@@ -117,8 +117,15 @@ class Layout:
             return None
         return max(heights)
 
-    def blocked(self, footprint: Footprint, margin: float) -> bool:
-        return any(footprint.hits_box(box, margin) for box in self.solids)
+    def blocked(self, footprint: Footprint, margin: float, min_height: float = 0.0) -> bool:
+        """Solids in the way. `min_height` ignores trim lower than that: a kerb or a pillar base
+        guard has to keep a crate out, but line paint is allowed to run right up to it."""
+        for box in self.solids:
+            if box.high[1] - box.low[1] <= min_height:
+                continue
+            if footprint.hits_box(box, margin):
+                return True
+        return False
 
 
 class PropShape:

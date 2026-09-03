@@ -570,7 +570,9 @@ gi_mode = 2
         while line_x < 29.0:
             centre_z = wall_z + direction * depth * 0.5
             probe = Footprint(line_x, centre_z, 0.11, depth * 0.5, 0.0)
-            if layout.level(probe) is not None and not layout.blocked(probe, 0.0):
+            # 0.35 m: paint is flat on the floor and runs up to the kerb and around the pillar
+            # base guards, which are the only solids lower than that.
+            if layout.level(probe) is not None and not layout.blocked(probe, 0.0, 0.35):
                 emit_mark("bay", (0.22, depth), (line_x, 0.012, centre_z), 0.0)
             line_x += 2.6
 
