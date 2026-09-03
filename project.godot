@@ -116,21 +116,17 @@ common/physics_interpolation=true
 
 [rendering]
 
-environment/ssao/quality=3
-environment/ssao/blur_passes=2
-environment/ssil/quality=3
-environment/ssil/blur_passes=2
-environment/volumetric_fog/volume_size=128
-environment/volumetric_fog/volume_depth=128
-environment/volumetric_fog/use_filter=1
-global_illumination/sdfgi/probe_ray_count=3
-global_illumination/sdfgi/frames_to_converge=3
-global_illumination/gi/use_half_resolution=false
-lights_and_shadows/directional_shadow/size=4096
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
 lights_and_shadows/positional_shadow/soft_shadow_filter_quality=3
+environment/ssao/quality=3
+environment/ssil/quality=3
+environment/ssil/blur_passes=2
 anti_aliasing/quality/msaa_3d=2
 anti_aliasing/quality/use_debanding=true
+global_illumination/sdfgi/probe_ray_count=3
+global_illumination/sdfgi/frames_to_converge=3
+environment/volumetric_fog/volume_size=128
+environment/volumetric_fog/volume_depth=128
 occlusion_culling/use_occlusion_culling=true
 environment/screen_space_reflection/roughness_quality=2
 
