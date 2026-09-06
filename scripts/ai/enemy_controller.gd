@@ -115,4 +115,3 @@ func apply_damage(amount: float, _zone: String = "torso") -> void:
 		timer.timeout.connect(func() -> void: set_physics_process(false))
 	else:
 		state = State.COMBAT
-
