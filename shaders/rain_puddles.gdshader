@@ -8,12 +8,17 @@ shader_type spatial;
 // Fullscreen pass: it reads depth, rebuilds world position, decides where standing water
 // would collect on flat-enough surfaces, and reflects the screen into it. Drive it with
 // scripts/environment/fullscreen_mesh.gd, which builds the oversized triangle it needs.
-render_mode unshaded, fog_disabled;
+render_mode unshaded, fog_disabled, depth_draw_never, depth_test_disabled;
 
 #include "res://shaders/muzzle_flash_light.gdshaderinc"
 
 uniform sampler2D depth_texture : hint_depth_texture;
-uniform sampler2D screen_texture : hint_screen_texture, filter_nearest;
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
+uniform float puddle_amount : hint_range(0.0, 1.0) = 0.0;
+uniform float rain_intensity : hint_range(0.0, 1.0) = 0.0;
+// Authored receiving height band: depth alone cannot distinguish a floor from a crate.
+uniform vec2 receiving_height = vec2(-0.3, 0.12);
+uniform bool debug_puddles = false;
 
 group_uniforms PuddleEffect;
 
@@ -84,7 +89,7 @@ vec2 get_ripple_offset(vec2 input_uv) {
 	// Zero means no rain hitting the water at all - an underground garage has standing water but
 	// nothing falling into it. Without this the loop below still runs its centre cell once and
 	// keeps animating rings, which is not what "no ripples" is supposed to look like.
-	if (ripple_max_radius < 0.5) {
+	if (ripple_max_radius < 0.5 || rain_intensity < 0.001) {
 		return vec2(0.0);
 	}
 	float resolution = 10.0 * exp2(-3.0);
@@ -105,17 +110,15 @@ vec2 get_ripple_offset(vec2 input_uv) {
 			float h = 1e-3;
 			float d1 = d - h;
 			float d2 = d + h;
-			float p1 = sin(31.0 * d1) * smoothstep(-0.6, -0.3, d1) * smoothstep(0.0, -0.3, d1);
-			float p2 = sin(31.0 * d2) * smoothstep(-0.6, -0.3, d2) * smoothstep(0.0, -0.3, d2);
-			circles += 0.5 * normalize(v) * ((p2 - p1) / (2.0 * h) * (1.0 - t) * (1.0 - t));
+			float p1 = sin(31.0 * d1) * smoothstep(-0.6, -0.3, d1) * (1.0 - smoothstep(-0.3, 0.0, d1));
+			float p2 = sin(31.0 * d2) * smoothstep(-0.6, -0.3, d2) * (1.0 - smoothstep(-0.3, 0.0, d2));
+			circles += 0.5 * v / max(length(v), 0.001) * ((p2 - p1) / (2.0 * h) * (1.0 - t) * (1.0 - t));
 		}
 	}
 
 	circles /= float((ripple_max_radius * 2.0 + 1.0) * (ripple_max_radius * 2.0 + 1.0));
 
-	float intensity = mix(0.01, 0.15, smoothstep(0.1, 0.6, abs(fract(0.05 * TIME + 0.5) * 2.0 - 1.0)));
-	vec3 n = vec3(circles, sqrt(1.0 - dot(circles, circles)));
-	return (intensity * n.xy) + 5.0 * pow(clamp(dot(n, normalize(vec3(1.0, 0.7, 0.5))), 0.0, 1.0), 6.0);
+	return clamp(circles * 0.018 * rain_intensity, vec2(-0.08), vec2(0.08));
 }
 
 vec2 get_uv_from_view_position(vec3 position_view_space, mat4 proj_m) {
@@ -175,7 +178,9 @@ vec4 get_ssr_color(vec3 surface_view_position, vec3 normal_view_space, vec3 view
 	vec3 resulting_color = vec3(-1.0);
 	for (float travel = 0.0; resulting_color.x < 0.0 && travel < ssr_max_travel; travel = travel + ssr_resolution) {
 		current_position_view_space += reflect_vector_view_space * ssr_resolution;
+		if (current_position_view_space.z >= -0.02) { break; }
 		current_screen_position = get_uv_from_view_position(current_position_view_space, proj_m);
+		if (!is_within_screen_boundaries(current_screen_position)) { break; }
 
 		float depth_texture_probe_raw = texture(depth_texture, current_screen_position).x;
 		vec3 depth_texture_probe_view_position = get_view_position_from_uv(current_screen_position, depth_texture_probe_raw, inv_proj_m);
@@ -186,8 +191,8 @@ vec4 get_ssr_color(vec3 surface_view_position, vec3 normal_view_space, vec3 view
 		resulting_color = (is_within_screen_boundaries(current_screen_position) && depth_diff >= 0.0 && depth_diff < ssr_max_diff) ? ssr_screen_color : vec3(-1.0);
 	}
 
-	float alpha = get_screen_border_alpha(current_screen_position);
-	return vec4(resulting_color, alpha);
+	float alpha = resulting_color.x < 0.0 ? 0.0 : get_screen_border_alpha(current_screen_position);
+	return vec4(max(resulting_color, vec3(0.0)), alpha);
 }
 
 void vertex() {
@@ -228,9 +233,15 @@ void fragment() {
 	vec3 normal = normalize(cross(pixel_world_position_top - pixel_world_position_center,
 			pixel_world_position_right - pixel_world_position_center));
 
+	// A screen-depth pass has no knowledge of real drainage. Restrict it to the
+	// authored ground band; never put water on crate lids, stairs or ceilings.
+	float height = pixel_world_position_center.y;
+	float receiver = smoothstep(receiving_height.x - 0.04, receiving_height.x, height)
+		* (1.0 - smoothstep(receiving_height.y, receiving_height.y + 0.04, height));
+	float facing = smoothstep(0.92, 0.995, normal.y);
+	if (receiver * facing * puddle_amount < 0.001) { discard; }
 	vec2 ripple_offset = get_ripple_offset(pixel_world_position_center.xz);
-	vec3 ripple_vector = vec3(ripple_offset.x * CAMERA_DIRECTION_WORLD.x, 0.0, ripple_offset.y * CAMERA_DIRECTION_WORLD.z);
-	normal -= ripple_vector;
+	normal = normalize(normal + vec3(ripple_offset.x, 0.0, ripple_offset.y));
 
 	vec3 normal_view_space = (VIEW_MATRIX * vec4(normal, 0.0)).xyz;
 	vec3 view_view_space = normalize(-get_view_position_from_uv(SCREEN_UV, 1.0, INV_PROJECTION_MATRIX));
@@ -240,20 +251,19 @@ void fragment() {
 	// walls: standing water only collects on surfaces facing up.
 	float puddle_mask_micro = noise(pixel_world_position_center.xz / puddle_micro_mask_size);
 	float puddle_mask_macro = noise(pixel_world_position_center.xz / puddle_macro_mask_size);
-	float final_puddle_mask = clamp(puddle_reflectivness * puddle_mask_micro * clamp(puddle_mask_macro, 0.0, 1.0) * normal.y - puddle_mask_threshold, 0.0, 1.0);
-
+	float basin = puddle_reflectivness * puddle_mask_micro * clamp(puddle_mask_macro, 0.0, 1.0);
+	float threshold = puddle_mask_threshold + (1.0 - puddle_amount) * 0.65;
+	float edge = max(fwidth(basin) * 1.5, 0.06);
+	float final_puddle_mask = smoothstep(threshold, threshold + edge, basin) * receiver * facing * puddle_amount;
+	if (final_puddle_mask < 0.001) { discard; }
 	vec4 ssr_color = get_ssr_color(surface_view_position, normal_view_space, view_view_space, PROJECTION_MATRIX, INV_PROJECTION_MATRIX);
-
-	// The muzzle flash cannot appear in an SSR trace: the flame is drawn in the weapon's own
-	// SubViewport and composited afterwards, so it is not on screen for the ray march to
-	// find. This puts it into the water directly, using the ripple-perturbed normal so the
-	// reflection breaks up across the rings, and near-zero roughness because it is water.
-	vec3 flash = muzzle_flash_light(pixel_world_position_center, normalize(normal), CAMERA_POSITION_WORLD, 0.04, 1.0);
-	float flash_strength = max(max(flash.r, flash.g), flash.b);
-
-	ALBEDO = mix(puddle_color.rgb, ssr_color.x < 0.0 ? puddle_color.rgb : ssr_color.rgb, ssr_color.a) + flash * final_puddle_mask;
-	ALPHA = mix(0.0, ssr_color.x < 0.0 ? puddle_color.a : max(ssr_color.a, puddle_color.a), final_puddle_mask);
-	// Without lifting alpha the flash would be multiplied away wherever the water is
-	// transparent, and the brightest highlight would be the one you could not see.
-	ALPHA = clamp(max(ALPHA, flash_strength * final_puddle_mask), 0.0, 1.0);
+	float fresnel = 0.02 + 0.98 * pow(1.0 - clamp(dot(normal_view_space, view_view_space), 0.0, 1.0), 5.0);
+	// Keep the underlying PBR/probe response when screen-space has no hit. Painting
+	// black/teal in missing reflections or adding an unoccluded flash is not water.
+	ALBEDO = ssr_color.rgb;
+	ALPHA = final_puddle_mask * fresnel * ssr_color.a;
+	if (debug_puddles) {
+		ALBEDO = vec3(final_puddle_mask);
+		ALPHA = 1.0;
+	}
 }

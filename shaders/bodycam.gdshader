@@ -16,11 +16,11 @@ uniform float alpha : hint_range(0.0, 1.0, 0.01) = 1.0;
 // the corners fall outside it. That last part is deliberate - the lens port below is opaque out
 // there anyway, and normalising on the corner instead is what used to magnify the centre by
 // nearly two and blow the weapon up to fill the screen every time the strength was raised.
-uniform float fisheye_strength : hint_range(0.0, 0.6, 0.005) = 0.10;
+uniform float fisheye_strength : hint_range(0.0, 0.6, 0.005) = 0.018;
 uniform float fisheye_falloff : hint_range(0.0, 1.0, 0.01) = 0.2;
 // Lateral chromatic aberration, zero in the middle and growing towards the corners. Squared
 // falloff: a cheap lens is clean across the middle and fringes hard only at the very edge.
-uniform float channel_offset : hint_range(0.0, 0.02, 0.0005) = 0.0032;
+uniform float channel_offset : hint_range(0.0, 0.02, 0.0005) = 0.0006;
 // Veiling glare. A moulded plastic lens in front of a small sensor scatters bright light across
 // the whole frame instead of resolving it, so anything hot bleeds a hazy halo and the highlights
 // wash out. Taken from a mip of the screen, which is why the sampler asks for mipmaps. The
@@ -28,7 +28,7 @@ uniform float channel_offset : hint_range(0.0, 0.02, 0.0005) = 0.0032;
 // after AgX, and anything lower than this turned an open courtyard into milk.
 uniform float glare_strength : hint_range(0.0, 1.0, 0.01) = 0.10;
 uniform float glare_threshold : hint_range(0.0, 2.0, 0.01) = 1.02;
-uniform float grain_strength : hint_range(0.0, 2.0, 0.01) = 0.5;
+uniform float grain_strength : hint_range(0.0, 2.0, 0.01) = 0.08;
 // Sensor noise lives in the dark: bright pixels have plenty of photons, shadows do not.
 uniform float grain_shadow_bias : hint_range(0.0, 4.0, 0.05) = 2.2;
 uniform float vignette_start : hint_range(0.0, 1.0, 0.01) = 0.42;
@@ -39,14 +39,13 @@ uniform float vignette_darkness : hint_range(0.0, 1.0, 0.01) = 0.22;
 // 1.0 is the top and bottom edge and a 16:9 corner sits at about 1.94.
 uniform float lens_circle_start : hint_range(0.0, 2.0, 0.01) = 1.14;
 uniform float lens_circle_end : hint_range(0.0, 2.0, 0.01) = 1.74;
-uniform float lens_circle_darkness : hint_range(0.0, 1.0, 0.01) = 0.94;
-uniform float saturation : hint_range(0.0, 2.0, 0.01) = 0.58;
-uniform float black_lift : hint_range(0.0, 0.2, 0.001) = 0.032;
-uniform float contrast : hint_range(0.5, 2.0, 0.01) = 1.02;
-uniform vec3 shadow_tint : source_color = vec3(0.86, 0.92, 1.0);
-uniform vec3 highlight_tint : source_color = vec3(1.0, 0.98, 0.94);
-// Auto-exposure hunting: a real bodycam pumps a little as it re-meters the scene.
-uniform float exposure_wobble : hint_range(0.0, 0.2, 0.001) = 0.018;
+uniform float lens_circle_darkness : hint_range(0.0, 1.0, 0.01) = 0.12;
+uniform float saturation : hint_range(0.0, 2.0, 0.01) = 0.98;
+uniform float black_lift : hint_range(0.0, 0.2, 0.001) = 0.0;
+uniform float contrast : hint_range(0.5, 2.0, 0.01) = 1.0;
+uniform vec3 shadow_tint : source_color = vec3(1.0);
+uniform vec3 highlight_tint : source_color = vec3(1.0);
+// ExposureController owns HDR adaptation; no fake exposure hunting after tonemapping.
 
 float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -60,8 +59,9 @@ void fragment() {
 	float aspect = SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;
 	centered.x *= aspect;
 	float radius_squared = dot(centered, centered);
-	// One, because `centered.y` is already normalised to the half-height.
-	float edge_squared = 1.0;
+	// Fit the complete sensor rectangle: never stretch the last screen pixel into
+	// the corners. The small distortion default keeps this crop modest.
+	float edge_squared = aspect * aspect + 1.0;
 	float distortion = 1.0 + fisheye_strength * radius_squared
 		+ fisheye_strength * fisheye_falloff * radius_squared * radius_squared;
 	float edge_distortion = 1.0 + fisheye_strength * edge_squared
@@ -93,10 +93,9 @@ void fragment() {
 	color = mix(vec3(luminance), color, saturation);
 	color = mix(color * shadow_tint, color * highlight_tint, smoothstep(0.08, 0.7, luminance));
 	color = (color - 0.5) * contrast + 0.5 + black_lift;
-	color *= 1.0 + sin(TIME * 0.7) * sin(TIME * 2.3 + 1.7) * exposure_wobble;
 
-	// Sensor grain, per pixel and per frame, weighted towards the shadows.
-	float grain = hash12(SCREEN_UV * vec2(1920.0, 1080.0) + fract(TIME) * 371.0) - 0.5;
+	// Sensor grain at actual pixel resolution, weighted towards the shadows.
+	float grain = hash12(floor(SCREEN_UV / SCREEN_PIXEL_SIZE) + fract(TIME) * 371.0) - 0.5;
 	float shadow_weight = pow(1.0 - clamp(luminance, 0.0, 1.0), grain_shadow_bias);
 	color += grain * grain_strength * 0.09 * (0.25 + shadow_weight);
 

@@ -10,7 +10,7 @@ const GRAPHICS_NAMES: PackedStringArray = ["AUTO", "PERFORMANCE", "HIGH", "ULTRA
 # Plain 0/1 is what PhotorealEnvironment reads back out of the setting: 0 clear, 1 rain, and
 # clear is what the game starts on - rain is the heavier grade and the one that costs a
 # fullscreen water pass, so it is opted into rather than out of.
-const WEATHER_NAMES: PackedStringArray = ["ЯСНО", "ДОЖДЬ"]
+const WEATHER_NAMES: PackedStringArray = ["ЯСНО", "ДОЖДЬ", "ПАСМУРНО", "ЛИВЕНЬ"]
 const WEATHER_SETTING := "zero_frame/weather"
 # The menu shows the PvP map behind the buttons: a camera standing in the middle of it,
 # turning slowly, that the player can grab and look around with.
@@ -92,6 +92,9 @@ func _build_panorama() -> void:
 	if player != null:
 		level.remove_child(player)
 		player.free()
+	var preview_environment := level.get_node_or_null("PhotorealEnvironment") as PhotorealEnvironment
+	if preview_environment != null:
+		preview_environment.enable_auto_exposure = false
 	var scan := level.get_node_or_null("Scan")
 	if scan != null:
 		scan.set("build_collision", false)

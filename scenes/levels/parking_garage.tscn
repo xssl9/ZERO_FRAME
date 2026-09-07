@@ -2438,9 +2438,10 @@ sky_energy = 0.1
 ambient_energy = 0.05
 exposure_multiplier = 0.8
 shaft_density = 0.006
-fill_light_energy = 0.05
+fill_light_energy = 0.0
 weather = 1
 standing_water = 0.9
+allow_sdfgi = false
 
 [node name="Garage" parent="." unique_id=1460812609 instance=ExtResource("1_garage")]
 script = ExtResource("3_collision")

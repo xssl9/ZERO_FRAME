@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
 [ext_resource type="Texture2D" uid="uid://cqvk5fbm7fe1m" path="res://assets/environment/sky/kloofendal_43d_clear_puresky_2k.hdr" id="5_sky"]
 
+[ext_resource type="Script" path="res://scripts/environment/rain_system.gd" id="6_rain"]
+
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_3eng3"]
 panorama = ExtResource("5_sky")
 
@@ -68,9 +70,9 @@ exposure_multiplier = 0.62
 lighting_model = 1
 scan_ambient_energy = 1.6
 scan_sun_energy = 0.45
-fill_light_energy = null
-fill_light_color = null
-weather = 1
+fill_light_energy = 0.0
+weather = 0
+allow_sdfgi = false
 
 [node name="PhysicalSun" type="DirectionalLight3D" parent="." unique_id=244699739]
 transform = Transform3D(1.0109357, 0.055506, -0.025239432, 0.016845677, -0.038957443, 1.7611712, 0.057353005, -0.96693677, -0.07240563, 0.9582894, 6.5053067, -1.2388779)
@@ -90,5 +92,9 @@ mesh = ExtResource("1_scan")
 
 [node name="SpawnPoint3D" type="Marker3D" parent="." unique_id=1764705696 groups=["player_spawn_point"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -1.59)
+
+[node name="Rain" type="Node3D" parent="."]
+script = ExtResource("6_rain")
+intensity = 0.0
 
 [node name="Player" parent="." unique_id=141372011 instance=ExtResource("4_player")]

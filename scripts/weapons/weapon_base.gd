@@ -210,6 +210,7 @@ func _build_model() -> void:
 	if resource is PackedScene:
 		var imported := (resource as PackedScene).instantiate()
 		model_root.add_child(imported)
+		WeaponMaterials.apply(imported)
 		var tuning_camera := imported.find_child("WeaponTuningCamera", true, false) as Camera3D
 		if tuning_camera != null:
 			authored_camera = tuning_camera

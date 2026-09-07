@@ -224,12 +224,14 @@ func _build_weapon_viewport() -> void:
 	weapon_env.glow_bloom = 0.04
 	weapon_env.glow_hdr_threshold = 1.35
 	weapon_world_env.environment = weapon_env
+	weapon_environment = weapon_world_env
 	weapon_viewport.add_child(weapon_world_env)
 	var weapon_key := DirectionalLight3D.new()
 	weapon_key.name = "WeaponKeyLight"
 	weapon_key.rotation_degrees = Vector3(-42.0, -38.0, 0.0)
 	weapon_key.light_energy = 1.5
 	weapon_key.light_color = Color("fff2df")
+	weapon_key_light = weapon_key
 	weapon_viewport.add_child(weapon_key)
 	weapon_aim_pivot = Node3D.new()
 	weapon_aim_pivot.name = "WeaponAimPivot"
@@ -268,45 +270,41 @@ func _update_overlay(delta: float) -> void:
 # level reaches it on its own: no sun, no sky, no weather. Everything the hands and the
 # gun know about the world outside is copied across here.
 func _bind_level_lighting() -> void:
-	_level_environment = get_tree().get_first_node_in_group("photoreal_environment") as PhotorealEnvironment
+	for candidate: Node in get_tree().get_nodes_in_group("photoreal_environment"):
+		if candidate.get_viewport() == get_viewport():
+			_level_environment = candidate as PhotorealEnvironment
+			break
 	var host := get_parent()
 	if host != null:
 		_level_sun = host.get_node_or_null("PhysicalSun") as DirectionalLight3D
-	_apply_viewmodel_grade()
+	if _level_environment != null and weapon_environment != null:
+		var lighting := WeaponLighting.new()
+		lighting.name = "WeaponLighting"
+		add_child(lighting)
+		lighting.configure(self, _level_environment, _level_sun)
 	_build_viewmodel_rain()
 
-func _apply_viewmodel_grade() -> void:
-	if weapon_environment == null or weapon_environment.environment == null or _level_environment == null:
-		return
-	var raining := _level_environment.is_raining()
-	var environment := weapon_environment.environment
-	# Scaled up because the level's ambient is a sky multiplier while this one is a flat
-	# colour, and clamped so a dark level never leaves the hands as a silhouette.
-	environment.ambient_light_energy = clampf(_level_environment.ambient_energy_in_effect() * 1.5, 0.7, 2.4)
-	environment.ambient_light_color = Color(0.7, 0.76, 0.9) if raining else Color(0.82, 0.83, 0.86)
-	environment.tonemap_exposure = clampf(_level_environment.exposure_in_effect() * 1.35, 0.4, 1.6)
-
 func _update_viewmodel_lighting() -> void:
-	if weapon_key_light == null or _level_sun == null or camera == null:
+	# World/weapon light and exposure sync now lives in WeaponLighting. Keep the
+	# existing near-camera emitter, but stop it under shelter and in clear weather.
+	if _viewmodel_rain == null or _level_environment == null:
 		return
-	# Camera space: the sun has to be re-expressed relative to where the player is looking,
-	# otherwise the gun stays lit from one fixed side no matter which way you turn.
-	var relative := camera.global_transform.basis.inverse() * _level_sun.global_transform.basis
-	weapon_key_light.transform = Transform3D(relative, Vector3.ZERO)
-	weapon_key_light.light_color = _level_sun.light_color
-	weapon_key_light.light_energy = clampf(_level_sun.light_energy * 0.45, 0.15, 2.2)
-	if _viewmodel_rain != null:
-		var down: Vector3 = camera.global_transform.basis.inverse() * Vector3.DOWN
-		var process := _viewmodel_rain.process_material as ParticleProcessMaterial
-		process.direction = down
-		process.gravity = down * 6.0
+	var rain := _level_environment.get_parent().find_child("Rain", true, false) as RainSystem
+	var amount := rain.intensity * (1.0 - rain.shelter) * rain.quality_scale if rain != null else 0.0
+	_viewmodel_rain.emitting = amount > 0.001
+	_viewmodel_rain.amount_ratio = clampf(amount, 0.0, 1.0)
+	var down: Vector3 = camera.global_transform.basis.inverse() * Vector3.DOWN
+	var process := _viewmodel_rain.process_material as ParticleProcessMaterial
+	process.direction = down
+	process.gravity = down * 6.0
 
 # A thin curtain of drops inside the weapon viewport, so rain falls past the hands instead
 # of stopping at an invisible line in front of the camera.
 func _build_viewmodel_rain() -> void:
-	if _level_environment == null or not _level_environment.is_raining() or weapon_camera == null:
+	if _level_environment == null or weapon_camera == null:
 		return
 	_viewmodel_rain = GPUParticles3D.new()
+	_viewmodel_rain.emitting = false
 	_viewmodel_rain.name = "ViewmodelRain"
 	_viewmodel_rain.amount = 90
 	_viewmodel_rain.lifetime = 0.55

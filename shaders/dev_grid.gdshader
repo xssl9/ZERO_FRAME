@@ -20,6 +20,10 @@ uniform float surface_roughness : hint_range(0.0, 1.0, 0.01) = 0.72;
 // Rain. Wet concrete is both darker and far smoother than dry concrete, so one value
 // drives both, and the screen-space reflections then have something to reflect in.
 uniform float wetness : hint_range(0.0, 1.0, 0.01) = 0.0;
+uniform float roughness_variation : hint_range(0.0, 0.2) = 0.08;
+uniform float wet_roughness_floor : hint_range(0.15, 0.8) = 0.34;
+uniform int debug_view = 0;
+uniform vec3 material_id : source_color = vec3(0.5);
 
 group_uniforms PhotoTextures;
 // Real PBR maps on top of the greybox. World-space triplanar, so a 48 m box floor tiles
@@ -65,7 +69,7 @@ varying vec3 world_normal;
 
 void vertex() {
 	world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	world_normal = normalize(MODEL_NORMAL_MATRIX * NORMAL);
 }
 
 // Antialiased band around every integer boundary of `coordinate`.
@@ -161,10 +165,12 @@ void fragment() {
 	surface = mix(surface, minor_line_color, minor * detail);
 	surface = mix(surface, major_line_color, major * detail);
 
-	ALBEDO = surface * mix(1.0, 0.84, wetness);
-	ROUGHNESS = surface_roughness * mix(1.0, 0.45, wetness);
+	ALBEDO = surface;
+	ROUGHNESS = surface_roughness;
 	METALLIC = 0.0;
-	SPECULAR = mix(0.4, 0.6, wetness);
+	AO = 1.0;
+	SPECULAR = 0.5;
+	float moisture = clamp(wetness, 0.0, 1.0) * mix(0.65, 1.0, max(world_normal.y, 0.0));
 	vec3 shading_normal = normalize(world_normal);
 
 	if (texture_blend > 0.0) {
@@ -187,8 +193,8 @@ void fragment() {
 					variant));
 			}
 		}
-		ALBEDO = mix(ALBEDO, photo_albedo * mix(1.0, 0.84, wetness), texture_blend);
-		ROUGHNESS = mix(ROUGHNESS, arm.g * mix(1.0, 0.45, wetness), texture_blend);
+		ALBEDO = mix(ALBEDO, photo_albedo, texture_blend);
+		ROUGHNESS = mix(ROUGHNESS, arm.g, texture_blend);
 		METALLIC = mix(METALLIC, arm.b, texture_blend);
 		AO = mix(1.0, arm.r, texture_blend);
 		AO_LIGHT_AFFECT = 0.65;
@@ -198,9 +204,20 @@ void fragment() {
 		NORMAL = normalize((VIEW_MATRIX * vec4(shading_normal, 0.0)).xyz);
 	}
 
-	// The muzzle flash goes in as emission rather than through a light, so its wet-ground
-	// smear can be shaped without touching how the sun and GI light this surface.
-	EMISSION = muzzle_flash_light(world_position, shading_normal, CAMERA_POSITION_WORLD, ROUGHNESS, wetness);
+	// Filter micro variation out before it becomes sub-pixel specular shimmer.
+	float footprint = length(fwidth(world_position * 24.0));
+	float micro = (value_noise(world_position * 24.0) - 0.5) * (1.0 - smoothstep(0.3, 1.2, footprint));
+	float stains = value_noise(world_position * 0.7);
+	moisture *= mix(0.75, 1.0, stains);
+	ALBEDO *= mix(1.0, 0.83, moisture) * (1.0 - roughness_variation * 0.3 * stains);
+	float dry_roughness = clamp(ROUGHNESS + micro * roughness_variation, 0.12, 0.98);
+	ROUGHNESS = mix(dry_roughness, max(wet_roughness_floor, dry_roughness * 0.7), moisture);
+	// Normal variance broadens the BRDF when details can no longer be resolved.
+	float variance = dot(dFdx(shading_normal), dFdx(shading_normal)) + dot(dFdy(shading_normal), dFdy(shading_normal));
+	ROUGHNESS = clamp(sqrt(ROUGHNESS * ROUGHNESS + min(variance * 0.2, 0.12)), 0.12, 1.0);
+	// The existing real OmniLight now owns flash lighting. Adding the old unoccluded
+	// emission here doubled the diffuse energy and illuminated through walls.
+	EMISSION = vec3(0.0);
 
 	// Baked occlusion last, so nothing above can brighten a corner back up.
 	if (unique_ao_strength > 0.0) {
@@ -209,5 +226,15 @@ void fragment() {
 		AO = min(AO, occlusion);
 		AO_LIGHT_AFFECT = 0.65;
 		ALBEDO *= mix(1.0, occlusion, unique_ao_albedo);
+	}
+	if (debug_view > 0) {
+		vec3 debug_color = vec3(ROUGHNESS);
+		if (debug_view == 2) { debug_color = vec3(METALLIC); }
+		if (debug_view == 3) { debug_color = shading_normal * 0.5 + 0.5; }
+		if (debug_view == 4) { debug_color = vec3(AO); }
+		if (debug_view == 5) { debug_color = vec3(moisture); }
+		if (debug_view == 6) { debug_color = material_id; }
+		ALBEDO = vec3(0.0);
+		EMISSION = debug_color;
 	}
 }

@@ -4,7 +4,7 @@ extends WorldEnvironment
 
 enum QualityPreset { AUTO, PERFORMANCE, HIGH, ULTRA }
 # AUTO reads zero_frame/weather, which the main menu writes.
-enum Weather { AUTO, CLEAR, RAIN }
+enum Weather { AUTO, CLEAR, RAIN, OVERCAST, HEAVY_RAIN }
 # PHOTOREAL lights the scene from scratch. SCAN_FLAT is for photogrammetry: the albedo
 # already contains the real lighting, its own shadows and its own ambient occlusion, so a
 # second sun plus SSAO plus GI just crushes everything the camera did not see into black.
@@ -40,7 +40,7 @@ const RAIN_SUN_FOG_ENERGY := 4.0
 
 @export_category("Photoreal preset")
 @export var quality_preset: QualityPreset = QualityPreset.AUTO
-@export var use_hdr_panorama: bool = true
+@export var use_hdr_panorama: bool = false
 @export var panorama: Texture2D = DEFAULT_HDR
 @export_range(0.1, 4.0, 0.05) var sky_energy: float = 0.7
 @export_range(0.0, 4.0, 0.05) var ambient_energy: float = 0.9
@@ -66,7 +66,7 @@ const RAIN_SUN_FOG_ENERGY := 4.0
 @export_category("Fill light")
 # Flat light that guarantees nothing in frame is pitch black. Raise it for a hazier, more
 # overcast look; 0.0 turns it off and leaves the scene to the sun and the sky alone.
-@export_range(0.0, 3.0, 0.05) var fill_light_energy: float = 1.0
+@export_range(0.0, 3.0, 0.05) var fill_light_energy: float = 0.0
 @export var fill_light_color: Color = Color(0.72, 0.79, 0.92)
 
 @export_category("Weather")
@@ -92,6 +92,20 @@ var _flash_receivers: Array[ShaderMaterial] = []
 # so a level can author a soaked floor next to dry plaster and keep the difference.
 var _authored_wetness: Dictionary = {}
 
+@export_category("Realism tuning")
+## Optional per-map overrides, ordered CLEAR, RAIN, OVERCAST, HEAVY RAIN.
+@export var weather_profiles: Array[WeatherVisualProfile] = []
+@export var enable_auto_exposure: bool = true
+## Disable for thin-shell interiors; use authored probes / future LightmapGI there.
+@export var allow_sdfgi: bool = true
+@export_range(0.0, 1.0) var roughness_variation: float = 0.08
+var profile: WeatherVisualProfile
+var resolved_quality: QualityPreset = QualityPreset.HIGH
+var wetness_manager: WetnessManager
+var exposure_controller: ExposureController
+var rendering_debug: RenderingDebug
+var _scene_root: Node
+
 func _ready() -> void:
 	# WeaponBase looks the environment up by group to push flash state at it.
 	add_to_group("photoreal_environment")
@@ -112,28 +126,43 @@ func push_muzzle_flash(world_position: Vector3, color: Color, energy: float, rad
 func apply_preset() -> void:
 	if environment == null:
 		environment = Environment.new()
+	elif _scene_root == null:
+		# Menu previews and gameplay must not mutate the same packed resource.
+		environment = environment.duplicate() as Environment
 	_resolve_weather()
 	_configure_sky()
 	_configure_color_and_exposure()
 	_configure_quality()
+	if is_instance_valid(_scene_root):
+		_configure_reflection_probes(_scene_root)
+		_configure_weather_nodes(_scene_root)
+		if exposure_controller != null:
+			exposure_controller.refresh_target()
+
+func base_exposure() -> float:
+	return _exposure
 
 func _resolve_weather() -> void:
-	var effective := weather
-	if effective == Weather.AUTO:
-		var requested := int(ProjectSettings.get_setting(WEATHER_SETTING, WEATHER_SETTING_CLEAR))
-		effective = Weather.RAIN if requested == WEATHER_SETTING_RAIN else Weather.CLEAR
-	_rain = effective == Weather.RAIN
-	_sky_energy = sky_energy if _rain else CLEAR_SKY_ENERGY
-	_ambient_energy = ambient_energy if _rain else CLEAR_AMBIENT_ENERGY
-	_exposure = exposure_multiplier if _rain else CLEAR_EXPOSURE
-	_shaft_density = shaft_density if _rain else CLEAR_SHAFT_DENSITY
-	_fog_albedo = RAIN_FOG_ALBEDO if _rain else CLEAR_FOG_ALBEDO
+	var index := int(weather) - 1
+	if weather == Weather.AUTO:
+		index = clampi(int(ProjectSettings.get_setting(WEATHER_SETTING, 0)), 0, 3)
+	profile = weather_profiles[index] if index < weather_profiles.size() and weather_profiles[index] != null else WeatherVisualProfile.defaults(index)
+	_rain = profile.rain_intensity > 0.0 and standing_water < 0.0
+	_sky_energy = profile.sky_intensity
+	_ambient_energy = profile.ambient_intensity
+	_exposure = profile.exposure
+	_shaft_density = profile.atmosphere_density
+	_fog_albedo = Color(0.96, 0.97, 1.0)
+	if standing_water >= 0.0:
+		# Interior practical lights and authored exposure are independent of outdoor weather.
+		_sky_energy = sky_energy
+		_ambient_energy = ambient_energy
+		_exposure = exposure_multiplier
+		_shaft_density = minf(shaft_density, 0.001)
 	if lighting_model == Lighting.SCAN_FLAT:
-		# A scan carries its own weather in its pixels. Nothing here may darken it.
-		_rain = false
 		_ambient_energy = scan_ambient_energy
 		_exposure = scan_exposure
-		_shaft_density = 0.0
+		_shaft_density *= 0.25
 
 func is_raining() -> bool:
 	return _rain
@@ -142,7 +171,7 @@ func ambient_energy_in_effect() -> float:
 	return _ambient_energy
 
 func exposure_in_effect() -> float:
-	return _exposure
+	return environment.tonemap_exposure if environment != null else _exposure
 
 func _configure_sky() -> void:
 	environment.background_mode = Environment.BG_SKY
@@ -157,6 +186,17 @@ func _configure_sky() -> void:
 	environment.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	environment.sky_rotation = Vector3(0.0, deg_to_rad(sky_rotation_degrees), 0.0)
 	if not use_hdr_panorama or panorama == null:
+		var physical := PhysicalSkyMaterial.new()
+		physical.rayleigh_coefficient = 2.0
+		physical.mie_coefficient = lerpf(0.005, 0.035, profile.cloud_cover)
+		physical.mie_eccentricity = 0.76
+		physical.turbidity = lerpf(2.0, 10.0, profile.cloud_cover)
+		physical.ground_color = Color(0.18, 0.17, 0.15)
+		var sky := Sky.new()
+		sky.sky_material = physical
+		sky.radiance_size = Sky.RADIANCE_SIZE_256
+		sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
+		environment.sky = sky
 		return
 	var panorama_material := PanoramaSkyMaterial.new()
 	panorama_material.panorama = panorama
@@ -175,7 +215,8 @@ func _configure_color_and_exposure() -> void:
 	# This, not CameraAttributesPhysical.exposure_multiplier, is what actually controls
 	# exposure here: physical light units are off project-wide, so the physical camera's
 	# exposure is nearly inert and only the tonemapper's pre-scale moves the image.
-	environment.tonemap_exposure = _exposure
+	if exposure_controller == null or not exposure_controller.enabled:
+		environment.tonemap_exposure = _exposure
 	environment.tonemap_white = 1.0
 	# The previous contrast=1.3 crushed interiors and made PBR materials look
 	# painted. AgX provides the shoulder without a second contrast operation.
@@ -185,16 +226,14 @@ func _configure_color_and_exposure() -> void:
 	# threshold is left alone instead of the whole frame going milky.
 	environment.glow_enabled = true
 	environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	environment.glow_intensity = 0.32
-	environment.glow_strength = 1.05
-	environment.glow_bloom = 0.06
-	environment.glow_hdr_threshold = 1.05
-	environment.glow_hdr_scale = 2.2
-	if camera_attributes is CameraAttributesPhysical:
-		var physical := camera_attributes as CameraAttributesPhysical
-		physical.auto_exposure_enabled = false
-		physical.exposure_sensitivity = 160.0
-		physical.exposure_multiplier = _exposure
+	environment.glow_intensity = 0.12
+	environment.glow_strength = 0.8
+	environment.glow_bloom = 0.0
+	environment.glow_hdr_threshold = 2.0
+	environment.glow_hdr_scale = 1.0
+	# Physical camera would also override authored FOV. ExposureController meters HDR
+	# once for both viewports; no independent native adaptation or DOF is applied.
+	camera_attributes = null
 
 func _configure_quality() -> void:
 	var method := RenderingServer.get_current_rendering_method()
@@ -212,11 +251,12 @@ func _configure_quality() -> void:
 	# albedo. Adding SSAO, SSIL, SDFGI and fog on top is what turned every corner the
 	# camera did not see into black, so the flat model runs the screen effects off.
 	var flat := lighting_model == Lighting.SCAN_FLAT
-	environment.ssao_enabled = not flat
-	environment.ssao_radius = 0.9
-	environment.ssao_intensity = 1.35
-	environment.ssao_power = 1.25
-	environment.ssao_detail = 0.55
+	resolved_quality = effective
+	environment.ssao_enabled = not flat and effective >= QualityPreset.HIGH
+	environment.ssao_radius = 0.35
+	environment.ssao_intensity = 0.65
+	environment.ssao_power = 1.0
+	environment.ssao_detail = 0.4
 	environment.ssao_horizon = 0.08
 	environment.ssao_light_affect = 0.35
 	environment.ssao_ao_channel_affect = 0.65
@@ -228,29 +268,34 @@ func _configure_quality() -> void:
 	environment.ssr_depth_tolerance = 0.12
 	_configure_global_illumination(effective if not flat else QualityPreset.PERFORMANCE)
 	_configure_light_shafts(not flat and effective >= QualityPreset.HIGH, effective >= QualityPreset.HIGH)
-	environment.fog_enabled = not flat
-	environment.fog_density = 0.00065
-	environment.fog_height_density = 0.012
+	environment.fog_enabled = not environment.volumetric_fog_enabled and standing_water < 0.0
+	environment.fog_density = profile.fog_density
+	environment.fog_height_density = 0.0
 	environment.fog_sky_affect = 0.08
 	# TAA is what makes the ray-marched effects settle: SDFGI, SSIL, SSR and the fog are
 	# all temporally noisy on their own. It is Ultra-only because it also softens motion.
 	var view := get_viewport()
 	if view != null:
-		view.use_taa = effective == QualityPreset.ULTRA
+		view.use_taa = effective >= QualityPreset.HIGH
+		view.msaa_3d = Viewport.MSAA_DISABLED if view.use_taa else Viewport.MSAA_2X
+		view.positional_shadow_atlas_size = 4096 if effective == QualityPreset.ULTRA else 2048
+		view.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
+	if forward_plus:
+		RenderingServer.directional_shadow_atlas_set_size(8192 if effective == QualityPreset.ULTRA else 4096, true)
 
 # Godot has no hardware ray tracing. SDFGI is the closest thing it does have: it cone-
 # traces rays against a signed distance field of the scene every frame, so bounced
 # sunlight fills the shadowed side of geometry and, through gi_inject below, the fog.
 func _configure_global_illumination(effective: QualityPreset) -> void:
-	environment.sdfgi_enabled = effective == QualityPreset.ULTRA
+	environment.sdfgi_enabled = allow_sdfgi and effective >= QualityPreset.HIGH
 	if not environment.sdfgi_enabled:
 		return
-	environment.sdfgi_use_occlusion = false
-	environment.sdfgi_bounce_feedback = 0.75
+	environment.sdfgi_use_occlusion = true
+	environment.sdfgi_bounce_feedback = 0.45
 	environment.sdfgi_cascades = 6 if effective == QualityPreset.ULTRA else 4
 	environment.sdfgi_min_cell_size = 0.15
 	environment.sdfgi_y_scale = Environment.SDFGI_Y_SCALE_75_PERCENT
-	environment.sdfgi_energy = 1.35
+	environment.sdfgi_energy = 1.0
 	environment.sdfgi_normal_bias = 1.1
 	environment.sdfgi_probe_bias = 1.1
 
@@ -283,19 +328,36 @@ func _configure_light_shafts(enabled: bool, gi_available: bool) -> void:
 	environment.volumetric_fog_temporal_reprojection_amount = 0.9
 
 func _configure_scene_nodes() -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		scene_root = get_parent()
-	if scene_root == null:
+	# The containing level, not current_scene (which is the menu during previews).
+	var scene_root := get_parent()
+	if scene_root == null or is_instance_valid(_scene_root):
 		return
+	_scene_root = scene_root
+	MaterialResponse.apply(scene_root)
+	wetness_manager = WetnessManager.new()
+	wetness_manager.name = "WetnessManager"
+	add_child(wetness_manager)
+	wetness_manager.configure(scene_root, standing_water if standing_water >= 0.0 else profile.wetness)
+	_flash_receivers = wetness_manager.materials
+	if not Engine.is_editor_hint():
+		exposure_controller = ExposureController.new()
+		exposure_controller.name = "ExposureController"
+		exposure_controller.enabled = enable_auto_exposure
+		add_child(exposure_controller)
+		if enable_auto_exposure:
+			exposure_controller.configure(self)
+		if scene_root.find_child("Player", true, false) != null:
+			rendering_debug = RenderingDebug.new()
+			rendering_debug.name = "RenderingDebug"
+			add_child(rendering_debug)
+			rendering_debug.configure(self)
 	_configure_reflection_probes(scene_root)
 	_configure_weather_nodes(scene_root)
 
 func _configure_reflection_probes(scene_root: Node) -> void:
 	var method := RenderingServer.get_current_rendering_method()
 	var forward_plus := method != "gl_compatibility" and method != "mobile"
-	var requested := int(ProjectSettings.get_setting("zero_frame/graphics_quality", QualityPreset.AUTO))
-	var probes_enabled := forward_plus and requested != QualityPreset.PERFORMANCE
+	var probes_enabled := forward_plus and resolved_quality != QualityPreset.PERFORMANCE
 	for node: Node in scene_root.find_children("*", "ReflectionProbe", true, false):
 		(node as ReflectionProbe).visible = probes_enabled
 
@@ -304,7 +366,9 @@ func _configure_reflection_probes(scene_root: Node) -> void:
 func _configure_weather_nodes(scene_root: Node) -> void:
 	var rain_system := scene_root.find_child("Rain", true, false) as RainSystem
 	if rain_system != null:
-		rain_system.intensity = 1.0 if _rain else 0.0
+		rain_system.intensity = profile.rain_intensity if _rain else 0.0
+		rain_system.wind = profile.wind
+		rain_system.quality_scale = 1.0 if resolved_quality == QualityPreset.ULTRA else (0.7 if resolved_quality == QualityPreset.HIGH else 0.35)
 	var wet_ground := scene_root.find_child("WetGround", true, false) as MeshInstance3D
 	if wet_ground != null:
 		# No puddles at all in clear weather: the pass is fullscreen, so switching it off
@@ -323,10 +387,26 @@ func _configure_weather_nodes(scene_root: Node) -> void:
 			sun.light_volumetric_fog_energy = 0.0
 			sun.shadow_enabled = false
 		else:
-			sun.light_energy = RAIN_SUN_ENERGY if _rain else CLEAR_SUN_ENERGY
-			sun.light_volumetric_fog_energy = RAIN_SUN_FOG_ENERGY if _rain else CLEAR_SUN_FOG_ENERGY
+			sun.light_energy = profile.sun_intensity
+			sun.light_color = profile.sun_color
+			sun.light_angular_distance = profile.sun_angular_distance
+			sun.light_volumetric_fog_energy = 1.0
+			sun.shadow_enabled = true
+			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+			sun.directional_shadow_max_distance = 70.0
+			sun.directional_shadow_blend_splits = true
+		sun.light_specular = 1.0
 	_configure_fill_lights(sun)
-	_configure_surface_wetness(scene_root)
+	if wetness_manager != null:
+		wetness_manager.target_wetness = standing_water if standing_water >= 0.0 else profile.wetness
+		wetness_manager.rain_intensity = profile.rain_intensity if _rain else 0.0
+		wetness_manager.roughness_variation = roughness_variation
+		wetness_manager.publish()
+	if wet_ground != null and wet_ground.material_override is ShaderMaterial:
+		var water := wet_ground.material_override as ShaderMaterial
+		water.set_shader_parameter("ssr_max_travel", 0.0 if resolved_quality == QualityPreset.PERFORMANCE else 24.0)
+		water.set_shader_parameter("ssr_resolution", 0.6 if resolved_quality == QualityPreset.ULTRA else 1.0)
+		water.set_shader_parameter("ssr_max_diff", 0.18)
 
 # Sky and bounce fill. Godot hands ambient over to SDFGI whenever SDFGI is on, and in an
 # open arena of thin walls SDFGI returns almost nothing, so relying on ambient alone is what
