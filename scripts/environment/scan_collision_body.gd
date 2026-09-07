@@ -24,14 +24,22 @@ func _ready() -> void:
 		var source := instance.get_active_material(surface) as StandardMaterial3D
 		if source == null:
 			continue
-		var material := source.duplicate() as StandardMaterial3D
-		material.metallic = 0.0
-		material.roughness = 0.88
-		material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		# Preserve captured albedo and UV transforms; add only a sheltered moisture
+		# response. Never manufacture metal/height maps from photograph brightness.
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://shaders/scan_surface.gdshader")
+		material.set_shader_parameter("albedo_texture", source.albedo_texture)
+		material.set_shader_parameter("albedo_tint", source.albedo_color)
+		material.set_shader_parameter("uv_scale", source.uv1_scale)
+		material.set_shader_parameter("uv_offset", source.uv1_offset)
+		material.set_shader_parameter("wetness", 1.0)
 		instance.set_surface_override_material(surface, material)
 	if not build_collision:
 		return
 	var shape := CollisionShape3D.new()
 	shape.name = "ScanShape"
 	shape.shape = instance.mesh.create_trimesh_shape()
+	# Mesh arrays are local to the imported child, not this body. Match the authored
+	# axis correction so movement, bullet impacts and rain agree with visible geometry.
+	shape.transform = instance.transform
 	add_child(shape)

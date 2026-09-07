@@ -2,6 +2,8 @@
 class_name PhotorealEnvironment
 extends WorldEnvironment
 
+signal preset_applied
+
 enum QualityPreset { AUTO, PERFORMANCE, HIGH, ULTRA }
 # AUTO reads zero_frame/weather, which the main menu writes.
 enum Weather { AUTO, CLEAR, RAIN, OVERCAST, HEAVY_RAIN }
@@ -138,6 +140,10 @@ func apply_preset() -> void:
 		_configure_weather_nodes(_scene_root)
 		if exposure_controller != null:
 			exposure_controller.refresh_target()
+	preset_applied.emit()
+
+func atmosphere_density_in_effect() -> float:
+	return _shaft_density
 
 func base_exposure() -> float:
 	return _exposure
@@ -224,12 +230,16 @@ func _configure_color_and_exposure() -> void:
 	# Additive glow above the tonemapper's white point, so only genuinely bright things
 	# bloom: the sun, sky highlights, hot metal and the muzzle flash. Anything below the
 	# threshold is left alone instead of the whole frame going milky.
+	# Glow intensity varies by weather: rain scatters light less cleanly, so bloom is
+	# slightly reduced; clear sky has the sharpest highlights.
 	environment.glow_enabled = true
 	environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	environment.glow_intensity = 0.12
+	environment.glow_intensity = profile.glow_intensity if profile != null else 0.12
 	environment.glow_strength = 0.8
 	environment.glow_bloom = 0.0
-	environment.glow_hdr_threshold = 2.0
+	# Threshold above AgX white point: only the sun disc, sky highlights, hot metal and
+	# muzzle flash exceed this. Anything lower stays clean.
+	environment.glow_hdr_threshold = 1.85
 	environment.glow_hdr_scale = 1.0
 	# Physical camera would also override authored FOV. ExposureController meters HDR
 	# once for both viewports; no independent native adaptation or DOF is applied.
@@ -252,36 +262,56 @@ func _configure_quality() -> void:
 	# camera did not see into black, so the flat model runs the screen effects off.
 	var flat := lighting_model == Lighting.SCAN_FLAT
 	resolved_quality = effective
+
+	# SSAO: contact occlusion that makes objects sit on surfaces. Radius is kept small
+	# to avoid the "dark halo" look; intensity scales with weather (overcast = more AO).
+	var ssao_intensity_scale := profile.ssao_intensity_scale if profile != null else 1.0
 	environment.ssao_enabled = not flat and effective >= QualityPreset.HIGH
-	environment.ssao_radius = 0.35
-	environment.ssao_intensity = 0.65
-	environment.ssao_power = 1.0
-	environment.ssao_detail = 0.4
-	environment.ssao_horizon = 0.08
-	environment.ssao_light_affect = 0.35
-	environment.ssao_ao_channel_affect = 0.65
+	environment.ssao_radius = 0.28 if effective == QualityPreset.ULTRA else 0.22
+	environment.ssao_intensity = 0.72 * ssao_intensity_scale
+	environment.ssao_power = 1.1
+	environment.ssao_detail = 0.5 if effective == QualityPreset.ULTRA else 0.35
+	environment.ssao_horizon = 0.06
+	# Light affect: how much SSAO darkens lit surfaces. Keep low so it only reads in
+	# shadow, not as a dark ring around every object in direct sun.
+	environment.ssao_light_affect = 0.22
+	environment.ssao_ao_channel_affect = 0.72
+
+	# SSIL: screen-space indirect lighting. Adds colour bleeding and bounce light.
+	# Radius larger than SSAO to catch wall-to-floor bounce.
 	environment.ssil_enabled = not flat and effective >= QualityPreset.HIGH
+	environment.ssil_radius = 4.0 if effective == QualityPreset.ULTRA else 2.5
+	environment.ssil_intensity = 0.8
+	environment.ssil_sharpness = 0.98
+	environment.ssil_normal_rejection = 1.0
+
+	# SSR: screen-space reflections for wet surfaces, metal, glass.
 	environment.ssr_enabled = not flat and effective >= QualityPreset.HIGH
-	environment.ssr_max_steps = 64 if effective == QualityPreset.ULTRA else (48 if effective >= QualityPreset.HIGH else 16)
-	environment.ssr_fade_in = 0.15
-	environment.ssr_fade_out = 2.0
-	environment.ssr_depth_tolerance = 0.12
+	environment.ssr_max_steps = 80 if effective == QualityPreset.ULTRA else (56 if effective >= QualityPreset.HIGH else 16)
+	environment.ssr_fade_in = 0.12
+	environment.ssr_fade_out = 2.5
+	environment.ssr_depth_tolerance = 0.10
+
 	_configure_global_illumination(effective if not flat else QualityPreset.PERFORMANCE)
 	_configure_light_shafts(not flat and effective >= QualityPreset.HIGH, effective >= QualityPreset.HIGH)
+
+	# Fallback fog when volumetric is off (PERFORMANCE preset).
 	environment.fog_enabled = not environment.volumetric_fog_enabled and standing_water < 0.0
-	environment.fog_density = profile.fog_density
+	environment.fog_density = profile.fog_density if profile != null else 0.0003
 	environment.fog_height_density = 0.0
-	environment.fog_sky_affect = 0.08
+	environment.fog_sky_affect = 0.06
+
 	# TAA is what makes the ray-marched effects settle: SDFGI, SSIL, SSR and the fog are
-	# all temporally noisy on their own. It is Ultra-only because it also softens motion.
+	# all temporally noisy on their own. HIGH and above use TAA; PERFORMANCE uses MSAA.
 	var view := get_viewport()
 	if view != null:
 		view.use_taa = effective >= QualityPreset.HIGH
 		view.msaa_3d = Viewport.MSAA_DISABLED if view.use_taa else Viewport.MSAA_2X
-		view.positional_shadow_atlas_size = 4096 if effective == QualityPreset.ULTRA else 2048
+		# Larger shadow atlas on ULTRA for sharper contact shadows at distance.
+		view.positional_shadow_atlas_size = 4096 if effective == QualityPreset.ULTRA else (2048 if effective >= QualityPreset.HIGH else 1024)
 		view.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
 	if forward_plus:
-		RenderingServer.directional_shadow_atlas_set_size(8192 if effective == QualityPreset.ULTRA else 4096, true)
+		RenderingServer.directional_shadow_atlas_set_size(8192 if effective == QualityPreset.ULTRA else (4096 if effective >= QualityPreset.HIGH else 2048), true)
 
 # Godot has no hardware ray tracing. SDFGI is the closest thing it does have: it cone-
 # traces rays against a signed distance field of the scene every frame, so bounced
@@ -291,13 +321,22 @@ func _configure_global_illumination(effective: QualityPreset) -> void:
 	if not environment.sdfgi_enabled:
 		return
 	environment.sdfgi_use_occlusion = true
-	environment.sdfgi_bounce_feedback = 0.45
+	# Bounce feedback: how much of the bounced light feeds back into the next bounce.
+	# Too high causes colour bleeding to dominate; 0.45 gives natural indirect colour.
+	environment.sdfgi_bounce_feedback = 0.42
+	# More cascades = larger GI range. 6 covers a full outdoor arena; 4 is enough for
+	# the parking garage interior where the geometry is close.
 	environment.sdfgi_cascades = 6 if effective == QualityPreset.ULTRA else 4
-	environment.sdfgi_min_cell_size = 0.15
+	# Smaller cell = finer GI detail. 0.12 resolves thin walls and door frames.
+	environment.sdfgi_min_cell_size = 0.12
+	# 75% Y scale: outdoor scenes are wider than tall, so this saves probes without
+	# losing vertical resolution in the areas that matter.
 	environment.sdfgi_y_scale = Environment.SDFGI_Y_SCALE_75_PERCENT
 	environment.sdfgi_energy = 1.0
-	environment.sdfgi_normal_bias = 1.1
-	environment.sdfgi_probe_bias = 1.1
+	# Normal bias prevents self-occlusion on flat surfaces (light leaking through floors).
+	environment.sdfgi_normal_bias = 1.2
+	# Probe bias prevents the probe from sampling its own geometry.
+	environment.sdfgi_probe_bias = 1.2
 
 # Visible shafts of sunlight. The fog volume is what light is actually scattered in, so
 # the density has to be high enough to see and the scattering has to be forward-biased,
@@ -312,20 +351,27 @@ func _configure_light_shafts(enabled: bool, gi_available: bool) -> void:
 	environment.volumetric_fog_emission_energy = 0.0
 	# Forward scattering: looking towards the sun lights the haze up hard, looking away
 	# leaves it clear, which is what makes a beam read as a beam.
-	environment.volumetric_fog_anisotropy = 0.42
-	environment.volumetric_fog_length = 72.0
-	environment.volumetric_fog_detail_spread = 2.0
+	# Rain/overcast: lower anisotropy because cloud-scattered light is more isotropic.
+	var cloud_cover := profile.cloud_cover if profile != null else 0.0
+	environment.volumetric_fog_anisotropy = lerpf(0.44, 0.22, cloud_cover)
+	# Fog length: how far the volume extends from the camera. 80 m covers the full arena.
+	environment.volumetric_fog_length = 80.0
+	# Detail spread: higher = more variation in the fog density, which is what makes
+	# shafts look like shafts rather than a uniform haze.
+	environment.volumetric_fog_detail_spread = 2.2
 	# With SDFGI on, bounced sunlight is scattered in the fog as well as direct sunlight,
 	# so a shaft landing on a wall lights the air next to that wall too.
 	environment.volumetric_fog_gi_inject = 1.0 if gi_available else 0.5
 	# Ambient injection lifts the shadowed half of the fog, which is exactly the contrast
 	# the shafts live on, so it stays low.
-	environment.volumetric_fog_ambient_inject = 0.05
+	environment.volumetric_fog_ambient_inject = 0.04
 	# The panorama already contains its own sky haze; injecting more turns the horizon
 	# into soup.
-	environment.volumetric_fog_sky_affect = 0.06
+	environment.volumetric_fog_sky_affect = 0.05
 	environment.volumetric_fog_temporal_reprojection_enabled = true
-	environment.volumetric_fog_temporal_reprojection_amount = 0.9
+	# Higher reprojection = smoother but more ghosting on fast camera moves.
+	# 0.88 is a good balance for a bodycam that moves quickly.
+	environment.volumetric_fog_temporal_reprojection_amount = 0.88
 
 func _configure_scene_nodes() -> void:
 	# The containing level, not current_scene (which is the menu during previews).
@@ -338,6 +384,11 @@ func _configure_scene_nodes() -> void:
 	wetness_manager.name = "WetnessManager"
 	add_child(wetness_manager)
 	wetness_manager.configure(scene_root, standing_water if standing_water >= 0.0 else profile.wetness)
+	if standing_water < 0.0 and not Engine.is_editor_hint():
+		var roof_mask := RainExposureMask.new()
+		roof_mask.name = "RainExposureMask"
+		add_child(roof_mask)
+		roof_mask.configure(scene_root as Node3D, wetness_manager.materials)
 	_flash_receivers = wetness_manager.materials
 	if not Engine.is_editor_hint():
 		exposure_controller = ExposureController.new()
@@ -353,6 +404,11 @@ func _configure_scene_nodes() -> void:
 			rendering_debug.configure(self)
 	_configure_reflection_probes(scene_root)
 	_configure_weather_nodes(scene_root)
+	if get_node_or_null("RealismManager") == null:
+		var tuning := RealismManager.new()
+		tuning.name = "RealismManager"
+		tuning.roughness_variation = roughness_variation
+		add_child(tuning)
 
 func _configure_reflection_probes(scene_root: Node) -> void:
 	var method := RenderingServer.get_current_rendering_method()
@@ -360,6 +416,10 @@ func _configure_reflection_probes(scene_root: Node) -> void:
 	var probes_enabled := forward_plus and resolved_quality != QualityPreset.PERFORMANCE
 	for node: Node in scene_root.find_children("*", "ReflectionProbe", true, false):
 		(node as ReflectionProbe).visible = probes_enabled
+	for node: Node in scene_root.find_children("*", "Decal", true, false):
+		if node is SurfaceDecal:
+			node.visible = probes_enabled
+			node.distance_fade_begin = 30.0 if resolved_quality == QualityPreset.ULTRA else 22.0
 
 # Everything that is weather rather than grading: the downpour, the standing water, how
 # wet the concrete looks and how hard the sun is pushing through it.
@@ -389,12 +449,17 @@ func _configure_weather_nodes(scene_root: Node) -> void:
 		else:
 			sun.light_energy = profile.sun_intensity
 			sun.light_color = profile.sun_color
+			# Angular distance controls penumbra softness. Overcast/rain profiles use a
+			# larger value so shadows are soft and diffuse, matching cloud-filtered light.
 			sun.light_angular_distance = profile.sun_angular_distance
 			sun.light_volumetric_fog_energy = 1.0
 			sun.shadow_enabled = true
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-			sun.directional_shadow_max_distance = 70.0
+			# Extend shadow distance on ULTRA for better far-field contact shadows.
+			sun.directional_shadow_max_distance = 80.0 if resolved_quality == QualityPreset.ULTRA else 65.0
 			sun.directional_shadow_blend_splits = true
+			# Pancaking reduces shadow acne on thin geometry without bias artifacts.
+			sun.directional_shadow_pancake_size = 20.0
 		sun.light_specular = 1.0
 	_configure_fill_lights(sun)
 	if wetness_manager != null:

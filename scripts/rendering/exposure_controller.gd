@@ -3,10 +3,14 @@ extends Node
 
 @export var enabled: bool = true
 @export_range(0.05, 1.0) var middle_gray: float = 0.18
-@export var minimum: float = 0.18
-@export var maximum: float = 3.0
-@export var brighten_stops_per_second: float = 0.8
-@export var darken_stops_per_second: float = 2.0
+@export var minimum: float = 0.14
+@export var maximum: float = 3.2
+## Increase exposure when entering a dark room: slower gain recovery.
+@export var brighten_stops_per_second: float = 0.6
+## Reduce exposure when entering daylight: faster highlight protection.
+@export var darken_stops_per_second: float = 1.2
+## Minimum exposure error in STOPS before adaptation (not linear luminance).
+@export_range(0.0, 0.1) var adaptation_threshold: float = 0.008
 
 var measured_luminance: float = 0.18
 var sample_count: int = 0
@@ -42,7 +46,8 @@ func _exit_tree() -> void:
 		_meter = null
 
 func _on_luminance(value: float) -> void:
-	if not is_finite(value) or value <= 0.0:
+	# Diagnostic colors are not scene luminance; do not meter them while paused.
+	if not enabled or not is_finite(value) or value <= 0.0:
 		return
 	measured_luminance = value
 	sample_count += 1
@@ -58,7 +63,14 @@ func _process(delta: float) -> void:
 		return
 	# Adapt in stops, not linearly in multiplier. No sine-wave hunting, no per-shot
 	# exposure kick: the meter responds to actual HDR illumination, including flash.
+	# Names refer to the exposure multiplier, not scene brightness.
+	var current_stops := log(maxf(current_exposure, 0.001)) / log(2.0)
+	var target_stops := log(maxf(_target, 0.001)) / log(2.0)
+	# Dead zone: don't adapt for tiny luminance changes (prevents micro-hunting on
+	# surfaces that flicker slightly due to TAA or particle effects).
+	if absf(target_stops - current_stops) < adaptation_threshold:
+		return
 	var rate := brighten_stops_per_second if _target > current_exposure else darken_stops_per_second
-	var stops := move_toward(log(current_exposure) / log(2.0), log(_target) / log(2.0), rate * delta)
+	var stops := move_toward(current_stops, target_stops, maxf(rate, 0.0) * maxf(delta, 0.0))
 	current_exposure = pow(2.0, stops)
 	_environment.environment.tonemap_exposure = current_exposure

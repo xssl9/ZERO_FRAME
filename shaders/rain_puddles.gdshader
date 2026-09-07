@@ -11,6 +11,7 @@ shader_type spatial;
 render_mode unshaded, fog_disabled, depth_draw_never, depth_test_disabled;
 
 #include "res://shaders/muzzle_flash_light.gdshaderinc"
+#include "res://shaders/rain_exposure.gdshaderinc"
 
 uniform sampler2D depth_texture : hint_depth_texture;
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
@@ -238,6 +239,7 @@ void fragment() {
 	float height = pixel_world_position_center.y;
 	float receiver = smoothstep(receiving_height.x - 0.04, receiving_height.x, height)
 		* (1.0 - smoothstep(receiving_height.y, receiving_height.y + 0.04, height));
+	receiver *= rain_exposure_at(pixel_world_position_center);
 	float facing = smoothstep(0.92, 0.995, normal.y);
 	if (receiver * facing * puddle_amount < 0.001) { discard; }
 	vec2 ripple_offset = get_ripple_offset(pixel_world_position_center.xz);
@@ -247,20 +249,32 @@ void fragment() {
 	vec3 view_view_space = normalize(-get_view_position_from_uv(SCREEN_UV, 1.0, INV_PROJECTION_MATRIX));
 	vec3 surface_view_position = get_view_position_from_uv(SCREEN_UV, depth_center, INV_PROJECTION_MATRIX);
 
-	// Two noise octaves decide where water would actually pool, and normal.y keeps it off
-	// walls: standing water only collects on surfaces facing up.
+	// Three noise octaves decide where water would actually pool.
+	// Micro: fine surface texture (cracks, pores). Macro: large drainage basins.
+	// Mid: medium-scale variation (pavement sections, slope changes).
 	float puddle_mask_micro = noise(pixel_world_position_center.xz / puddle_micro_mask_size);
 	float puddle_mask_macro = noise(pixel_world_position_center.xz / puddle_macro_mask_size);
-	float basin = puddle_reflectivness * puddle_mask_micro * clamp(puddle_mask_macro, 0.0, 1.0);
+	float puddle_mask_mid = noise(pixel_world_position_center.xz / (puddle_macro_mask_size * 0.35));
+	// Combine: macro sets the large basins, mid adds medium variation, micro adds texture.
+	float basin = puddle_reflectivness
+		* puddle_mask_micro
+		* clamp(puddle_mask_macro * 0.65 + puddle_mask_mid * 0.35, 0.0, 1.0);
 	float threshold = puddle_mask_threshold + (1.0 - puddle_amount) * 0.65;
-	float edge = max(fwidth(basin) * 1.5, 0.06);
+	// Adaptive edge: wider at low puddle_amount (sparse puddles have softer edges),
+	// tighter at high puddle_amount (full flooding has sharper water boundaries).
+	float edge = max(fwidth(basin) * 1.5, mix(0.10, 0.04, puddle_amount));
 	float final_puddle_mask = smoothstep(threshold, threshold + edge, basin) * receiver * facing * puddle_amount;
 	if (final_puddle_mask < 0.001) { discard; }
 	vec4 ssr_color = get_ssr_color(surface_view_position, normal_view_space, view_view_space, PROJECTION_MATRIX, INV_PROJECTION_MATRIX);
+	// Fresnel: water is nearly transparent at normal incidence, highly reflective at grazing.
+	// The 0.02 base is the Fresnel reflectance of water at 0 degrees.
 	float fresnel = 0.02 + 0.98 * pow(1.0 - clamp(dot(normal_view_space, view_view_space), 0.0, 1.0), 5.0);
+	// Depth darkening: deeper puddles are slightly darker (more absorption).
+	// Approximated by the puddle mask value — higher mask = deeper basin.
+	float depth_tint = mix(1.0, 0.88, clamp((basin - threshold) / max(edge, 0.001) * 0.5, 0.0, 1.0));
 	// Keep the underlying PBR/probe response when screen-space has no hit. Painting
 	// black/teal in missing reflections or adding an unoccluded flash is not water.
-	ALBEDO = ssr_color.rgb;
+	ALBEDO = ssr_color.rgb * depth_tint;
 	ALPHA = final_puddle_mask * fresnel * ssr_color.a;
 	if (debug_puddles) {
 		ALBEDO = vec3(final_puddle_mask);

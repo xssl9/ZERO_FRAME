@@ -32,17 +32,18 @@ func configure(root: Node, initial: float) -> void:
 			if original == null or original.shader == null:
 				continue
 			var path := original.shader.resource_path
-			if path not in ["res://shaders/dev_grid.gdshader", "res://shaders/rain_puddles.gdshader"]:
+			if path not in ["res://shaders/dev_grid.gdshader", "res://shaders/rain_puddles.gdshader", "res://shaders/scan_surface.gdshader"]:
 				continue
 			if not copies.has(original):
 				copies[original] = original.duplicate()
 				var copy := copies[original] as ShaderMaterial
 				materials.append(copy)
-				if path.ends_with("dev_grid.gdshader"):
+				if not path.ends_with("rain_puddles.gdshader"):
 					var authored: Variant = original.get_shader_parameter("wetness")
 					_capacity[copy] = float(authored) if authored != null else 0.0
 			if mesh.material_override != null:
 				mesh.material_override = copies[original]
+				break # One override covers all surfaces; do not duplicate its copy again.
 			else:
 				mesh.set_surface_override_material(surface, copies[original])
 	_water = root.find_child("WetGround", true, false) as MeshInstance3D

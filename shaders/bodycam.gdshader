@@ -46,6 +46,13 @@ uniform float contrast : hint_range(0.5, 2.0, 0.01) = 1.0;
 uniform vec3 shadow_tint : source_color = vec3(1.0);
 uniform vec3 highlight_tint : source_color = vec3(1.0);
 // ExposureController owns HDR adaptation; no fake exposure hunting after tonemapping.
+// Subtle compression artifacts: a real h.264 stream has slight banding in flat areas.
+uniform float compression_strength : hint_range(0.0, 1.0, 0.01) = 0.04;
+// Micro-jitter: a body-mounted camera vibrates slightly from the wearer's heartbeat
+// and muscle tremor. This is NOT the gait shake (that lives in BodycamPhysics).
+// It is the sensor-level noise floor of a cheap CMOS chip.
+// Default off: per-pixel UV noise is not rigid camera motion and destabilizes edges.
+uniform float micro_jitter : hint_range(0.0, 0.005, 0.0001) = 0.0;
 
 float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -75,6 +82,12 @@ void fragment() {
 	float distance_to_centre = length(from_centre);
 	vec2 direction = from_centre / max(distance_to_centre, 0.0001);
 
+	// Micro-jitter: sub-pixel sensor vibration. Applied before sampling so it affects
+	// all channels equally (it is a physical camera shake, not a colour artifact).
+	float jitter_time = TIME * 9.0;
+	uv += vec2(sin(jitter_time), sin(jitter_time * 1.17)) * micro_jitter;
+	uv = clamp(uv, SCREEN_PIXEL_SIZE, vec2(1.0) - SCREEN_PIXEL_SIZE);
+
 	// Radial chromatic aberration: the green channel stays put, red and blue split.
 	float aberration = channel_offset * distance_to_centre * distance_to_centre * 2.8;
 	vec3 color;
@@ -94,8 +107,20 @@ void fragment() {
 	color = mix(color * shadow_tint, color * highlight_tint, smoothstep(0.08, 0.7, luminance));
 	color = (color - 0.5) * contrast + 0.5 + black_lift;
 
+	// Subtle h.264 compression banding: flat areas get a tiny quantisation step.
+	// This is what makes a real bodycam recording look like a recording rather than
+	// a clean render. The step is in luminance space, not per-channel.
+	if (compression_strength > 0.001) {
+		float quant_steps = mix(64.0, 16.0, compression_strength);
+		float luma_q = floor(luminance * quant_steps + 0.5) / quant_steps;
+		color = mix(color, color * (luma_q / max(luminance, 0.001)), compression_strength * 0.3);
+	}
+
 	// Sensor grain at actual pixel resolution, weighted towards the shadows.
-	float grain = hash12(floor(SCREEN_UV / SCREEN_PIXEL_SIZE) + fract(TIME) * 371.0) - 0.5;
+	// Two-frequency grain: coarse (CMOS pixel) + fine (read noise).
+	float grain_coarse = hash12(floor(SCREEN_UV / SCREEN_PIXEL_SIZE) + fract(TIME) * 371.0) - 0.5;
+	float grain_fine = hash12(floor(SCREEN_UV / SCREEN_PIXEL_SIZE * 2.0) + fract(TIME) * 193.7) - 0.5;
+	float grain = grain_coarse * 0.7 + grain_fine * 0.3;
 	float shadow_weight = pow(1.0 - clamp(luminance, 0.0, 1.0), grain_shadow_bias);
 	color += grain * grain_strength * 0.09 * (0.25 + shadow_weight);
 

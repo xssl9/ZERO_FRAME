@@ -130,6 +130,8 @@ var _light_timer: float = 0.0
 var _flash_gain: float = 1.0
 var _sparks: GPUParticles3D
 var _smoke: GPUParticles3D
+var _smoke_pool: Array[GPUParticles3D] = []
+var _smoke_index: int = 0
 var _smoke_cooldown: float = 0.0
 var _world_flash_light: OmniLight3D
 var _flash_surface_bus: PhotorealEnvironment
@@ -400,9 +402,53 @@ func _build_muzzle_smoke() -> void:
 	_smoke.process_material = process
 	var puff := QuadMesh.new()
 	puff.size = Vector2(muzzle_flash_size * 0.62, muzzle_flash_size * 0.62)
-	puff.material = _build_particle_material(Color(0.62, 0.61, 0.6, 0.5), _build_soft_disc())
+	var smoke_material := _build_particle_material(Color(0.62, 0.61, 0.6, 0.16), _build_soft_disc())
+	smoke_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	smoke_material.disable_receive_shadows = false
+	smoke_material.roughness = 1.0
+	smoke_material.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	puff.material = smoke_material
 	_smoke.draw_pass_1 = puff
+	_smoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_smoke.visibility_aabb = AABB(Vector3(-3.0, -3.0, -3.0), Vector3(6.0, 6.0, 6.0))
 	muzzle.add_child(_smoke)
+	_smoke_pool.append(_smoke)
+	# Four emitters cover 0.7 s lifetime / 0.22 s interval without erasing a live puff.
+	# Mesh/textures are shared; only per-puff trajectories need their own resource.
+	for index: int in 3:
+		var emitter := _smoke.duplicate() as GPUParticles3D
+		emitter.process_material = process.duplicate()
+		muzzle.add_child(emitter)
+		_smoke_pool.append(emitter)
+
+func _emit_world_smoke() -> void:
+	if _smoke_pool.is_empty() or not is_instance_valid(_world_flash_light):
+		return
+	var player := get_tree().get_first_node_in_group("player") as PlayerController
+	if player == null:
+		return
+	var emitter := _smoke_pool[_smoke_index]
+	_smoke_index = (_smoke_index + 1) % _smoke_pool.size()
+	if emitter.get_parent() != player.get_parent():
+		emitter.reparent(player.get_parent(), false)
+	emitter.global_transform = _world_flash_light.global_transform.orthonormalized()
+	var process := emitter.process_material as ParticleProcessMaterial
+	var breeze := Vector3.ZERO
+	if player._level_environment != null and player._level_environment.standing_water < 0.0:
+		var rain := player.get_parent().find_child("Rain", true, false) as RainSystem
+		if rain != null:
+			breeze = rain.wind * (1.0 - rain.shelter) * 0.16
+	process.gravity = Vector3.UP * 0.42 + breeze
+	emitter.restart()
+
+func _exit_tree() -> void:
+	# Reparented puffs are owned by this weapon, not leaked into subsequent maps.
+	for emitter: GPUParticles3D in _smoke_pool:
+		if is_instance_valid(emitter) and not is_ancestor_of(emitter):
+			emitter.queue_free()
+	for voice: AudioStreamPlayer in _shot_voices:
+		if is_instance_valid(voice):
+			voice.stop()
 
 func _build_particle_material(albedo: Color, texture: Texture2D) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -891,11 +937,11 @@ func _muzzle_flash() -> void:
 	_flash_world_light()
 	if _sparks != null:
 		_sparks.restart()
-	# restart() wipes the previous puff, so gating keeps a burst leaving one drifting
-	# cloud instead of a single popping puff that resets every 92 ms.
+	# A bounded pool preserves earlier puffs in the LEVEL's coordinates: turning or
+	# holstering the gun must not drag airborne gas along with the weapon camera.
 	if _smoke != null and _smoke_cooldown <= 0.0:
 		_smoke_cooldown = MUZZLE_SMOKE_INTERVAL
-		_smoke.restart()
+		_emit_world_smoke()
 
 # The viewmodel light only ever reaches the hands and the receiver, because the
 # viewmodel lives in its own World3D. This twin light is the one that makes the level
@@ -948,9 +994,9 @@ func _create_world_flash_light() -> void:
 	# The flash has to light the volumetric fog too, so every round puts a visible pulse
 	# into the air and the light shafts around the shooter, not just on the walls.
 	_world_flash_light.light_volumetric_fog_energy = 2.4
-	# Shadows stay off deliberately: a 75 ms light would force a full shadow map update
-	# every round, and the flash is far too short for anyone to resolve its shadows.
-	_world_flash_light.shadow_enabled = false
+	# Without a shadow map, shots illuminate the far side of cover. HIGH/ULTRA
+	# pay for this short-lived map; PERFORMANCE retains the cheaper unshadowed light.
+	_world_flash_light.shadow_enabled = player._level_environment != null and player._level_environment.resolved_quality >= PhotorealEnvironment.QualityPreset.HIGH
 	player.camera.add_child(_world_flash_light)
 
 func reload() -> void:

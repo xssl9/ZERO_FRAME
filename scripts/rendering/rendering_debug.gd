@@ -64,7 +64,7 @@ func set_mode(value: Mode) -> void:
 		Mode.GI: viewport.debug_draw = Viewport.DEBUG_DRAW_GI_BUFFER
 		Mode.REFLECTION_PROBES: viewport.debug_draw = Viewport.DEBUG_DRAW_CLUSTER_REFLECTION_PROBES
 	for material: ShaderMaterial in host.wetness_manager.materials:
-		if material.shader.resource_path.ends_with("dev_grid.gdshader"):
+		if not material.shader.resource_path.ends_with("rain_puddles.gdshader"):
 			material.set_shader_parameter("debug_view", int(mode) if mode <= Mode.MATERIAL_IDS else 0)
 			material.set_shader_parameter("material_id", Color.from_hsv(float(material.get_instance_id() % 97) / 97.0, 0.65, 0.8))
 		else:

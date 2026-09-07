@@ -9,6 +9,7 @@ var sun: DirectionalLight3D
 var _sources: Array[Light3D] = []
 var _mirrors: Dictionary = {}
 var _sun_visibility: float = 1.0
+var _filtered_sun_visibility: float = 1.0
 var _timer: float = 0.0
 
 func configure(owner_player: PlayerController, environment: PhotorealEnvironment, world_sun: DirectionalLight3D) -> void:
@@ -64,18 +65,24 @@ func _physics_process(delta: float) -> void:
 		query.to = query.to.move_toward(eye, 0.12)
 		(_mirrors[source] as Light3D).visible = space.intersect_ray(query).is_empty()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player == null or host == null:
 		return
+	_filtered_sun_visibility = lerpf(_filtered_sun_visibility, _sun_visibility, 1.0 - exp(-maxf(delta, 0.0) * 18.0))
 	var world := host.environment
 	var view := player.weapon_environment.environment
 	view.tonemap_mode = world.tonemap_mode
 	view.tonemap_exposure = world.tonemap_exposure
 	view.adjustment_enabled = false
 	view.glow_enabled = world.glow_enabled
+	# One photographic response: no extra studio fill or separate bloom on the gun.
+	view.glow_blend_mode = world.glow_blend_mode
 	view.glow_intensity = world.glow_intensity
-	view.glow_bloom = 0.0
+	view.glow_strength = world.glow_strength
+	view.glow_bloom = world.glow_bloom
 	view.glow_hdr_threshold = world.glow_hdr_threshold
+	view.glow_hdr_scale = world.glow_hdr_scale
+	view.background_energy_multiplier = world.background_energy_multiplier
 	view.sky = world.sky
 	view.ambient_light_source = world.ambient_light_source
 	view.ambient_light_color = world.ambient_light_color
@@ -96,7 +103,9 @@ func _process(_delta: float) -> void:
 		var key := player.weapon_key_light
 		key.global_basis = mapping.basis.orthonormalized() * sun.global_basis.orthonormalized()
 		key.light_color = sun.light_color
-		key.light_energy = sun.light_energy * _sun_visibility
+		# Sun visibility: 0 when occluded (indoors), 1 when in direct sun.
+		# Smooth the transition to avoid a hard cut when crossing a doorway.
+		key.light_energy = sun.light_energy * _filtered_sun_visibility
 		key.light_angular_distance = sun.light_angular_distance
 		key.shadow_enabled = high
 		key.directional_shadow_max_distance = 4.0

@@ -194,6 +194,9 @@ func _build_weapon_viewport() -> void:
 	var weapon_viewport := SubViewport.new()
 	weapon_viewport.name = "WeaponViewport"
 	weapon_viewport.own_world_3d = true
+	# Recoil and authored weapon animation are render-frame driven. Interpolating
+	# this isolated hierarchy as physics poses adds lag and stale camera transforms.
+	weapon_viewport.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	weapon_viewport.transparent_bg = true
 	weapon_viewport.handle_input_locally = false
 	weapon_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS

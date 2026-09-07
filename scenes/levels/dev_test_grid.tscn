@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://dkwnxtcdcvr77"]
 
+[ext_resource type="PackedScene" path="res://scenes/levels/dev_surface_details.tscn" id="14_details"]
 [ext_resource type="Shader" uid="uid://4abj64ssl2ff" path="res://shaders/dev_grid.gdshader" id="1_grid"]
 [ext_resource type="Texture2D" uid="uid://cqvk5fbm7fe1m" path="res://assets/environment/sky/kloofendal_43d_clear_puresky_2k.hdr" id="2_sky"]
 [ext_resource type="Script" uid="uid://d1r5f672sn6xm" path="res://scripts/environment/photoreal_environment.gd" id="3_env"]
@@ -257,6 +258,8 @@ _surfaces = [{
 }]
 
 [node name="DevTestGrid" type="Node3D" unique_id=1562256795]
+
+[node name="SurfaceDetails" parent="." instance=ExtResource("14_details")]
 
 [node name="PhotorealEnvironment" type="WorldEnvironment" parent="." unique_id=331818817]
 environment = SubResource("Environment_day")

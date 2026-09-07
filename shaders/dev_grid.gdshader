@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/muzzle_flash_light.gdshaderinc"
+#include "res://shaders/rain_exposure.gdshaderinc"
 
 // Classic greybox dev surface: checkerboard cells plus a thin grid line every
 // cell and a thicker one every `major_cells`. World-space and triplanar, so one
@@ -63,6 +64,14 @@ uniform sampler2D unique_ao_texture : hint_default_white, filter_linear_mipmap;
 uniform float unique_ao_strength : hint_range(0.0, 1.0, 0.01) = 0.0;
 // How much of it also darkens albedo rather than only the AO term. Dirt is not just shadow.
 uniform float unique_ao_albedo : hint_range(0.0, 1.0, 0.01) = 0.45;
+
+group_uniforms MicroDetail;
+// Procedural dust layer: fine particles on upward-facing surfaces.
+uniform float dust_amount : hint_range(0.0, 1.0, 0.01) = 0.0;
+uniform vec3 dust_color : source_color = vec3(0.70, 0.68, 0.63);
+// Procedural stain layer: water marks, oil, chemical residue.
+uniform float stain_amount : hint_range(0.0, 1.0, 0.01) = 0.0;
+uniform vec3 stain_color : source_color = vec3(0.22, 0.20, 0.17);
 
 varying vec3 world_position;
 varying vec3 world_normal;
@@ -170,7 +179,8 @@ void fragment() {
 	METALLIC = 0.0;
 	AO = 1.0;
 	SPECULAR = 0.5;
-	float moisture = clamp(wetness, 0.0, 1.0) * mix(0.65, 1.0, max(world_normal.y, 0.0));
+	float moisture = clamp(wetness, 0.0, 1.0) * mix(0.65, 1.0, max(world_normal.y, 0.0))
+		* rain_exposure_at(world_position) * smoothstep(-0.3, 0.0, world_normal.y);
 	vec3 shading_normal = normalize(world_normal);
 
 	if (texture_blend > 0.0) {
@@ -198,7 +208,7 @@ void fragment() {
 		METALLIC = mix(METALLIC, arm.b, texture_blend);
 		AO = mix(1.0, arm.r, texture_blend);
 		AO_LIGHT_AFFECT = 0.65;
-		float bump = normal_strength * texture_blend * (1.0 - 0.4 * wetness);
+		float bump = normal_strength * texture_blend * (1.0 - 0.4 * moisture);
 		shading_normal = normalize(mix(shading_normal, mapped, clamp(bump, 0.0, 1.0)));
 		// World space to view space: NORMAL is expected in view space in fragment().
 		NORMAL = normalize((VIEW_MATRIX * vec4(shading_normal, 0.0)).xyz);
@@ -207,14 +217,33 @@ void fragment() {
 	// Filter micro variation out before it becomes sub-pixel specular shimmer.
 	float footprint = length(fwidth(world_position * 24.0));
 	float micro = (value_noise(world_position * 24.0) - 0.5) * (1.0 - smoothstep(0.3, 1.2, footprint));
-	float stains = value_noise(world_position * 0.7);
-	moisture *= mix(0.75, 1.0, stains);
-	ALBEDO *= mix(1.0, 0.83, moisture) * (1.0 - roughness_variation * 0.3 * stains);
+	float stains_noise = value_noise(world_position * 0.7);
+	moisture *= mix(0.75, 1.0, stains_noise);
+	ALBEDO *= mix(1.0, 0.83, moisture) * (1.0 - roughness_variation * 0.3 * stains_noise);
 	float dry_roughness = clamp(ROUGHNESS + micro * roughness_variation, 0.12, 0.98);
-	ROUGHNESS = mix(dry_roughness, max(wet_roughness_floor, dry_roughness * 0.7), moisture);
+	ROUGHNESS = mix(dry_roughness, max(wet_roughness_floor, dry_roughness * 0.68), moisture);
 	// Normal variance broadens the BRDF when details can no longer be resolved.
 	float variance = dot(dFdx(shading_normal), dFdx(shading_normal)) + dot(dFdy(shading_normal), dFdy(shading_normal));
-	ROUGHNESS = clamp(sqrt(ROUGHNESS * ROUGHNESS + min(variance * 0.2, 0.12)), 0.12, 1.0);
+	ROUGHNESS = clamp(sqrt(ROUGHNESS * ROUGHNESS + min(variance * 0.18, 0.10)), 0.12, 1.0);
+
+	// --- Procedural micro-detail layers ---
+	// Dust: fine particles on upward-facing surfaces. Increases roughness, lightens albedo.
+	if (dust_amount > 0.001) {
+		float dust_noise = value_noise(world_position * 5.5);
+		float facing_up = smoothstep(0.2, 0.85, world_normal.y);
+		float dust_mask = dust_noise * facing_up * dust_amount * (1.0 - moisture);
+		ALBEDO = mix(ALBEDO, dust_color, dust_mask * 0.5);
+		ROUGHNESS = mix(ROUGHNESS, min(ROUGHNESS + 0.14, 0.98), dust_mask * 0.65);
+	}
+
+	// Stains: water marks, oil, chemical residue. Darker and slightly smoother.
+	if (stain_amount > 0.001) {
+		float stain_noise = value_noise(world_position * 0.28 + vec3(31.7, 12.4, 7.9));
+		float stain_mask = smoothstep(0.52, 0.76, stain_noise) * stain_amount;
+		ALBEDO = mix(ALBEDO, stain_color, stain_mask * 0.65);
+		ROUGHNESS = mix(ROUGHNESS, max(ROUGHNESS - 0.06, 0.12), stain_mask * 0.4);
+	}
+
 	// The existing real OmniLight now owns flash lighting. Adding the old unoccluded
 	// emission here doubled the diffuse energy and illuminated through walls.
 	EMISSION = vec3(0.0);
@@ -234,6 +263,12 @@ void fragment() {
 		if (debug_view == 4) { debug_color = vec3(AO); }
 		if (debug_view == 5) { debug_color = vec3(moisture); }
 		if (debug_view == 6) { debug_color = material_id; }
+		// Debug mode 7: dust mask visualization
+		if (debug_view == 7) {
+			float dust_noise = value_noise(world_position * 5.5);
+			float facing_up = smoothstep(0.2, 0.85, world_normal.y);
+			debug_color = vec3(dust_noise * facing_up * dust_amount);
+		}
 		ALBEDO = vec3(0.0);
 		EMISSION = debug_color;
 	}
