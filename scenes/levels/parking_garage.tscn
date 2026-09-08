@@ -46,6 +46,8 @@
 [ext_resource type="Texture2D" uid="uid://dnjdmuwsmaj8t" path="res://assets/environment/parking/ao/Walls_Plaster_ao.png" id="46_ao_walls_plaster"]
 [ext_resource type="Texture2D" uid="uid://4amret2bkobw" path="res://assets/environment/parking/ao/Ceiling_ao.png" id="47_ao_ceiling"]
 
+[ext_resource type="PackedScene" path="res://assets/environment/parking/fixture_details/deck_fixture_housings.glb" id="48_fixture_details"]
+
 [sub_resource type="Environment" id="Environment_garage"]
 background_mode = 2
 background_color = Color(0.015, 0.017, 0.022, 1)
@@ -2455,6 +2457,8 @@ materials = {
 "Walls_Concrete": SubResource("Material_concrete"),
 "Walls_Plaster": SubResource("Material_plaster")
 }
+
+[node name="FixtureDetails" parent="." instance=ExtResource("48_fixture_details")]
 
 [node name="Lights" type="Node3D" parent="." unique_id=1688288256]
 

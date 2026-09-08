@@ -26,7 +26,7 @@ func _run() -> void:
 	wet.advance(30.0)
 	check(is_equal_approx(wet.wetness, 0.3), "dry at 150 seconds")
 	wet.free()
-	for map_name: String in ["dev_test_grid", "pvp_linse", "parking_garage"]:
+	for map_name: String in ["dev_test_grid", "pvp_linse", "parking_garage", "parking_garage_rework"]:
 		ProjectSettings.set_setting("zero_frame/graphics_quality", 2)
 		ProjectSettings.set_setting("zero_frame/weather", 0)
 		var level := (load("res://scenes/levels/%s.tscn" % map_name) as PackedScene).instantiate()

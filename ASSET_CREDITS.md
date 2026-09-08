@@ -1,5 +1,16 @@
 # ZERO FRAME — Asset Credits
 
+## Parking fixture housings (2026-09-08)
+
+- Original procedural geometry authored for ZERO FRAME through the existing local
+  Blender MCP, using `tools/build_parking_fixture_details.py`; no downloaded models,
+  textures or cloud-generated assets in this addition.
+- Files: `assets/environment/parking/fixture_details/` (editable Blender scene, GLB,
+  provenance/placement manifest). 40 deck housings, five row meshes, 21,600 triangles.
+- Two constant PBR finishes: dielectric powder coat and metallic clips. Unique
+  photographic wear textures are not part of this first geometry pass.
+- The original parking mesh and its emissive strips remain unchanged.
+
 ## Weapons
 
 ### FPS pistol animations
@@ -135,6 +146,12 @@ Full license copies and bundled notices are in `third_party_licenses/`.
   as base surfaces, with `worn_tile_floor`, `brick_wall_006` and `concrete_wall_008` blended in
   over large patches by `shaders/dev_grid.gdshader`.
 - Download: each slug and file URL is validated by `tools/fetch_polyhaven.py` through the Poly Haven API.
+- User-selected parking service finishes (2026-09-08):
+  [`rusty_metal_sheet`](https://polyhaven.com/a/rusty_metal_sheet) for ventilation and
+  [`rusty_metal_05`](https://polyhaven.com/a/rusty_metal_05) for unpainted pipes.
+  2K diffuse, ARM and OpenGL normal maps are fetched by
+  `tools/fetch_parking_requested_metals.py`, with API file-size/MD5 verification and
+  per-asset `source_manifest.json`. Colored pipe coatings are preserved.
 
 ### Poly Haven props for the parking garage
 

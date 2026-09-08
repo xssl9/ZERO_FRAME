@@ -4,6 +4,7 @@ const MAPS: PackedStringArray = [
 	"res://scenes/levels/dev_test_grid.tscn",
 	"res://scenes/levels/pvp_linse.tscn",
 	"res://scenes/levels/parking_garage.tscn",
+	"res://scenes/levels/parking_garage_rework.tscn",
 ]
 
 func _initialize() -> void:

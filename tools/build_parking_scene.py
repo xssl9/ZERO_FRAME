@@ -151,6 +151,8 @@ def main(seed: int = 7) -> int:
         resource("Texture2D", "assets/environment/parking/ao/%s_ao.png" % mesh_name,
                  "ao_" + mesh_name.lower())
 
+    resource("PackedScene", "assets/environment/parking/fixture_details/deck_fixture_housings.glb",
+             "fixture_details")
     subs: list[str] = []
 
     def surface(name: str, texture_key: str, scale: float, roughness: float, wetness: float,
@@ -296,6 +298,10 @@ materials = {
 "Walls_Plaster": SubResource("%s")
 }
 """ % (ids["surfaces"], ceiling_material, annex_material, floor_material, concrete_material, plaster_material))
+
+    # Additive MCP-authored housings; original emissive strips remain the diffusers.
+    nodes.append('[node name="FixtureDetails" parent="." instance=ExtResource("%s")]\n'
+                 % ids["fixture_details"])
 
     # ---- lights ------------------------------------------------------------------------
     # Every lamp is a baked light. The shell of the garage carries a lightmap (its glTF is
