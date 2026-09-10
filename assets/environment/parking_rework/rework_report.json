@@ -1,0 +1,27 @@
+{
+  "added_meshes": 86,
+  "added_triangles": 51592,
+  "parts": {
+    "FloorJoints": 45,
+    "CeilingReveals": 24,
+    "DuctFlanges": 76,
+    "DuctSupports": 91,
+    "PipeFlanges": 18,
+    "PipeSupports": 30,
+    "DrainRecess": 12,
+    "DrainFrames": 48,
+    "DrainBars": 228
+  },
+  "drains": 12,
+  "pipe_flanges": 18,
+  "source_visible_meshes": 601,
+  "base_scene_sha256": "1ab67eb249d2a1eb159c69829cbbd9c1e0f7e3bc4f393dd0e06b2e8881caf6cf",
+  "full_blend": "/home/tuxpc/game/ZERO_FRAME_backups/parking_full_rework_20260908/parking_complete_reworked.blend",
+  "limitations": [
+    "not a whole architectural shell replacement",
+    "visual acceptance pending",
+    "Blender world PBR/photometry approximate",
+    "no GI bake",
+    "flush decorative drains; unchanged floor collider"
+  ]
+}

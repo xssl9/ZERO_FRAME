@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d08h1ljpmr8jh"]
+
+[ext_resource type="Script" uid="uid://be1w7e61wy2ih" path="res://PlantGenerator/Calculation/calculator.gd" id="1_b6uqo"]
+
+[node name="Calculator" type="Node"]
+script = ExtResource("1_b6uqo")

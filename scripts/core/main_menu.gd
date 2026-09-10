@@ -3,7 +3,7 @@ extends Control
 const MAPS: Array[Array] = [
 	["DEV TEST GRID", "res://scenes/levels/dev_test_grid.tscn"],
 	["PVP — LINSE", "res://scenes/levels/pvp_linse.tscn"],
-	["ПАРКИНГ", "res://scenes/levels/parking_garage.tscn"]
+	["ПАРКИНГ", "res://scenes/levels/parking_garage_rework.tscn"]
 ]
 
 const GRAPHICS_NAMES: PackedStringArray = ["AUTO", "PERFORMANCE", "HIGH", "ULTRA"]

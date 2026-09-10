@@ -1,0 +1,1463 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/environment/parking_rework/assembly.glb" id="1_garage"]
+
+[ext_resource type="Script" uid="uid://d1r5f672sn6xm" path="res://scripts/environment/photoreal_environment.gd" id="2_env"]
+[ext_resource type="Shader" uid="uid://dmrbwwhif0fha" path="res://shaders/rain_puddles.gdshader" id="7_puddles"]
+[ext_resource type="Script" uid="uid://cjxfguwq3p33i" path="res://scripts/environment/fullscreen_mesh.gd" id="8_fullscreen"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="11_player"]
+[sub_resource type="Environment" id="Environment_garage"]
+background_mode = 2
+background_color = Color(0.015, 0.017, 0.022, 1)
+background_energy_multiplier = 0.95
+ambient_light_source = 3
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_sky_contribution = 0.88
+ambient_light_energy = 1.15
+reflected_light_source = 2
+tonemap_mode = 4
+tonemap_exposure = 0.82
+ssr_enabled = true
+ssr_max_steps = 48
+ssr_depth_tolerance = 0.12
+ssao_enabled = true
+ssao_radius = 0.9
+ssao_intensity = 1.35
+ssao_power = 1.25
+ssao_detail = 0.55
+ssao_horizon = 0.08
+ssao_light_affect = 0.35
+ssao_ao_channel_affect = 0.65
+ssil_enabled = true
+glow_enabled = true
+glow_intensity = 0.32
+glow_strength = 1.05
+glow_bloom = 0.06
+glow_blend_mode = 0
+glow_hdr_threshold = 1.05
+glow_hdr_scale = 2.2
+fog_enabled = true
+fog_light_color = Color(0.34, 0.35, 0.42, 1)
+fog_density = 0.00065
+fog_sky_affect = 0.08
+fog_height_density = 0.012
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.014
+volumetric_fog_albedo = Color(1, 0.98, 0.95, 1)
+volumetric_fog_emission_energy = 0.0
+volumetric_fog_anisotropy = 0.42
+volumetric_fog_length = 72.0
+volumetric_fog_ambient_inject = 0.05
+volumetric_fog_sky_affect = 0.06
+
+[sub_resource type="CameraAttributesPhysical" id="CameraAttributes_garage"]
+exposure_sensitivity = 160.0
+exposure_multiplier = 0.82
+
+[sub_resource type="ShaderMaterial" id="Material_puddles"]
+render_priority = 0
+shader = ExtResource("7_puddles")
+shader_parameter/flash_position_energy = Vector4(0, 0, 0, 0)
+shader_parameter/flash_color_radius = Color(1, 0.68, 0.33, 9)
+shader_parameter/flash_wet_smear = 5.5
+shader_parameter/flash_specular_gain = 2.4
+shader_parameter/flash_sheen_gain = 0.8
+shader_parameter/puddle_color = Color(0.012, 0.014, 0.02, 0.82)
+shader_parameter/puddle_reflectivness = 2.0
+shader_parameter/puddle_micro_mask_size = 2.4
+shader_parameter/puddle_macro_mask_size = 11.0
+shader_parameter/puddle_mask_threshold = 0.46
+shader_parameter/ssr_resolution = 0.35
+shader_parameter/ssr_max_travel = 26.0
+shader_parameter/ssr_max_diff = 0.6
+shader_parameter/ssr_screen_border_fadeout = 0.2
+shader_parameter/ripple_max_radius = 0.0
+shader_parameter/ripple_scale = 0.5
+shader_parameter/ripple_speed = 0.3
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_2chx4"]
+_surfaces = [{
+"aabb": AABB(-1, -1, 0, 4, 4, 1e-05),
+"format": 34359738369,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 3,
+"vertex_data": PackedByteArray(0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 0, 0, 0, 0, 64, 64, 0, 0, 128, 191, 0, 0, 0, 0, 0, 0, 128, 191, 0, 0, 64, 64, 0, 0, 0, 0)
+}]
+
+[node name="ParkingGarage" type="Node3D" unique_id=436393114]
+
+[node name="PhotorealEnvironment" type="WorldEnvironment" parent="." unique_id=619432379]
+environment = SubResource("Environment_garage")
+camera_attributes = SubResource("CameraAttributes_garage")
+script = ExtResource("2_env")
+use_hdr_panorama = false
+sky_energy = 0.1
+ambient_energy = 0.05
+exposure_multiplier = 0.8
+shaft_density = 0.006
+fill_light_energy = 0.0
+weather = 1
+standing_water = 0.0
+allow_sdfgi = false
+
+[node name="Garage" parent="." instance=ExtResource("1_garage")]
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="LIGHT_Deck01" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.196
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 117.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck02" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.196
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 117.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck03" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.196
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 117.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck04" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.196
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 117.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck05" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.196
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 117.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck06" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.468
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 127.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck07" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.468
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 127.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck08" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.468
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 127.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck09" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.468
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 127.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck10" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.468
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 127.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck11" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.332
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 122.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck12" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.332
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 122.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck13" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.332
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 122.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck14" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.332
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 122.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck15" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.332
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 122.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck16" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.604
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 132.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck17" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.604
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 132.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck18" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.604
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 132.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck19" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.604
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 132.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck20" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.604
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 132.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck21" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.298
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 121.25
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck22" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.298
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 121.25
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck23" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.298
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 121.25
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck24" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.298
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 121.25
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck25" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.298
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 121.25
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck26" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.502
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 128.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck27" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.502
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 128.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck28" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.502
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 128.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck29" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.502
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 128.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck30" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.502
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 128.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck31" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.23
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 118.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck32" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.23
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 118.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck33" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.23
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 118.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck34" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.23
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 118.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck35" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.23
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 118.75
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck36" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 2.86999989, -18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.4
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 125
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck37" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 2.86999989, -9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.4
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 125
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck38" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 2.86999989, 0)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.4
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 125
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck39" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 2.86999989, 9)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.4
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 125
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Deck40" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 2.86999989, 18)
+light_color = Color(1, 0.964999974, 0.899999976, 1)
+light_energy = 3.4
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 125
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor41" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, -18)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor42" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, -13.5)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor43" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, -9)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor44" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, -4.5)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor45" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, 0)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor46" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, 4.5)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor47" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, 9)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor48" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, 13.5)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Corridor49" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-4.37113883e-08, 0, -1, -1, 0, 4.37113883e-08, 0, 1, 0, 36.2999992, 2.77999997, 18)
+light_color = Color(0.899999976, 0.949999988, 1, 1)
+light_energy = 2.176
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 80
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Room50" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 48.2999992, 2.75, 16)
+light_color = Color(1, 0.920000017, 0.800000012, 1)
+light_energy = 2.584
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 95
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Room51" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 48.2999992, 2.75, 8)
+light_color = Color(1, 0.920000017, 0.800000012, 1)
+light_energy = 2.584
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 95
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Room52" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 48.2999992, 2.75, 0)
+light_color = Color(1, 0.920000017, 0.800000012, 1)
+light_energy = 2.584
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 95
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_Room53" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 48.2999992, 2.75, -8)
+light_color = Color(1, 0.920000017, 0.800000012, 1)
+light_energy = 2.584
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 95
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="LIGHT_ExitParking" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 2.45000005, -20)
+light_color = Color(1, 0.150000006, 0.100000001, 1)
+light_energy = 3
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 24
+metadata/blender_light_type = "POINT"
+omni_range = 5.0
+omni_attenuation = 1.5
+
+[node name="LIGHT_ExitAnnex" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 36.2999992, 2.4000001, 19)
+light_color = Color(1, 0.150000006, 0.100000001, 1)
+light_energy = 2.5999999
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 20.7999992
+metadata/blender_light_type = "POINT"
+omni_range = 5.0
+omni_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck01" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.81248004
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 103.400002
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck02" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.81248004
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 103.400002
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck03" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.81248004
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 103.400002
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck04" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.81248004
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 103.400002
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck05" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -26, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.81248004
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 103.400002
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck06" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.05183992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 112.199997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck07" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.05183992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 112.199997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck08" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.05183992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 112.199997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck09" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.05183992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 112.199997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck10" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -18.6000004, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.05183992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 112.199997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck11" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.93216008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 107.800003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck12" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.93216008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 107.800003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck13" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.93216008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 107.800003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck14" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.93216008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 107.800003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck15" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -11.1999998, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.93216008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 107.800003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck16" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.17151996
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 116.599998
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck17" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.17151996
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 116.599998
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck18" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.17151996
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 116.599998
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck19" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.17151996
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 116.599998
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck20" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -3.79999995, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.17151996
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 116.599998
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck21" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.90223992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 106.699997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck22" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.90223992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 106.699997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck23" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.90223992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 106.699997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck24" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.90223992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 106.699997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck25" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 3.5999999, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.90223992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 106.699997
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck26" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.08176008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 113.300003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck27" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.08176008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 113.300003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck28" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.08176008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 113.300003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck29" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.08176008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 113.300003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck30" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 11, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 3.08176008
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 113.300003
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck31" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.8424
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 104.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck32" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.8424
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 104.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck33" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.8424
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 104.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck34" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.8424
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 104.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck35" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 18.3999996, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.8424
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 104.5
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck36" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 6.26999998, -18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 110
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck37" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 6.26999998, -9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 110
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck38" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 6.26999998, 0)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 110
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck39" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 6.26999998, 9)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 110
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="L02_LIGHT_Deck40" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 25.7999992, 6.26999998, 18)
+light_color = Color(0.939999998, 0.964999974, 1, 1)
+light_energy = 2.992
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 110
+metadata/blender_light_type = "AREA"
+spot_range = 13.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="GP_EntranceDaylight" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(-1, -1.50995803e-07, 0, -1.50995803e-07, 1, -7.54979013e-08, 1.13998658e-14, -7.54979013e-08, -1, 0, 1.60000002, -20.3500004)
+light_color = Color(0.75999999, 0.860000014, 1, 1)
+light_energy = 17.68
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 650
+metadata/blender_light_type = "AREA"
+spot_range = 25.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="GP_RampDaylight" type="SpotLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -34, 8, 0)
+light_color = Color(0.75999999, 0.860000014, 1, 1)
+light_energy = 24.48
+shadow_enabled = true
+shadow_bias = 0.045
+metadata/blender_energy_watts = 900
+metadata/blender_light_type = "AREA"
+spot_range = 25.0
+spot_angle = 85.0
+spot_attenuation = 1.5
+
+[node name="Reflections" type="Node3D" parent="." unique_id=1036765836]
+
+[node name="Deck0_0" type="ReflectionProbe" parent="Reflections" unique_id=1602086096]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5, 1.55, -13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck0_1" type="ReflectionProbe" parent="Reflections" unique_id=1892681932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5, 1.55, 0)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck0_2" type="ReflectionProbe" parent="Reflections" unique_id=1942517078]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5, 1.55, 13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_0" type="ReflectionProbe" parent="Reflections" unique_id=631976214]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.55, -13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_1" type="ReflectionProbe" parent="Reflections" unique_id=281733418]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.55, 0)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck1_2" type="ReflectionProbe" parent="Reflections" unique_id=1409545112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.55, 13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_0" type="ReflectionProbe" parent="Reflections" unique_id=643391514]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.55, -13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_1" type="ReflectionProbe" parent="Reflections" unique_id=361554712]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.55, 0)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck2_2" type="ReflectionProbe" parent="Reflections" unique_id=1639415680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.55, 13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_0" type="ReflectionProbe" parent="Reflections" unique_id=138991587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 1.55, -13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_1" type="ReflectionProbe" parent="Reflections" unique_id=59910648]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 1.55, 0)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Deck3_2" type="ReflectionProbe" parent="Reflections" unique_id=1803472617]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 1.55, 13.3)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(17, 3.1, 16)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Hall0" type="ReflectionProbe" parent="Reflections" unique_id=1451234613]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.6, 1.5, -10)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(5, 3, 22)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Corridor0" type="ReflectionProbe" parent="Reflections" unique_id=79055720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.3, 1.5, -10)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(2.6, 3, 22)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Hall1" type="ReflectionProbe" parent="Reflections" unique_id=769156665]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.6, 1.5, 10)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(5, 3, 22)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Corridor1" type="ReflectionProbe" parent="Reflections" unique_id=269533501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.3, 1.5, 10)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(2.6, 3, 22)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room0" type="ReflectionProbe" parent="Reflections" unique_id=2035354118]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 1.5, -13.95)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.5, 3, 13.5)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room1" type="ReflectionProbe" parent="Reflections" unique_id=1873694624]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 1.5, -4.1)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.5, 3, 9.6)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room2" type="ReflectionProbe" parent="Reflections" unique_id=303073785]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 1.5, 4.1)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.5, 3, 9.6)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="Room3" type="ReflectionProbe" parent="Reflections" unique_id=77955966]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 1.5, 12.15)
+blend_distance = 2.0
+max_distance = 44.0
+size = Vector3(19.5, 3, 9.7)
+box_projection = true
+interior = true
+enable_shadows = true
+
+[node name="SpawnPoint3D" type="Marker3D" parent="." unique_id=1062178000 groups=["player_spawn_point"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -26, 0.1, -2)
+
+[node name="WetGround" type="MeshInstance3D" parent="." unique_id=2034148134]
+material_override = SubResource("Material_puddles")
+cast_shadow = 0
+extra_cull_margin = 16384.0
+gi_mode = 0
+mesh = SubResource("ArrayMesh_2chx4")
+script = ExtResource("8_fullscreen")
+
+[node name="Player" parent="." unique_id=1682511850 instance=ExtResource("11_player")]

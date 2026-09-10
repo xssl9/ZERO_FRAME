@@ -7,3 +7,4 @@
 *.fbx binary
 *.gltf -text
 *.bin binary
+assets/environment/parking_rework/assembly.glb filter=lfs diff=lfs merge=lfs -text

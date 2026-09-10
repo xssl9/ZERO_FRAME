@@ -374,6 +374,9 @@ func _configure_light_shafts(enabled: bool, gi_available: bool) -> void:
 	environment.volumetric_fog_temporal_reprojection_amount = 0.88
 
 func _configure_scene_nodes() -> void:
+	# A menu selection can detach the preview before this deferred call runs.
+	if not is_inside_tree():
+		return
 	# The containing level, not current_scene (which is the menu during previews).
 	var scene_root := get_parent()
 	if scene_root == null or is_instance_valid(_scene_root):
