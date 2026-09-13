@@ -455,7 +455,14 @@ func _configure_weather_nodes(scene_root: Node) -> void:
 			# Angular distance controls penumbra softness. Overcast/rain profiles use a
 			# larger value so shadows are soft and diffuse, matching cloud-filtered light.
 			sun.light_angular_distance = profile.sun_angular_distance
-			sun.light_volumetric_fog_energy = 1.0
+			# Shadow blur from the weather profile: clear = sharp (1.0), overcast/rain = soft.
+			sun.shadow_blur = profile.shadow_softness
+			# Under heavy cloud cover the remaining directional shadow fades to near-invisible,
+			# matching the diffuse wraparound of a fully overcast sky.
+			sun.shadow_opacity = lerpf(1.0, 0.3, clampf((profile.cloud_cover - 0.5) / 0.5, 0.0, 1.0))
+			# Volumetric fog scattering from the sun dims under clouds: no sharp god-rays
+			# when the sky is a featureless grey dome.
+			sun.light_volumetric_fog_energy = lerpf(1.0, 0.15, profile.cloud_cover)
 			sun.shadow_enabled = true
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 			# Extend shadow distance on ULTRA for better far-field contact shadows.

@@ -11,6 +11,8 @@ var _mirrors: Dictionary = {}
 var _sun_visibility: float = 1.0
 var _filtered_sun_visibility: float = 1.0
 var _timer: float = 0.0
+var _world_probes: Array[ReflectionProbe] = []
+var _weapon_probe: ReflectionProbe = null
 
 func configure(owner_player: PlayerController, environment: PhotorealEnvironment, world_sun: DirectionalLight3D) -> void:
 	player = owner_player
@@ -20,6 +22,9 @@ func configure(owner_player: PlayerController, environment: PhotorealEnvironment
 	for node: Node in host.get_parent().find_children("*", "Light3D", true, false):
 		if node.get_viewport() == player.get_viewport() and (node is OmniLight3D or node is SpotLight3D):
 			_sources.append(node as Light3D)
+	for node: Node in host.get_parent().find_children("*", "ReflectionProbe", true, false):
+		if node.get_viewport() == player.get_viewport():
+			_world_probes.append(node as ReflectionProbe)
 
 func _physics_process(delta: float) -> void:
 	if player == null or host == null:
@@ -125,7 +130,34 @@ func _process(delta: float) -> void:
 			mirror.spot_attenuation = (source as SpotLight3D).spot_attenuation
 			mirror.spot_angle_attenuation = (source as SpotLight3D).spot_angle_attenuation
 
+	# Relay the nearest world reflection probe into the weapon viewport so metallic
+	# surfaces (AK-74M receiver, barrel) reflect the surrounding room instead of void.
+	if _world_probes.size() > 0:
+		var nearest: ReflectionProbe = null
+		var best_dist := INF
+		var eye := player.camera.global_position
+		for probe: ReflectionProbe in _world_probes:
+			if not is_instance_valid(probe) or not probe.is_visible_in_tree():
+				continue
+			var d := eye.distance_squared_to(probe.global_position)
+			if d < best_dist:
+				best_dist = d
+				nearest = probe
+		if nearest != null:
+			if _weapon_probe == null:
+				_weapon_probe = ReflectionProbe.new()
+				_weapon_probe.name = "WeaponReflectionProbe"
+				_weapon_probe.interior = true
+				_weapon_probe.box_projection = true
+				_weapon_probe.enable_shadows = false
+				player.weapon_camera.get_viewport().add_child(_weapon_probe)
+			_weapon_probe.global_transform = mapping * nearest.global_transform
+			_weapon_probe.size = nearest.size
+			_weapon_probe.max_distance = nearest.max_distance
+
 func _exit_tree() -> void:
 	for mirror: Light3D in _mirrors.values():
 		if is_instance_valid(mirror):
 			mirror.queue_free()
+	if is_instance_valid(_weapon_probe):
+		_weapon_probe.queue_free()
