@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1qia4kf6gpp8"
-path="res://.godot/imported/soldier_rifle_locomotion_tripo_rgb_40362f99-f408-4169-99af-bda27b86399d-Diffuse Texture.png-85dc9f2c764746b8c39cd35f9d569087.ctex"
+path.s3tc="res://.godot/imported/soldier_rifle_locomotion_tripo_rgb_40362f99-f408-4169-99af-bda27b86399d-Diffuse Texture.png-85dc9f2c764746b8c39cd35f9d569087.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "bada7a1d4ddae00f8ae4737cf9741e92"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://IMPORTANT_MULTIPLAYER_ASSETS/soldier_rifle_locomotion_tripo_rgb_40362f99-f408-4169-99af-bda27b86399d-Diffuse Texture.png"
-dest_files=["res://.godot/imported/soldier_rifle_locomotion_tripo_rgb_40362f99-f408-4169-99af-bda27b86399d-Diffuse Texture.png-85dc9f2c764746b8c39cd35f9d569087.ctex"]
+dest_files=["res://.godot/imported/soldier_rifle_locomotion_tripo_rgb_40362f99-f408-4169-99af-bda27b86399d-Diffuse Texture.png-85dc9f2c764746b8c39cd35f9d569087.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

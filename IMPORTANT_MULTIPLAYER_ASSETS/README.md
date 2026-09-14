@@ -14,20 +14,15 @@
 * **Единый `AnimationPlayer` со всеми 50 тактическими анимациями:**
   * **Стойки удержания оружия:** `idle`, `idle_aiming` (прицеливание), `idle_crouching` (присед), `idle_crouching_aiming`.
   * **Полная 8-направленная ходьба с автоматом (Walk 8-way):**
-    `walk_forward`, `walk_backward`, `walk_left`, `walk_right`, `walk_forward_left`, `walk_forward_right`, `walk_backward_left`, `walk_backward_right`.
+	`walk_forward`, `walk_backward`, `walk_left`, `walk_right`, `walk_forward_left`, `walk_forward_right`, `walk_backward_left`, `walk_backward_right`.
   * **Полная 8-направленная ходьба в приседе (Crouch Walk 8-way):**
-    `walk_crouching_forward`, `walk_crouching_backward`, `walk_crouching_left`, `walk_crouching_right`, диагонали.
+	`walk_crouching_forward`, `walk_crouching_backward`, `walk_crouching_left`, `walk_crouching_right`, диагонали.
   * **Полный 8-направленный тактический бег (Run 8-way):**
-    `run_forward`, `run_backward`, `run_left`, `run_right`, `run_forward_left`, `run_forward_right`, `run_backward_left`, `run_backward_right`.
+	`run_forward`, `run_backward`, `run_left`, `run_right`, `run_forward_left`, `run_forward_right`, `run_backward_left`, `run_backward_right`.
   * **Полный 8-направленный спринт (Sprint 8-way):**
-    `sprint_forward`, `sprint_backward`, `sprint_left`, `sprint_right`, диагонали.
+	`sprint_forward`, `sprint_backward`, `sprint_left`, `sprint_right`, диагонали.
   * **Прыжки и развороты:** `jump_up`, `jump`, `jump_down`, `turn_90_left`, `turn_90_right`, развороты в приседе.
   * **Смерти и попадания:** 6 реалистичных анимаций гибели (хэдшоты спереди/сзади, падения в приседе и стоя).
-
-### 🗄️ `Pro_Rifle_Pack.zip` (20.3 МБ) — ИСХОДНЫЙ АРХИВ
-Оригинальный нетронутый архив от Mixamo со всеми отдельными FBX-файлами на случай, если потребуется извлечь какую-то анимацию отдельно или доработать в Blender.
-
----
 
 ## 2. Зачем это нужно для онлайна (Steam Multiplayer)
 
@@ -52,10 +47,10 @@
 2. **ТРЕБУЕТСЯ ПОЛНОЦЕННАЯ ЛОКОМОЦИЯ (НЕ УПРОЩАТЬ!):**
    * **Никаких примитивных решений** вроде поворота корпуса боком или инверсии скорости анимации задом наперед.
    * В этом файле уже зашита **честная 8-направленная тактическая локомоция**. Обязательно строй `AnimationTree` на `BlendSpace2D` для каждого режима:
-     * `Walk_BlendSpace2D` (8 направлений: шаг вперед, назад, стрейфы влево/вправо и диагонали).
-     * `Run_BlendSpace2D` (8 направлений: тактический бег во все стороны).
-     * `Sprint_BlendSpace2D` (8 направлений спринта).
-     * `Crouch_BlendSpace2D` (8 направлений приседа).
+	 * `Walk_BlendSpace2D` (8 направлений: шаг вперед, назад, стрейфы влево/вправо и диагонали).
+	 * `Run_BlendSpace2D` (8 направлений: тактический бег во все стороны).
+	 * `Sprint_BlendSpace2D` (8 направлений спринта).
+	 * `Crouch_BlendSpace2D` (8 направлений приседа).
    * Сетевой контроллер должен передавать локальный вектор скорости соперника `Vector2(local_velocity.x, -local_velocity.z)` прямо в позицию смешивания `BlendSpace2D`, чтобы ноги соперника точно отбивали шаги по направлению движения.
 3. **Крепление оружия у соперника:**
    * Автомат АК-74М или пистолет у сетевого соперника вешается через `BoneAttachment3D` на кость правой кисти: **`mixamorig_RightHand`**.
