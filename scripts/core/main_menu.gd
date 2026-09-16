@@ -26,6 +26,19 @@ var _panorama_yaw: float = 0.0
 var _panorama_pitch: float = -3.0
 var _dragging: bool = false
 
+# Lobby state
+var _main_panel: VBoxContainer
+var _lobby_panel: VBoxContainer
+var _member_list: VBoxContainer
+var _steam_status: Label
+var _lobby_map_button: Button
+var _lobby_ready_button: Button
+var _lobby_start_button: Button
+var _create_lobby_button: Button
+var _lobby_map_index: int = 0
+var _in_lobby: bool = false
+var _is_ready: bool = false
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_build_panorama()
@@ -50,22 +63,168 @@ func _ready() -> void:
 	scroll.position = Vector2(80.0, 175.0)
 	scroll.size = Vector2(460.0, 455.0)
 	background.add_child(scroll)
-	var buttons := VBoxContainer.new()
-	buttons.custom_minimum_size = Vector2(430.0, 0.0)
-	buttons.add_theme_constant_override("separation", 8)
-	scroll.add_child(buttons)
+	# --- Main button list (single-player maps + settings) ---
+	_main_panel = VBoxContainer.new()
+	_main_panel.custom_minimum_size = Vector2(430.0, 0.0)
+	_main_panel.add_theme_constant_override("separation", 8)
+	scroll.add_child(_main_panel)
 	for map_data: Array in MAPS:
-		_add_button(buttons, map_data[0] as String, _start_map.bind(map_data[1] as String))
-	graphics_button = _add_button(buttons, "", _cycle_graphics)
+		_add_button(_main_panel, map_data[0] as String, _start_map.bind(map_data[1] as String))
+	graphics_button = _add_button(_main_panel, "", _cycle_graphics)
 	_refresh_graphics_button()
-	weather_button = _add_button(buttons, "", _cycle_weather)
+	weather_button = _add_button(_main_panel, "", _cycle_weather)
 	_refresh_weather_button()
-	_add_button(buttons, "ВЫХОД", _quit)
-	var hint := Label.new()
-	hint.text = "ЛКМ — осмотреться"
-	hint.modulate = Color(0.65, 0.72, 0.74, 0.6)
-	hint.position = Vector2(84.0, 648.0)
-	background.add_child(hint)
+	_create_lobby_button = _add_button(_main_panel, "СОЗДАТЬ ЛОББИ", _create_lobby)
+	_add_button(_main_panel, "ВЫХОД", _quit)
+	# --- Lobby panel (hidden until a lobby is entered) ---
+	_build_lobby_panel(scroll)
+	# --- Steam status ---
+	_steam_status = Label.new()
+	_steam_status.modulate = Color(0.55, 0.7, 0.72, 0.7)
+	_steam_status.position = Vector2(84.0, 648.0)
+	background.add_child(_steam_status)
+	_update_steam_status()
+	# Connect to SteamManager signals if available.
+	if _steam_available():
+		SteamManager.lobby_entered.connect(_on_lobby_entered)
+		SteamManager.lobby_exited.connect(_on_lobby_exited)
+		SteamManager.lobby_members_changed.connect(_on_lobby_members_changed)
+		SteamManager.status_changed.connect(func(_t: String) -> void: _update_steam_status())
+		# If we already have an active lobby (returned from a match), show the panel.
+		if SteamManager.lobby_id != 0:
+			call_deferred("_on_lobby_entered", SteamManager.lobby_id)
+	else:
+		_create_lobby_button.disabled = true
+		_create_lobby_button.text = "ЛОББИ (STEAM НЕ ДОСТУПЕН)"
+
+# --- Lobby panel ----------------------------------------------------------
+
+func _build_lobby_panel(scroll: ScrollContainer) -> void:
+	_lobby_panel = VBoxContainer.new()
+	_lobby_panel.custom_minimum_size = Vector2(430.0, 0.0)
+	_lobby_panel.add_theme_constant_override("separation", 8)
+	_lobby_panel.visible = false
+	scroll.add_child(_lobby_panel)
+	var header := Label.new()
+	header.text = "ЛОББИ"
+	header.add_theme_font_size_override("font_size", 24)
+	header.modulate = Color(0.82, 0.92, 1.0)
+	_lobby_panel.add_child(header)
+	_member_list = VBoxContainer.new()
+	_member_list.name = "MemberList"
+	_member_list.add_theme_constant_override("separation", 4)
+	_lobby_panel.add_child(_member_list)
+	var sep := HSeparator.new()
+	sep.modulate = Color(0.4, 0.5, 0.55, 0.5)
+	_lobby_panel.add_child(sep)
+	_lobby_map_button = _add_button(_lobby_panel, "", _cycle_lobby_map)
+	_refresh_lobby_map_button()
+	_add_button(_lobby_panel, "ПРИГЛАСИТЬ ДРУГА", _invite_friend)
+	_lobby_ready_button = _add_button(_lobby_panel, "ГОТОВ", _toggle_ready)
+	_lobby_start_button = _add_button(_lobby_panel, "НАЧАТЬ МАТЧ", _start_match)
+	_add_button(_lobby_panel, "ПОКИНУТЬ ЛОББИ", _leave_lobby)
+
+func _steam_available() -> bool:
+	return SteamManager != null and SteamManager.available
+
+func _update_steam_status() -> void:
+	if _steam_status == null:
+		return
+	if SteamManager != null:
+		_steam_status.text = SteamManager.status_text
+	else:
+		_steam_status.text = "STEAM: НЕ ЗАГРУЖЕН"
+
+func _create_lobby() -> void:
+	if not _steam_available():
+		return
+	SteamManager.create_lobby()
+
+func _on_lobby_entered(_lobby_id: int) -> void:
+	_in_lobby = true
+	_main_panel.visible = false
+	_lobby_panel.visible = true
+	_update_member_list()
+	_update_lobby_buttons()
+
+func _on_lobby_exited() -> void:
+	_in_lobby = false
+	_is_ready = false
+	_main_panel.visible = true
+	_lobby_panel.visible = false
+
+func _on_lobby_members_changed() -> void:
+	_update_member_list()
+	_update_lobby_buttons()
+
+func _update_member_list() -> void:
+	for child: Node in _member_list.get_children():
+		child.queue_free()
+	if not _steam_available() or SteamManager.lobby_id == 0:
+		return
+	var member_ids := SteamManager.members()
+	for member_id: int in member_ids:
+		var mname := SteamManager.member_name(member_id)
+		var ready := SteamManager.is_member_ready(member_id)
+		var is_host_member := SteamManager.is_host() and member_id == SteamManager.steam_id
+		var row := HBoxContainer.new()
+		row.custom_minimum_size = Vector2(420.0, 36.0)
+		_member_list.add_child(row)
+		var name_label := Label.new()
+		var prefix := "★ " if is_host_member else "  "
+		name_label.text = "%s%s" % [prefix, mname]
+		name_label.custom_minimum_size = Vector2(300.0, 32.0)
+		row.add_child(name_label)
+		var status_label := Label.new()
+		status_label.text = "ГОТОВ" if ready else "—"
+		status_label.modulate = Color(0.3, 1.0, 0.4) if ready else Color(0.55, 0.55, 0.55)
+		status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		status_label.custom_minimum_size = Vector2(100.0, 32.0)
+		row.add_child(status_label)
+
+func _update_lobby_buttons() -> void:
+	if not _steam_available():
+		return
+	var host := SteamManager.is_host()
+	_lobby_start_button.visible = host
+	_lobby_map_button.visible = host
+	if host:
+		_lobby_start_button.disabled = not SteamManager.everyone_ready()
+	_lobby_ready_button.text = "НЕ ГОТОВ" if _is_ready else "ГОТОВ"
+
+func _invite_friend() -> void:
+	if _steam_available():
+		SteamManager.invite_friend()
+
+func _toggle_ready() -> void:
+	if not _steam_available():
+		return
+	_is_ready = not _is_ready
+	SteamManager.set_ready(_is_ready)
+	_lobby_ready_button.text = "НЕ ГОТОВ" if _is_ready else "ГОТОВ"
+
+func _cycle_lobby_map() -> void:
+	_lobby_map_index = (_lobby_map_index + 1) % MAPS.size()
+	_refresh_lobby_map_button()
+
+func _refresh_lobby_map_button() -> void:
+	if _lobby_map_button != null:
+		_lobby_map_button.text = "КАРТА: %s" % (MAPS[_lobby_map_index][0] as String)
+
+func _start_match() -> void:
+	if not _steam_available() or not SteamManager.is_host():
+		return
+	if not SteamManager.everyone_ready():
+		return
+	var selected_map: String = MAPS[_lobby_map_index][1] as String
+	NetworkGame.host_match(selected_map)
+
+func _leave_lobby() -> void:
+	if _steam_available():
+		SteamManager.leave_lobby()
+	_on_lobby_exited()
+
+# --- Panorama background --------------------------------------------------
 
 # The map itself is the menu background, rendered by its own camera in a SubViewport. The
 # Player node is dropped before the level enters the tree, so it never grabs the mouse or
@@ -118,6 +277,8 @@ func _brighten_panorama(level: Node) -> void:
 		return
 	world_environment.environment.tonemap_exposure *= 1.4
 
+# --- Input ----------------------------------------------------------------
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _panorama_camera == null:
 		return
@@ -141,6 +302,8 @@ func _process(delta: float) -> void:
 func _apply_panorama_rotation() -> void:
 	_panorama_camera.rotation_degrees = Vector3(_panorama_pitch, _panorama_yaw, 0.0)
 
+# --- Shared button factory ------------------------------------------------
+
 func _add_button(parent: VBoxContainer, label_text: String, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = label_text
@@ -148,6 +311,8 @@ func _add_button(parent: VBoxContainer, label_text: String, callback: Callable) 
 	button.pressed.connect(callback)
 	parent.add_child(button)
 	return button
+
+# --- Graphics and weather cycling -----------------------------------------
 
 func _cycle_graphics() -> void:
 	var current := int(ProjectSettings.get_setting("zero_frame/graphics_quality", 0))

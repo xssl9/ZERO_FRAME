@@ -18,3 +18,4 @@ mono_crash.*.json
 
 # Python bytecode from the asset and level generators in tools/
 __pycache__/
+build/

@@ -54,6 +54,10 @@ var _overlay_clock: float = 0.0
 var _stamp_updated: float = -1.0
 var _stride_distance: float = 0.0
 var _was_on_floor: bool = true
+var _body_model: Node3D
+var _body_skeleton: Skeleton3D
+var _body_locomotion: SoldierLocomotion
+var _body_rig_modifier: SoldierRigModifier
 
 func _ready() -> void:
 	add_to_group("player")
@@ -70,6 +74,7 @@ func _ready() -> void:
 	# Deferred: the level's environment resolves its weather in a deferred pass of its own,
 	# and the viewmodel grade is copied from the result.
 	call_deferred("_bind_level_lighting")
+	_build_body_awareness()
 
 func _build_movement_audio() -> void:
 	# Non-positional on purpose. The shooter's own boots are at the listener, and a
@@ -440,6 +445,7 @@ func _physics_process(delta: float) -> void:
 	_update_bodycam(delta)
 	hud_ammo.text = weapon_manager.get_hud_text()
 	hud_status.text = weapon_manager.get_status_text()
+	_update_body_awareness(delta)
 
 func _update_lean(_delta: float) -> void:
 	var physics_camera := camera as BodycamPhysics
@@ -581,3 +587,69 @@ func apply_damage(amount: float) -> void:
 		reset_physics_interpolation()
 		velocity = Vector3.ZERO
 		health = 100.0
+
+# --- Body Awareness (first-person soldier legs) ---------------------------
+
+func _build_body_awareness() -> void:
+	var packed := load("res://IMPORTANT_MULTIPLAYER_ASSETS/soldier_rifle_locomotion.glb") as PackedScene
+	if packed == null:
+		return
+	_body_model = packed.instantiate()
+	_body_model.name = "BodyModel"
+	add_child(_body_model)
+	# The model is oriented and scaled at the CharacterBody3D origin (feet).
+	var body_anim_player: AnimationPlayer
+	for child: Node in _body_model.find_children("*", "Skeleton3D", true, false):
+		_body_skeleton = child as Skeleton3D
+		break
+	for child: Node in _body_model.find_children("*", "AnimationPlayer", true, false):
+		body_anim_player = child as AnimationPlayer
+		break
+	if _body_skeleton == null or body_anim_player == null:
+		push_warning("PLAYER: Body awareness: Skeleton3D или AnimationPlayer не найдены")
+		return
+	# Rig modifier hides head and arms so they don't clip the camera / viewmodel.
+	_body_rig_modifier = SoldierRigModifier.new()
+	_body_rig_modifier.name = "BodyRigModifier"
+	_body_rig_modifier.hide_upper_body = true
+	_body_skeleton.add_child(_body_rig_modifier)
+	# AnimationTree for the body model (independent of the viewmodel).
+	var body_tree := AnimationTree.new()
+	body_tree.name = "BodyAnimTree"
+	_body_model.add_child(body_tree)
+	# 8-way locomotion builder.
+	_body_locomotion = SoldierLocomotion.new()
+	_body_locomotion.name = "BodyLocomotion"
+	add_child(_body_locomotion)
+	_body_locomotion.build(body_tree, body_anim_player)
+
+func _update_body_awareness(delta: float) -> void:
+	if _body_locomotion == null:
+		return
+	var local_vel := global_transform.basis.inverse() * velocity
+	var crouching := Input.is_action_pressed("crouch")
+	var aiming := Input.is_action_pressed("aim")
+	var h_speed := Vector2(velocity.x, velocity.z).length()
+	var sprinting := Input.is_action_pressed("sprint") and h_speed > SPRINT_SPEED * 0.6
+	var airborne := not is_on_floor()
+	_body_locomotion.update(local_vel, crouching, aiming, sprinting, airborne, false, delta)
+	if _body_rig_modifier != null and bodycam != null:
+		var pitch_pivot := bodycam.get_parent() as Node3D
+		if pitch_pivot != null:
+			_body_rig_modifier.aim_pitch = rad_to_deg(pitch_pivot.rotation.x)
+
+# --- Multiplayer support --------------------------------------------------
+
+func teleport_to(target: Transform3D) -> void:
+	global_transform = Transform3D(
+		Basis(Vector3.UP, target.basis.get_euler().y),
+		target.origin)
+	reset_physics_interpolation()
+	velocity = Vector3.ZERO
+
+func revive() -> void:
+	health = 100.0
+
+func notify_hit_confirmed(_zone: String, _killed: bool) -> void:
+	# TODO: hit-marker HUD feedback.
+	pass

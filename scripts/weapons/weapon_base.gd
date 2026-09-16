@@ -769,9 +769,19 @@ func _fire_hitscan() -> void:
 		+ basis.y * randf_range(-spread, spread)).normalized()
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * 120.0)
 	query.exclude = [player.get_rid()]
+	query.collide_with_areas = true
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
 		var collider: Object = hit["collider"]
+		# Networked hitbox: Area3D with metadata set by SoldierHitboxes.
+		if collider is Area3D and collider.has_meta("hit_zone"):
+			var zone := String(collider.get_meta("hit_zone"))
+			var target_peer := int(collider.get_meta("hit_peer"))
+			var network_game := get_node_or_null("/root/NetworkGame")
+			if network_game != null and network_game.get("active"):
+				network_game.call("report_hit", target_peer, zone, damage)
+			_spawn_impact(hit["position"], hit["normal"])
+			return
 		if collider.has_method("apply_damage"):
 			collider.call("apply_damage", damage, String(hit.get("shape", "torso")))
 		_spawn_impact(hit["position"], hit["normal"])
