@@ -119,7 +119,12 @@ var _kick_roll: float = 0.0
 var _kick_roll_velocity: float = 0.0
 var _kick_side: float = 0.0
 var _kick_side_velocity: float = 0.0
-var _aim_pose: Vector3 = Vector3.ZERO
+var _ads_transform := Transform3D.IDENTITY
+var _aim_weight := 0.0
+var _clearance := ViewmodelClearance.new()
+var _clearance_pivot: Node3D
+var clearance_offset := 0.0
+const CAMERA_CLEARANCE := 0.025
 var _shot_voices: Array[AudioStreamPlayer] = []
 var _shot_voice_index: int = 0
 var _reload_voice: AudioStreamPlayer
@@ -181,6 +186,12 @@ func cycle_fire_mode() -> bool:
 	return true
 
 func reset_recoil() -> void:
+	aiming = false
+	_aim_weight = 0.0
+	transform = Transform3D.IDENTITY
+	clearance_offset = 0.0
+	if _clearance_pivot != null:
+		_clearance_pivot.position = Vector3.ZERO
 	_recoil_heat = 0.0
 	_kick_offset = 0.0
 	_kick_velocity = 0.0
@@ -216,9 +227,12 @@ func _ready() -> void:
 	_build_model()
 
 func _build_model() -> void:
+	_clearance_pivot = Node3D.new()
+	_clearance_pivot.name = "CameraClearance"
+	add_child(_clearance_pivot)
 	model_root = Node3D.new()
 	model_root.top_level = false
-	add_child(model_root)
+	_clearance_pivot.add_child(model_root)
 	# Ignore the editor resource cache: every Play run must use the transform that
 	# was actually saved in the editable weapon scene.
 	var resource := ResourceLoader.load(model_path, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE)
@@ -259,6 +273,9 @@ func _build_model() -> void:
 	mount_pose.origin += Vector3(0.045, -0.025, 0.10) if weapon_name == "AK-74M" else Vector3(0.0, -0.035, 0.015)
 	flashlight_mount = WeaponFlashlight.build(model_root, mount_pose)
 	_bind_barrel_markers()
+	# Cache physical geometry before transient muzzle-flash quads exist.
+	_clearance.configure(model_root)
+	_configure_ads()
 	muzzle_light = OmniLight3D.new()
 	muzzle_light.name = "MuzzleLight"
 	muzzle_light.light_color = Color("ffc182")
@@ -745,7 +762,8 @@ func _process(delta: float) -> void:
 	model_root.rotation.z = _kick_roll * 0.7
 	# Frame-rate independent sights: the old fixed 0.14 lerp made aiming faster at 144 Hz
 	# than at 60.
-	position = position.lerp(_aim_pose, 1.0 - exp(-delta * 13.0))
+	_aim_weight = lerpf(_aim_weight, 1.0 if aiming and not reloading else 0.0, 1.0 - exp(-delta * 13.0))
+	transform = Transform3D.IDENTITY.interpolate_with(_ads_transform, _aim_weight)
 
 func _update_muzzle_flash(delta: float) -> void:
 	if _smoke_cooldown > 0.0:
@@ -1126,8 +1144,33 @@ func _play_animation(animation_name: String, speed: float = 1.0) -> void:
 	_animation_player.speed_scale = speed
 	_animation_player.play(animation_name, 0.12)
 
+func _configure_ads() -> void:
+	var rear := model_root.find_child("RearSight", true, false) as Marker3D
+	var front := model_root.find_child("FrontSight", true, false) as Marker3D
+	if rear == null or front == null or authored_camera == null:
+		_ads_transform.origin = Vector3(-0.07, 0.07, -0.08)
+		return
+	# Align the authored iron-sight line, not the ballistic ray. Recoil and
+	# free aim remain separate layers and the physical source scale is unchanged.
+	var rear_local := to_local(rear.global_position)
+	var sight_line := (to_local(front.global_position) - rear_local).normalized()
+	var camera_local := global_transform.affine_inverse() * _authored_camera_rest
+	var alignment := Basis(Quaternion(sight_line, -camera_local.basis.z.normalized()))
+	_ads_transform = Transform3D(alignment, camera_local * Vector3(0, 0, -0.62) - alignment * rear_local)
+
+func enforce_camera_clearance(delta: float) -> void:
+	if _clearance_pivot == null or not is_visible_in_tree():
+		return
+	var view := get_viewport().get_camera_3d()
+	if view == null or view != authored_camera:
+		return
+	# Measure the final animated pose after aim, sway, recoil and wall pushback.
+	# Correction is not fed back into any spring and moves the entire assembly,
+	# including hands and barrel markers. Never hide/scale/clip individual meshes.
+	_clearance_pivot.position = Vector3.ZERO
+	var needed := maxf(0.0, _clearance.nearest_z(view) + view.near + CAMERA_CLEARANCE)
+	clearance_offset = maxf(needed, lerpf(clearance_offset, needed, 1.0 - exp(-10.0 * delta)))
+	_clearance_pivot.global_position -= view.global_basis.z * clearance_offset
+
 func set_aiming(value: bool) -> void:
-	aiming = value
-	# Only the target moves here; _process walks the weapon towards it with delta, so the
-	# sights come up at the same speed on any monitor.
-	_aim_pose = Vector3(-0.07, 0.07, -0.08) if aiming else Vector3.ZERO
+	aiming = value and not reloading

@@ -34,14 +34,14 @@ static func prepare_animations(player: AnimationPlayer) -> void:
 							# longitudinal component, keeping lateral sway and height.
 							pose -= forward * (pose - start).dot(forward)
 							animation.track_set_key_value(track, key, pose)
-				if moving or str(clip).begins_with("idle") or clip == &"jump_loop":
+				if moving or str(clip).begins_with("idle") or clip == &"jump":
 					animation.loop_mode = Animation.LOOP_LINEAR
 			_libraries[library_name] = library
 		player.remove_animation_library(library_name)
 		player.add_animation_library(library_name, _libraries[library_name])
 
-# Keep the waist, lower vest and legs, excluding head/arms and the upper chest
-# around the lens. Filter by skin weights, never by collapsing skeleton bones.
+# Keep the vest, waist and legs; the isolated viewmodel supplies the arms.
+# Exclude head/arms by skin weights, never by collapsing skeleton bones.
 # The untouched full mesh still casts body shadows.
 static func first_person_legs(model: Node3D, skeleton: Skeleton3D) -> void:
 	var full := model.find_child("SoldierMesh", true, false) as MeshInstance3D
@@ -61,7 +61,7 @@ static func first_person_legs(model: Node3D, skeleton: Skeleton3D) -> void:
 					var name := str(full.skin.get_bind_name(bones[slot]))
 					if name.is_empty():
 						name = skeleton.get_bone_name(full.skin.get_bind_bone(bones[slot]))
-					if "Leg" in name or "Foot" in name or "Toe" in name or name in ["mixamorig_Hips", "mixamorig_Spine", "mixamorig_Spine1"]:
+					if "Leg" in name or "Foot" in name or "Toe" in name or name in ["mixamorig_Hips", "mixamorig_Spine", "mixamorig_Spine1", "mixamorig_Spine2"]:
 						leg_weight += weights[slot]
 				keep.append(leg_weight >= 0.5)
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]

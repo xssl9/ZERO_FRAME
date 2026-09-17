@@ -21,7 +21,7 @@ func _run() -> void:
 	var mesh := avatar._model.find_child("SoldierMesh", true, false) as MeshInstance3D
 	check(avatar._weapon_proxies.size() == 2, "both real weapons built")
 	check(avatar._hitboxes.size() == 13, "all bone hitboxes built")
-	check(avatar.get_node("Synchronizer").get_multiplayer_authority() == 2, "dynamic synchronizer authority")
+	check(avatar.get_node("Synchronizer").get_multiplayer_authority() == 1, "host distributes every avatar without client relay")
 	avatar._animation_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	for gait: String in ["walk", "run", "sprint", "walk_crouching"]:
 		var speed := 1.9 if gait == "walk" else (7.0 if gait == "sprint" else (2.2 if gait == "walk_crouching" else 4.2))

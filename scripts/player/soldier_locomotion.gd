@@ -98,7 +98,7 @@ func build(animation_tree: AnimationTree, animation_player: AnimationPlayer) -> 
 	_add_state(machine, STATE_SPRINT, _build_blend_space(animation_player, "sprint", "idle"), Vector2(440.0, 180.0))
 	_add_state(machine, STATE_CROUCH, _build_blend_space(animation_player, "walk_crouching", "idle_crouching"), Vector2(660.0, 180.0))
 	_add_state(machine, STATE_JUMP_UP, _clip("jump_up"), Vector2(0.0, 280.0))
-	_add_state(machine, STATE_JUMP, _clip("jump_loop"), Vector2(220.0, 280.0))
+	_add_state(machine, STATE_JUMP, _clip("jump"), Vector2(220.0, 280.0))
 	_add_state(machine, STATE_JUMP_DOWN, _clip("jump_down"), Vector2(440.0, 280.0))
 
 	# One death state whose clip is swapped just before travelling into it, so the
@@ -230,7 +230,10 @@ func update(local_velocity: Vector3, crouching: bool, aiming: bool, sprinting: b
 		tree.set("parameters/Locomotion/%s/blend_position" % _state_for_blend(blend_space), _blend)
 	tree.set("parameters/Speed/scale", _scale)
 
-	if wanted_state != _state:
+	# Reactivating the tree after ragdoll can reset playback to Start/idle while
+	# the cached desired state still says jump/run. Reconcile with real playback
+	# too, without restarting a transition that is already queued.
+	if wanted_state != _state or (_playback.get_current_node() != wanted_state and _playback.get_travel_path().is_empty()):
 		_state = wanted_state
 		_playback.travel(wanted_state)
 

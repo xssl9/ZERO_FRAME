@@ -8,7 +8,7 @@ Controls: WASD, mouse, Shift sprint, C crouch, LMB fire, RMB aim, V fire mode (A
 
 Esc resumes/opens an in-game menu, never immediately leaves the match. Offline it pauses the simulation; online it blocks only local gameplay input, so the other player, damage and respawn continue (you remain vulnerable). The menu exposes graphics quality, world FOV, mouse sensitivity, volume and fullscreen. Settings follow the existing session-only convention. Leaving is a separate confirmation; the host is warned that leaving ends the match. Weapon-camera framing is not changed by the world FOV slider.
 
-Locomotion is converted to in-place on private cached animation copies. First person draws a skinned waist, lower vest and legs beneath a chest-mounted camera, plus the isolated arms/weapon viewmodel and a full-body shadow; opponents retain the complete model and bone hitboxes. Shots converge from the authored muzzle towards the camera aim point, checking intervening cover, and the host applies zone and distance-dependent damage. See [gameplay verification](docs/GAMEPLAY_VERIFICATION.md) for checks and remaining limitations.
+Locomotion is converted to in-place on private cached animation copies. First person draws a skinned vest, waist and legs beneath a Spine2-mounted camera, plus the isolated arms/weapon viewmodel and a full-body shadow; opponents retain the complete model and bone hitboxes. Shots converge from the authored muzzle towards the camera aim point, checking intervening cover, and the host applies zone and distance-dependent damage. See [gameplay verification](docs/GAMEPLAY_VERIFICATION.md) for checks and remaining limitations.
 
 The menu also carries the graphics preset (`AUTO`/`PERFORMANCE`/`HIGH`/`ULTRA`) and the weather (`ЯСНО`/`ДОЖДЬ`).
 
@@ -54,7 +54,7 @@ The AK, pistol, run cycle and out-of-breath recordings are the user-supplied fil
 
 Each weapon scene (`scenes/weapons/ak_viewmodel.tscn`, `scenes/weapons/pistol_viewmodel.tscn`) owns its own first-person camera, and the game uses it verbatim. There are three nodes you are meant to touch:
 
-- `WeaponTuningCamera` — the actual in-game viewmodel camera. It sits at the weapon-scene origin with an identity transform, so whatever you drag it to in the editor *is* the framing you get in game. Enable Camera Preview on it to frame the weapon; do not use Left/Right Orthogonal view for placement. Its `fov`, `keep_aspect`, `near` and `far` are all read from the scene at runtime and never overwritten in code. `FORWARD_minus_Z` under it marks the same forward axis the player camera uses.
+- `WeaponTuningCamera` — the actual in-game viewmodel camera. Its authored transform is captured before sway and it is reparented directly under the weapon viewport. Enable Camera Preview to frame the weapon; do not use Left/Right Orthogonal view for placement. Its `fov`, `keep_aspect`, `near` and `far` remain authored. Runtime ADS/recoil and the final whole-assembly clearance constraint can move geometry relative to that framing; editor preview alone is not a clipping test. `FORWARD_minus_Z` marks the forward axis.
 - `MuzzlePoint` — the barrel tip in the idle pose. At runtime it and the flashlight mount attach to the receiver bone, so effects and shot origin follow reloads too.
 - `ModelAndArms` — moves the gun, hands, skeleton and animations together. The AK's enclosing `WeaponAssembly` applies uniform `0.675` source normalization: measured length is 0.942 m, not the original 1.395 m. Third person uses that same scale, with no second correction. The pistol measures 0.220 m. Both authored weapon cameras now use 96° vertical FOV; the world FOV slider still does not rewrite them.
 
@@ -72,6 +72,6 @@ Deaths use `SoldierRagdoll`: 13 metre-scale rigid bodies joined by 12 constraine
 
 Muzzle smoke uses soft procedural turbulent billboards, scene-depth intersection fading, world lighting and 1.8 s particle lifetimes. Sparse gas continues from the moving muzzle for 0.85–1.5 s after firing. A 12-emitter pool prevents old puffs being erased or dragged along when turning. Impact dust uses the same soft shader with expanding clouds and a few small irregular fragments instead of opaque square dust cards. Rain and near-weapon drops use tapered, antialiased, depth-faded streaks; existing roof and surface collision sampling is retained.
 
-See [body/weapon verification](docs/BODY_WEAPON_VERIFICATION.md) for actual checks, captures and remaining visual/renderer limitations.
+See [body/weapon verification](docs/BODY_WEAPON_VERIFICATION.md) for earlier checks, and [bodycam / multi-peer follow-up](docs/BODYCAM_MULTIPLAYER_VERIFICATION.md) for the current camera/ADS transforms, host-distributed Steam topology, reproducible multi-process tests and remaining visual/Steam limitations.
 
 The project includes user-provided animated first-person AK and pistol assets, hitscan combat, bodycam movement, the dev test grid level, a graphics menu and a daytime HDRI environment. See `ASSET_CREDITS.md` and `USER_ASSET_REPORT.md` before redistribution.

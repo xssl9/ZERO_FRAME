@@ -9,7 +9,8 @@ extends Camera3D
 @export_range(0.0, 2.0, 0.01) var idle_rotation_degrees: float = 0.16
 @export_range(0.0, 0.04, 0.001) var idle_position_meters: float = 0.003
 @export_range(0.0, 8.0, 0.1) var walk_rotation_degrees: float = 3.3
-@export_range(0.0, 0.08, 0.001) var walk_position_meters: float = 0.036
+# The animated chest supplies gross gait; this is only the mount's compliance.
+@export_range(0.0, 0.08, 0.001) var walk_position_meters: float = 0.012
 @export_range(0.2, 3.0, 0.05) var walk_frequency: float = 1.05
 @export_range(1.0, 40.0, 0.1) var response_speed: float = 18.0
 @export_range(0.0, 8.0, 0.1) var strafe_roll_degrees: float = 2.1
@@ -268,7 +269,11 @@ func _apply_body_transform(speed_ratio: float, local_velocity: Vector3, local_ac
 	# The recoil shove and the tremble are applied outside the smoothing, or the lerp would
 	# swallow exactly the frames that make a shot feel like a shot.
 	_smoothed_position = _smoothed_position.lerp(target_position + lean_position, weight)
-	position = _smoothed_position + _impact_position + shake_offset
+	# Secondary motion is mount compliance, not another free camera translation.
+	# Keep recoil/gait within the measured clearance in front of the vest. Lean
+	# remains separate so Q/E still moves out of cover.
+	var compliance := _smoothed_position - _base_position - lean_position + _impact_position + shake_offset
+	position = _base_position + lean_position + compliance.limit_length(0.025)
 	rotation = Vector3(
 		lerp_angle(rotation.x, target_rotation.x, weight),
 		lerp_angle(rotation.y, target_rotation.y, weight),

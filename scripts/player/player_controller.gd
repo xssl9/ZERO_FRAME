@@ -39,7 +39,9 @@ var sprinting: bool = false
 var flashlight: SpotLight3D
 # Lens sits in front of the vest, not inside the torso. Looking down reveals
 # belt/waist before boots; pitch rotates at this chest-mounted point.
-var base_bodycam_position: Vector3 = Vector3(0.10, 1.42, -0.04)
+var base_bodycam_position: Vector3 = Vector3(0.055, 1.30, -0.10)
+var _chest_bone: int = -1
+var _chest_mount: Vector3 = Vector3.ZERO
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_transform: Transform3D = Transform3D.IDENTITY
 
@@ -72,6 +74,8 @@ func gameplay_input_enabled() -> bool:
 	return not menu_open and health > 0.0
 
 func _ready() -> void:
+	# Read the evaluated body animation and final weapon pose, not last frame's.
+	process_priority = 100
 	add_to_group("player")
 	_apply_authored_spawn_point()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -204,6 +208,9 @@ func _configure_runtime_body() -> void:
 	if collider != null:
 		collider.shape = collider.shape.duplicate()
 	bodycam.position = base_bodycam_position
+	bodycam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	camera.near = 0.02
+	camera.make_current()
 	# The level light follows the weapon mount mapped out of its isolated viewport.
 	flashlight.reparent(self, false)
 	flashlight.shadow_enabled = true
@@ -225,7 +232,7 @@ func _build_body() -> void:
 	add_child(collider)
 	bodycam = Node3D.new()
 	bodycam.name = "BodycamRig"
-	bodycam.position = Vector3(0.18, 1.58, 0.0)
+	bodycam.position = base_bodycam_position
 	add_child(bodycam)
 	camera = Camera3D.new()
 	camera.set_script(load("res://scripts/player/bodycam_physics.gd"))
@@ -316,7 +323,11 @@ func _build_weapon_viewport() -> void:
 	viewmodel_pivot.add_child(weapon_manager)
 
 func _process(delta: float) -> void:
+	if health > 0.0:
+		_update_bodycam(delta)
 	_sync_weapon_camera_profile()
+	if not weapon_manager.weapons.is_empty():
+		weapon_manager.weapons[weapon_manager.current_index].enforce_camera_clearance(delta)
 	_update_viewmodel_lighting()
 	_update_overlay(delta)
 	_update_weapon_flashlight()
@@ -520,7 +531,6 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_lean(delta)
 	_update_movement_audio(delta, speed)
-	_update_bodycam(delta)
 	hud_ammo.text = weapon_manager.get_hud_text()
 	hud_status.text = weapon_manager.get_status_text()
 	_update_body_awareness(delta)
@@ -665,14 +675,16 @@ func _update_stance() -> void:
 	capsule.height = 1.1 if crouching else 1.75
 	collision.position.y = 0.575 if crouching else 0.9
 
-func _update_bodycam(delta: float) -> void:
-	var target := base_bodycam_position
-	if crouching:
-		target.y -= 0.55
-	bodycam.position = bodycam.position.lerp(target, 1.0 - exp(-delta * 14.0))
-	# Pitch lives on this rig; all gait/strafe roll is owned by BodycamPhysics so
-	# two independent roll layers cannot fight and create high-frequency shake.
-	bodycam.rotation.z = lerpf(bodycam.rotation.z, 0.0, 1.0 - exp(-delta * 16.0))
+func _update_bodycam(_delta: float) -> void:
+	if _chest_bone < 0:
+		return
+	# Follow the animated vest, not the head or a fixed capsule-height offset.
+	# Crouch/jump/sprint are already present in this pose: adding a second stance
+	# offset would put the lens inside the torso during animation transitions.
+	var chest := _body_skeleton.global_transform * _body_skeleton.get_bone_global_pose(_chest_bone)
+	bodycam.global_position = chest * _chest_mount
+	# Input/recoil still own pitch on BodycamRig, yaw on CharacterBody3D.
+	# Bone orientation moves the mount point but must not rotate real aim twice.
 
 func add_camera_impulse(pitch_impulse: float, yaw_impulse: float, roll_impulse: float = 0.0) -> void:
 	var physics_camera := camera as BodycamPhysics
@@ -716,6 +728,14 @@ func _build_body_awareness() -> void:
 	if _body_skeleton == null or body_anim_player == null:
 		push_warning("PLAYER: Body awareness: Skeleton3D или AnimationPlayer не найдены")
 		return
+	# Calibrate in the real idle pose. The imported rest/bind pose is not idle.
+	body_anim_player.play("idle")
+	body_anim_player.advance(0.0)
+	_chest_bone = _body_skeleton.find_bone("mixamorig_Spine2")
+	if _chest_bone >= 0:
+		var chest := _body_skeleton.global_transform * _body_skeleton.get_bone_global_pose(_chest_bone)
+		_chest_mount = chest.affine_inverse() * to_global(base_bodycam_position)
+	body_anim_player.stop(true)
 	SoldierModel.first_person_legs(_body_model, _body_skeleton)
 	# Local legs keep their gait; aim pitch belongs to the full network rig only.
 	_body_rig_modifier = SoldierRigModifier.new()

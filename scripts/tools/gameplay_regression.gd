@@ -65,9 +65,23 @@ func _run() -> void:
 		if pitch <= -55.0:
 			print("WAIST_GEOMETRY pitch=", pitch, " visible=", visible_waist, " bounds=", waist_bounds, " camera=", player.to_local(player.camera.global_position), " fov=", player.camera.fov)
 			check(visible_waist > 30, "waist really lies inside downward camera frustum at " + str(pitch) + ": " + str(visible_waist))
-		# Bodycam now intentionally includes the waist/lower vest. Keep an upper
-		# bound to reject head/shoulder geometry, and require actual torso height.
-		check(top > 1.1 and top < 1.45, "waist/lower vest retained without head/shoulders at pitch " + str(pitch) + " top=" + str(top))
+		# The chest is now intentionally retained. A height-only lower-vest cutoff
+		# would reject this requirement; verify skin membership directly instead.
+		check(top > 1.45 and top < 1.52, "upper vest retained at pitch " + str(pitch) + " top=" + str(top))
+		for surface: int in legs.mesh.get_surface_count():
+			var arrays := legs.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+			var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+			var influences: int = bones.size() / vertices.size()
+			for index: int in arrays[Mesh.ARRAY_INDEX]:
+				var excluded_weight := 0.0
+				for influence: int in influences:
+					var slot := index * influences + influence
+					var name := str(legs.skin.get_bind_name(bones[slot]))
+					if "Head" in name or "Neck" in name or "Arm" in name or "Hand" in name:
+						excluded_weight += weights[slot]
+				check(excluded_weight <= 0.5, "no head/arm-dominated vertex in local torso")
 	await _capture("look_down", player, -78.0)
 	Input.action_press("move_forward")
 	Input.action_press("sprint")

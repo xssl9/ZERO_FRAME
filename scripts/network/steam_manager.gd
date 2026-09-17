@@ -212,8 +212,9 @@ func publish_match(map_path: String) -> void:
 	Steam.setLobbyData(lobby_id, KEY_HOST, str(steam_id))
 	Steam.setLobbyData(lobby_id, KEY_MAP, map_path)
 	Steam.setLobbyData(lobby_id, KEY_STATE, STATE_PLAYING)
-	# No late joins into a running round: a peer arriving mid-match would land in
-	# a level whose avatars were spawned before it had a spawner to receive them.
+	# Keep the existing lobby policy: no new lobby members during a round.
+	# Members loading at different speeds are supported: NetworkGame builds the
+	# spawn path before opening the transport and replays existing avatars.
 	Steam.setLobbyJoinable(lobby_id, false)
 
 func reopen_lobby() -> void:

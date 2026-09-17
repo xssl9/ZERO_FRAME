@@ -36,7 +36,7 @@ position = Vector3(0, 0.9, 0)
 shape = SubResource("Capsule_player")
 
 [node name="BodycamRig" type="Node3D" parent="."]
-position = Vector3(0.16, 1.5, 0.02)
+position = Vector3(0.055, 1.30, -0.10)
 
 [node name="WorldCamera" type="Camera3D" parent="BodycamRig"]
 current = true

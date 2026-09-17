@@ -23,6 +23,13 @@ var sync_aiming: bool = false
 var sync_sprinting: bool = false
 var sync_airborne: bool = false
 var sync_dead: bool = false
+# Host-owned health is included in late-join snapshots as well as live RPCs.
+var sync_health: float = 100.0:
+	set(value):
+		sync_health = value
+		if _ragdoll != null:
+			set_dead(value <= 0.0)
+var _state_send_time := 0.0
 var sync_weapon_index: int = 0
 var sync_flashlight: bool = false
 var _flashlight: SpotLight3D
@@ -31,9 +38,8 @@ var _audio: SoldierAudio
 
 func send_sound(event: String, variant: int, gain: float, pitch: float) -> void:
 	if is_local and not sync_dead:
-		_receive_sound.rpc(event, variant, gain, pitch)
+		get_node("/root/NetworkGame").submit_sound(event, variant, gain, pitch)
 
-@rpc("authority", "call_remote", "reliable")
 func _receive_sound(event: String, variant: int, gain: float, pitch: float) -> void:
 	if _audio != null and not sync_dead:
 		_audio.play_event(event, variant, gain, pitch)
@@ -138,6 +144,7 @@ func _build() -> void:
 	_audio = SoldierAudio.new()
 	_audio.name = "SpatialAudio"
 	add_child(_audio)
+	set_dead(sync_health <= 0.0)
 
 func _find_skeleton_and_player() -> void:
 	for child: Node in _model.find_children("*", "Skeleton3D", true, false):
@@ -182,10 +189,16 @@ func _build_synchronizer() -> void:
 	for prop: String in [
 		"sync_position", "sync_rotation_y", "sync_pitch", "sync_velocity",
 		"sync_crouching", "sync_aiming", "sync_sprinting", "sync_airborne",
-		"sync_weapon_index", "sync_flashlight"]:
-		config.add_property(NodePath(".:%s" % prop))
+		"sync_weapon_index", "sync_flashlight", "sync_health"]:
+		var path := NodePath(".:%s" % prop)
+		config.add_property(path)
+		# Health shares reliable ordering with death/respawn RPCs; a delayed
+		# unreliable pose packet must never revive an already-dead avatar.
+		config.property_set_replication_mode(path, SceneReplicationConfig.REPLICATION_MODE_ON_CHANGE if prop == "sync_health" else SceneReplicationConfig.REPLICATION_MODE_ALWAYS)
 	sync.replication_config = config
-	sync.set_multiplayer_authority(peer_id)
+	# Avatar ownership still identifies its player. Only distribution belongs to
+	# the host: SteamMultiplayerPeer does NOT provide SceneMultiplayer relay.
+	sync.set_multiplayer_authority(1)
 	sync.replication_interval = 1.0 / 30.0
 	add_child(sync)
 
@@ -196,6 +209,12 @@ func _process(delta: float) -> void:
 		return
 	if is_local:
 		_push_local_state()
+		_state_send_time -= delta
+		var network := get_node("/root/NetworkGame")
+		var peer := multiplayer.multiplayer_peer
+		if _state_send_time <= 0.0 and network.active and peer != null and peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED and not multiplayer.is_server():
+			_state_send_time = 1.0 / 30.0
+			network.submit_pose(self)
 	_apply_remote_state(delta)
 
 func _push_local_state() -> void:
