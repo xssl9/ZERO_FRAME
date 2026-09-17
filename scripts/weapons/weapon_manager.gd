@@ -109,6 +109,8 @@ func _ready() -> void:
 	_select(1 if "--pistol" in OS.get_cmdline_user_args() else 0)
 
 func _process(delta: float) -> void:
+	if collision_player is PlayerController and (collision_player as PlayerController).health <= 0.0:
+		return
 	if Input.is_action_just_pressed("weapon_1"):
 		_select(0)
 	if Input.is_action_just_pressed("weapon_2"):

@@ -1,0 +1,6 @@
+{
+  "mcpServers": {
+    // Add your MCP server configurations here
+    // See: https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/
+  }
+}

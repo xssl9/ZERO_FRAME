@@ -36,4 +36,8 @@ func _run() -> void:
 		rad_to_deg(pivot.rotation.x - start_pitch),
 		rad_to_deg(start_yaw - player.rotation.y),
 		peak_view, peak_free_aim])
+	level.free()
+	# Let the audio mixer release stopped overlapping shot voices before exit.
+	for frame: int in 12:
+		await physics_frame
 	quit()

@@ -119,6 +119,7 @@ var _shot_voices: Array[AudioStreamPlayer] = []
 var _shot_voice_index: int = 0
 var _reload_voice: AudioStreamPlayer
 var _reload_audio_length: float = 0.0
+var _reload_timer: SceneTreeTimer
 var _animation_player: AnimationPlayer
 var _shot_animation_length: float = 0.0
 var _shot_animation_timer: float = 0.0
@@ -186,6 +187,12 @@ func reset_recoil() -> void:
 	_fire_cooldown = 0.0
 	_shot_animation_timer = 0.0
 	_end_muzzle_flash()
+	if reloading:
+		_replicate_sound("reload_stop")
+		reloading = false
+		if _reload_timer != null and _reload_timer.timeout.is_connected(_finish_reload):
+			_reload_timer.timeout.disconnect(_finish_reload)
+		_reload_timer = null
 	if _reload_voice != null and _reload_voice.playing:
 		# Holstering the weapon has to take its reload noise with it, or a switched-away
 		# rifle keeps rattling its magazine off screen.
@@ -546,6 +553,12 @@ func _play_shot_audio() -> void:
 	_shot_voice_index = (_shot_voice_index + 1) % _shot_voices.size()
 	voice.pitch_scale = randf_range(0.97, 1.04)
 	voice.play()
+	_replicate_sound("shot", shot_volume_db, voice.pitch_scale)
+
+func _replicate_sound(event: String, gain: float = -5.0, pitch: float = 1.0) -> void:
+	var player := get_tree().get_first_node_in_group("player") as PlayerController
+	if player != null:
+		player.replicate_sound(event, 0 if weapon_name == "AK-74M" else 1, gain, pitch)
 
 func set_authored_camera_active(enabled: bool) -> void:
 	if authored_camera != null:
@@ -767,19 +780,22 @@ func _fire_hitscan() -> void:
 	direction = (direction
 		+ basis.x * randf_range(-spread, spread)
 		+ basis.y * randf_range(-spread, spread)).normalized()
+	var network := get_node_or_null("/root/NetworkGame")
+	var excluded: Array[RID] = [player.get_rid()]
+	if network != null and network.active:
+		network.report_shot(origin, direction, 0 if weapon_name == "AK-74M" else 1)
+		var avatar := network.local_avatar() as SoldierAvatar
+		if avatar != null:
+			for area: Area3D in avatar._hitboxes:
+				excluded.append(area.get_rid())
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * 120.0)
-	query.exclude = [player.get_rid()]
+	query.exclude = excluded
 	query.collide_with_areas = true
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
 		var collider: Object = hit["collider"]
 		# Networked hitbox: Area3D with metadata set by SoldierHitboxes.
 		if collider is Area3D and collider.has_meta("hit_zone"):
-			var zone := String(collider.get_meta("hit_zone"))
-			var target_peer := int(collider.get_meta("hit_peer"))
-			var network_game := get_node_or_null("/root/NetworkGame")
-			if network_game != null and network_game.get("active"):
-				network_game.call("report_hit", target_peer, zone, damage)
 			_spawn_impact(hit["position"], hit["normal"])
 			return
 		if collider.has_method("apply_damage"):
@@ -1013,6 +1029,7 @@ func reload() -> void:
 	if reloading or ammo >= magazine_size or reserve <= 0:
 		return
 	reloading = true
+	_replicate_sound("reload")
 	# The recording is the authority on how long a magazine change takes: 4.2 s of real
 	# mag-out, mag-in and bolt-release for the AK. The animation is then stretched to
 	# cover exactly that, so the hands are not finished a second and a half early.
@@ -1026,10 +1043,11 @@ func reload() -> void:
 		if clip_length > 0.0 and duration > 0.0:
 			animation_speed = clampf(clip_length / duration, 0.35, 3.0)
 	_play_animation(reload_animation, animation_speed)
-	var timer := get_tree().create_timer(duration)
-	timer.timeout.connect(_finish_reload)
+	_reload_timer = get_tree().create_timer(duration)
+	_reload_timer.timeout.connect(_finish_reload)
 
 func _finish_reload() -> void:
+	_reload_timer = null
 	var needed := magazine_size - ammo
 	var loaded := mini(needed, reserve)
 	ammo += loaded

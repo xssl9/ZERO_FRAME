@@ -12,9 +12,10 @@ const AVATAR_SCENE := "res://scenes/player/soldier_avatar.tscn"
 const SPAWN_GROUP := "player_spawn_point"
 const RESPAWN_DELAY := 5.0
 const MAX_HEALTH := 100.0
+const MAPS := ["res://scenes/levels/dev_test_grid.tscn", "res://scenes/levels/pvp_linse.tscn", "res://scenes/levels/parking_garage_rework.tscn"]
 
-## Server-side damage scaling. The client only reports which zone it hit; the
-## numbers live here so a patched client cannot invent its own multipliers.
+## Server-side damage scaling. Both the hit zone and these multipliers are
+## resolved on the host, never supplied by the shooting client.
 const ZONE_MULTIPLIER := {
 	"head": 2.5,
 	"torso": 1.0,
@@ -31,6 +32,8 @@ var map_path: String = ""
 var _spawner: MultiplayerSpawner = null
 var _avatar_root: Node3D = null
 var _health: Dictionary = {}
+var _last_shot: Dictionary = {}
+var _round_id := 0
 var _spawn_index: Dictionary = {}
 var _local_spawn_index: int = 0
 var _next_spawn_index: int = 0
@@ -42,6 +45,14 @@ func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	multiplayer.connection_failed.connect(_on_server_disconnected)
+	SteamManager.lobby_exited.connect(_on_lobby_exited)
+
+func _on_lobby_exited() -> void:
+	if active or _loading:
+		_loading = false
+		leave_match()
+		await _leave_to_menu()
 
 func is_server() -> bool:
 	return active and multiplayer.multiplayer_peer != null and multiplayer.is_server()
@@ -60,7 +71,7 @@ func health_of(peer: int) -> float:
 func host_match(wanted_map: String) -> void:
 	if _loading or active:
 		return
-	if not SteamManager.is_host():
+	if not SteamManager.is_host() or not SteamManager.everyone_ready() or not wanted_map in MAPS:
 		return
 	_loading = true
 	map_path = wanted_map
@@ -109,12 +120,15 @@ func leave_match() -> void:
 	if not active:
 		return
 	active = false
+	_round_id += 1
+	_last_shot.clear()
 	_health.clear()
 	_spawn_index.clear()
 	_next_spawn_index = 0
 	_spawner = null
 	_avatar_root = null
 	SteamManager.close_transport()
+	SteamManager.set_ready(false)
 	if SteamManager.is_host():
 		SteamManager.reopen_lobby()
 	match_state_changed.emit(false)
@@ -135,12 +149,17 @@ func _leave_to_menu() -> void:
 ## `change_scene_to_file` only queues the swap. Everything downstream - the
 ## spawner, the socket - depends on the level already being there.
 func _enter_map(wanted_map: String) -> bool:
+	if not wanted_map in MAPS:
+		push_error("NETWORK_GAME: неизвестная карта %s" % wanted_map)
+		return false
 	get_tree().paused = false
 	if get_tree().change_scene_to_file(wanted_map) != OK:
 		push_error("NETWORK_GAME: не удалось загрузить карту %s" % wanted_map)
 		return false
 	for _attempt: int in 240:
 		await get_tree().process_frame
+		if not _loading:
+			return false
 		var current := get_tree().current_scene
 		if current != null and current.scene_file_path == wanted_map and current.is_node_ready():
 			_build_network_root(current)
@@ -242,30 +261,67 @@ func _assign_spawn_index(index: int) -> void:
 
 # --- Damage ---------------------------------------------------------------
 
-## Called on the shooter's machine. The trace itself stays client-side so firing
-## feels immediate, but only the zone and the weapon's base damage travel; the
-## server decides what that is worth and who ends up dead.
-func report_hit(target_peer: int, zone: String, base_damage: float) -> void:
-	if not active or target_peer <= 0:
-		return
-	_receive_hit.rpc_id(1, target_peer, zone, base_damage)
+## Clients submit a ray, never a victim, zone or damage value. The host traces
+## its bone hitboxes and cover geometry; the local trace is cosmetic feedback.
+func report_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
+	if active:
+		_receive_shot.rpc_id(1, origin, direction, weapon)
 
 @rpc("any_peer", "call_local", "reliable")
-func _receive_hit(target_peer: int, zone: String, base_damage: float) -> void:
-	if not is_server():
+func _receive_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
+	if not is_server() or weapon < 0 or weapon > 1 or not origin.is_finite() or not direction.is_finite():
 		return
-	if not _health.has(target_peer):
+	var sender := multiplayer.get_remote_sender_id()
+	if sender == 0:
+		sender = local_peer_id()
+	var shooter := avatar_for(sender) as SoldierAvatar
+	if shooter == null or health_of(sender) <= 0.0 or not _health.has(sender):
 		return
-	if float(_health[target_peer]) <= 0.0:
+	if origin.distance_to(shooter.sync_position) > 2.5 or direction.length() < 0.9 or direction.length() > 1.1:
 		return
-	var multiplier: float = float(ZONE_MULTIPLIER.get(zone, 1.0))
-	var applied: float = maxf(0.0, base_damage) * multiplier
-	var remaining: float = maxf(0.0, float(_health[target_peer]) - applied)
-	_health[target_peer] = remaining
+	var now := Time.get_ticks_msec()
+	var interval := 60_000.0 / (650.0 if weapon == 0 else 330.0)
+	if float(now - int(_last_shot.get(sender, -10000))) < interval * 0.8:
+		return
+	_last_shot[sender] = now
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction.normalized() * 120.0)
+	query.collide_with_areas = true
+	var excluded: Array[RID] = []
+	for area: Area3D in shooter._hitboxes:
+		excluded.append(area.get_rid())
+	# The host's movement capsule is not a hitbox.
+	var player := get_tree().get_first_node_in_group("player") as PlayerController
+	if player != null:
+		excluded.append(player.get_rid())
+	query.exclude = excluded
+	var hit := shooter.get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return
+	_show_impact.rpc(sender, hit.position, hit.normal)
+	var collider := hit.collider as Area3D
+	if collider == null or not collider.has_meta("hit_peer"):
+		return
+	var target_peer := int(collider.get_meta("hit_peer"))
+	if not _health.has(target_peer) or health_of(target_peer) <= 0.0:
+		return
+	var zone := String(collider.get_meta("hit_zone"))
+	var base_damage := 34.0 if weapon == 0 else 25.0
+	var remaining := maxf(0.0, health_of(target_peer) - base_damage * float(ZONE_MULTIPLIER.get(zone, 1.0)))
 	_push_health.rpc(target_peer, remaining)
-	_confirm_hit.rpc_id(multiplayer.get_remote_sender_id(), zone, remaining <= 0.0)
+	if sender == local_peer_id():
+		_confirm_hit(zone, remaining <= 0.0)
+	else:
+		_confirm_hit.rpc_id(sender, zone, remaining <= 0.0)
 	if remaining <= 0.0:
 		_schedule_respawn(target_peer)
+
+@rpc("authority", "call_local", "unreliable")
+func _show_impact(shooter: int, point: Vector3, normal: Vector3) -> void:
+	if shooter == local_peer_id():
+		return
+	var player := get_tree().get_first_node_in_group("player") as PlayerController
+	if player != null and player.weapon_manager != null:
+		player.weapon_manager.weapons[0]._spawn_impact(point, normal)
 
 @rpc("authority", "call_local", "reliable")
 func _push_health(target_peer: int, value: float) -> void:
@@ -285,15 +341,17 @@ func _confirm_hit(zone: String, killed: bool) -> void:
 		player.call("notify_hit_confirmed", zone, killed)
 
 func _schedule_respawn(target_peer: int) -> void:
+	var round_id := _round_id
 	var timer := get_tree().create_timer(RESPAWN_DELAY, false)
 	await timer.timeout
-	if not is_server() or not _health.has(target_peer):
+	if round_id != _round_id or not is_server() or not _health.has(target_peer):
 		return
 	_health[target_peer] = MAX_HEALTH
 	_push_health.rpc(target_peer, MAX_HEALTH)
-	_respawn.rpc_id(target_peer, int(_spawn_index.get(target_peer, 0)))
 	if target_peer == 1:
 		_respawn(int(_spawn_index.get(1, 0)))
+	else:
+		_respawn.rpc_id(target_peer, int(_spawn_index.get(target_peer, 0)))
 
 @rpc("authority", "call_remote", "reliable")
 func _respawn(index: int) -> void:

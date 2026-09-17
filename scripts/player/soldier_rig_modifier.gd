@@ -56,13 +56,17 @@ func _apply(skeleton: Skeleton3D) -> void:
 	_resolve(skeleton)
 	if hide_upper_body:
 		for index: int in _hidden_indices:
-			skeleton.set_bone_pose_scale(index, Vector3.ZERO)
+			# A singular pose breaks skin normal matrices and bone attachments.
+			skeleton.set_bone_pose_scale(index, Vector3.ONE * 0.0001)
 	if not _pitch_indices.is_empty():
 		var clamped := clampf(aim_pitch, -MAX_PITCH_DEGREES, MAX_PITCH_DEGREES)
 		var share := deg_to_rad(clamped) / float(_pitch_indices.size())
 		for index: int in _pitch_indices:
 			var pose := skeleton.get_bone_pose_rotation(index)
-			skeleton.set_bone_pose_rotation(index, pose * Quaternion(Vector3.RIGHT, share))
+			# Mixamo joint axes are not the player's axes (the rig faces +Z).
+			var model_right := Vector3.LEFT
+			var axis := skeleton.get_bone_global_pose(index).basis.inverse() * model_right
+			skeleton.set_bone_pose_rotation(index, pose * Quaternion(axis.normalized(), share))
 
 func _process_modification() -> void:
 	_apply(get_skeleton())

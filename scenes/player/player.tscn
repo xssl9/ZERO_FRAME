@@ -63,6 +63,7 @@ mouse_filter = 2
 stretch = true
 
 [node name="WeaponViewport" type="SubViewport" parent="WeaponLayer/WeaponViewportContainer"]
+physics_interpolation_mode = 2
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(1280, 720)

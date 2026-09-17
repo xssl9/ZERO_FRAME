@@ -38,6 +38,8 @@ var _create_lobby_button: Button
 var _lobby_map_index: int = 0
 var _in_lobby: bool = false
 var _is_ready: bool = false
+var _member_avatars: Dictionary = {}
+var _friends_dialog: AcceptDialog
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -89,6 +91,7 @@ func _ready() -> void:
 		SteamManager.lobby_entered.connect(_on_lobby_entered)
 		SteamManager.lobby_exited.connect(_on_lobby_exited)
 		SteamManager.lobby_members_changed.connect(_on_lobby_members_changed)
+		SteamManager.avatar_ready.connect(_on_avatar_ready)
 		SteamManager.status_changed.connect(func(_t: String) -> void: _update_steam_status())
 		# If we already have an active lobby (returned from a match), show the panel.
 		if SteamManager.lobby_id != 0:
@@ -120,6 +123,7 @@ func _build_lobby_panel(scroll: ScrollContainer) -> void:
 	_lobby_map_button = _add_button(_lobby_panel, "", _cycle_lobby_map)
 	_refresh_lobby_map_button()
 	_add_button(_lobby_panel, "ПРИГЛАСИТЬ ДРУГА", _invite_friend)
+	_add_button(_lobby_panel, "ДРУЗЬЯ (БЕЗ ОВЕРЛЕЯ)", _show_friends)
 	_lobby_ready_button = _add_button(_lobby_panel, "ГОТОВ", _toggle_ready)
 	_lobby_start_button = _add_button(_lobby_panel, "НАЧАТЬ МАТЧ", _start_match)
 	_add_button(_lobby_panel, "ПОКИНУТЬ ЛОББИ", _leave_lobby)
@@ -152,12 +156,20 @@ func _on_lobby_exited() -> void:
 	_is_ready = false
 	_main_panel.visible = true
 	_lobby_panel.visible = false
+	if is_instance_valid(_friends_dialog):
+		_friends_dialog.hide()
 
 func _on_lobby_members_changed() -> void:
 	_update_member_list()
 	_update_lobby_buttons()
 
+func _on_avatar_ready(member: int, texture: ImageTexture) -> void:
+	var icon := _member_avatars.get(member) as TextureRect
+	if is_instance_valid(icon):
+		icon.texture = texture
+
 func _update_member_list() -> void:
+	_member_avatars.clear()
 	for child: Node in _member_list.get_children():
 		child.queue_free()
 	if not _steam_available() or SteamManager.lobby_id == 0:
@@ -166,10 +178,17 @@ func _update_member_list() -> void:
 	for member_id: int in member_ids:
 		var mname := SteamManager.member_name(member_id)
 		var ready := SteamManager.is_member_ready(member_id)
-		var is_host_member := SteamManager.is_host() and member_id == SteamManager.steam_id
+		var is_host_member := member_id == SteamManager.host_steam_id()
 		var row := HBoxContainer.new()
 		row.custom_minimum_size = Vector2(420.0, 36.0)
 		_member_list.add_child(row)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(32, 32)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
+		_member_avatars[member_id] = icon
+		icon.texture = SteamManager.request_avatar(member_id)
 		var name_label := Label.new()
 		var prefix := "★ " if is_host_member else "  "
 		name_label.text = "%s%s" % [prefix, mname]
@@ -186,6 +205,7 @@ func _update_lobby_buttons() -> void:
 	if not _steam_available():
 		return
 	var host := SteamManager.is_host()
+	_is_ready = SteamManager.is_member_ready(SteamManager.steam_id)
 	_lobby_start_button.visible = host
 	_lobby_map_button.visible = host
 	if host:
@@ -193,8 +213,33 @@ func _update_lobby_buttons() -> void:
 	_lobby_ready_button.text = "НЕ ГОТОВ" if _is_ready else "ГОТОВ"
 
 func _invite_friend() -> void:
-	if _steam_available():
-		SteamManager.invite_friend()
+	if _steam_available() and not SteamManager.invite_friend():
+		_show_friends()
+
+func _show_friends() -> void:
+	if not _steam_available() or SteamManager.lobby_id == 0:
+		return
+	if is_instance_valid(_friends_dialog):
+		_friends_dialog.queue_free()
+	_friends_dialog = AcceptDialog.new()
+	_friends_dialog.title = "ПРИГЛАСИТЬ ДРУГА"
+	_friends_dialog.ok_button_text = "ЗАКРЫТЬ"
+	add_child(_friends_dialog)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(460, 320)
+	_friends_dialog.add_child(scroll)
+	var list := VBoxContainer.new()
+	scroll.add_child(list)
+	var friends := SteamManager.friends()
+	if friends.is_empty():
+		var empty := Label.new()
+		empty.text = "Список друзей Steam пуст"
+		list.add_child(empty)
+	for friend_id: int in friends:
+		var button := _add_button(list, SteamManager.member_name(friend_id), func() -> void:
+			SteamManager.invite_user(friend_id))
+		button.tooltip_text = "Отправить приглашение Steam"
+	_friends_dialog.popup_centered()
 
 func _toggle_ready() -> void:
 	if not _steam_available():
@@ -260,6 +305,7 @@ func _build_panorama() -> void:
 	viewport.add_child(level)
 	_panorama_camera = Camera3D.new()
 	_panorama_camera.name = "PanoramaCamera"
+	_panorama_camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_panorama_camera.fov = 74.0
 	_panorama_camera.near = 0.05
 	_panorama_camera.far = 200.0

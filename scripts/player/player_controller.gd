@@ -32,6 +32,8 @@ var hud_status: Label
 var hud_stamp: Label
 var hud_rec: Label
 var health: float = 100.0
+var crouching: bool = false
+var sprinting: bool = false
 var flashlight: SpotLight3D
 var base_bodycam_position: Vector3 = Vector3(0.16, 1.5, 0.02)
 var spawn_position: Vector3 = Vector3.ZERO
@@ -75,6 +77,21 @@ func _ready() -> void:
 	# and the viewmodel grade is copied from the result.
 	call_deferred("_bind_level_lighting")
 	_build_body_awareness()
+	get_node("/root/NetworkGame").local_health_changed.connect(_on_network_health)
+
+func replicate_sound(event: String, variant: int, gain: float, pitch: float) -> void:
+	var network := get_node("/root/NetworkGame")
+	if network.active:
+		var avatar := network.local_avatar() as SoldierAvatar
+		if avatar != null:
+			avatar.send_sound(event, variant, gain, pitch)
+
+func _on_network_health(value: float) -> void:
+	health = value
+	if health <= 0.0:
+		velocity = Vector3.ZERO
+		for weapon: WeaponBase in weapon_manager.weapons:
+			weapon.reset_recoil()
 
 func _build_movement_audio() -> void:
 	# Non-positional on purpose. The shooter's own boots are at the listener, and a
@@ -146,6 +163,9 @@ func _bind_scene_body() -> void:
 	hud_rec = get_node_or_null("HUD/Rec") as Label
 
 func _configure_runtime_body() -> void:
+	var collider := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collider != null:
+		collider.shape = collider.shape.duplicate()
 	weapon_manager.configure_weapon_collision(self, camera)
 	var physics_camera := camera as BodycamPhysics
 	physics_camera.configure(self, weapon_aim_pivot)
@@ -153,6 +173,7 @@ func _configure_runtime_body() -> void:
 
 func _build_body() -> void:
 	var collider := CollisionShape3D.new()
+	collider.name = "CollisionShape3D"
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.35
 	capsule.height = 1.75
@@ -422,6 +443,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var motion := event as InputEventMouseMotion
 		weapon_manager.add_look_impulse(motion.relative)
 	if event.is_action_pressed("pause"):
+		get_node("/root/NetworkGame").leave_match()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 	if event.is_action_pressed("flashlight"):
@@ -430,13 +452,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
+	_update_stance()
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if health <= 0.0:
+		input = Vector2.ZERO
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
-	var speed := WALK_SPEED
-	if Input.is_action_pressed("sprint") and input.y < 0.0:
-		speed = SPRINT_SPEED
-	elif Input.is_action_pressed("crouch"):
-		speed = CROUCH_SPEED
+	sprinting = Input.is_action_pressed("sprint") and not crouching and not Input.is_action_pressed("aim") and not input.is_zero_approx()
+	var speed := CROUCH_SPEED if crouching else (SPRINT_SPEED if sprinting else WALK_SPEED)
 	velocity.x = move_toward(velocity.x, direction.x * speed, 24.0 * delta)
 	velocity.z = move_toward(velocity.z, direction.z * speed, 24.0 * delta)
 	move_and_slide()
@@ -475,6 +497,7 @@ func _update_movement_audio(delta: float, speed: float) -> void:
 	if grounded and not _was_on_floor and _land_audio != null:
 		_land_audio.pitch_scale = randf_range(0.94, 1.06)
 		_land_audio.play()
+		replicate_sound("land", 0, _land_audio.volume_db, _land_audio.pitch_scale)
 	_was_on_floor = grounded
 	var horizontal_speed: float = Vector2(velocity.x, velocity.z).length()
 	var sprinting: bool = is_equal_approx(speed, SPRINT_SPEED) and horizontal_speed > SPRINT_SPEED * 0.6
@@ -517,6 +540,7 @@ func _update_movement_audio(delta: float, speed: float) -> void:
 	voice.volume_db = volume
 	voice.pitch_scale = randf_range(pitch_low, pitch_high)
 	voice.play()
+	replicate_sound("step", _last_footstep_variant, volume, voice.pitch_scale)
 
 # Never the same stride twice in a row: a repeat is the one thing the ear catches.
 func _next_footstep_stream() -> AudioStream:
@@ -552,6 +576,7 @@ func _update_breathing(delta: float, sprinting: bool) -> void:
 	_breath_audio.volume_db = randf_range(-25.0, -21.0)
 	_breath_audio.pitch_scale = randf_range(0.93, 1.09)
 	_breath_audio.play()
+	replicate_sound("breath", _last_breath_variant, _breath_audio.volume_db, _breath_audio.pitch_scale)
 
 func _next_breath_stream() -> AudioStream:
 	if _breath_streams.size() == 1:
@@ -562,8 +587,30 @@ func _next_breath_stream() -> AudioStream:
 	_last_breath_variant = variant
 	return _breath_streams[variant]
 
+func _update_stance() -> void:
+	var wanted := Input.is_action_pressed("crouch")
+	var collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if collision == null:
+		return
+	if crouching and not wanted:
+		var standing := CapsuleShape3D.new()
+		standing.radius = 0.35
+		standing.height = 1.75
+		var query := PhysicsShapeQueryParameters3D.new()
+		query.shape = standing
+		query.transform = global_transform * Transform3D(Basis.IDENTITY, Vector3(0, 0.9, 0))
+		query.exclude = [get_rid()]
+		wanted = not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+	crouching = wanted
+	var capsule := collision.shape as CapsuleShape3D
+	capsule.height = 1.1 if crouching else 1.75
+	collision.position.y = 0.575 if crouching else 0.9
+
 func _update_bodycam(delta: float) -> void:
-	bodycam.position = base_bodycam_position
+	var target := base_bodycam_position
+	if crouching:
+		target.y -= 0.55
+	bodycam.position = bodycam.position.lerp(target, 1.0 - exp(-delta * 14.0))
 	# Pitch lives on this rig; all gait/strafe roll is owned by BodycamPhysics so
 	# two independent roll layers cannot fight and create high-frequency shake.
 	bodycam.rotation.z = lerpf(bodycam.rotation.z, 0.0, 1.0 - exp(-delta * 16.0))
@@ -591,10 +638,7 @@ func apply_damage(amount: float) -> void:
 # --- Body Awareness (first-person soldier legs) ---------------------------
 
 func _build_body_awareness() -> void:
-	var packed := load("res://IMPORTANT_MULTIPLAYER_ASSETS/soldier_rifle_locomotion.glb") as PackedScene
-	if packed == null:
-		return
-	_body_model = packed.instantiate()
+	_body_model = SoldierModel.instantiate()
 	_body_model.name = "BodyModel"
 	add_child(_body_model)
 	# The model is oriented and scaled at the CharacterBody3D origin (feet).
@@ -627,16 +671,11 @@ func _update_body_awareness(delta: float) -> void:
 	if _body_locomotion == null:
 		return
 	var local_vel := global_transform.basis.inverse() * velocity
-	var crouching := Input.is_action_pressed("crouch")
 	var aiming := Input.is_action_pressed("aim")
-	var h_speed := Vector2(velocity.x, velocity.z).length()
-	var sprinting := Input.is_action_pressed("sprint") and h_speed > SPRINT_SPEED * 0.6
 	var airborne := not is_on_floor()
-	_body_locomotion.update(local_vel, crouching, aiming, sprinting, airborne, false, delta)
+	_body_locomotion.update(local_vel, crouching, aiming, sprinting, airborne, health <= 0.0, delta)
 	if _body_rig_modifier != null and bodycam != null:
-		var pitch_pivot := bodycam.get_parent() as Node3D
-		if pitch_pivot != null:
-			_body_rig_modifier.aim_pitch = rad_to_deg(pitch_pivot.rotation.x)
+		_body_rig_modifier.aim_pitch = rad_to_deg(bodycam.rotation.x)
 
 # --- Multiplayer support --------------------------------------------------
 

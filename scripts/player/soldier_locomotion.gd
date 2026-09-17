@@ -79,6 +79,8 @@ var _death_node: AnimationNodeAnimation = null
 var _state: String = STATE_IDLE
 var _blend: Vector2 = Vector2.ZERO
 var _scale: float = 1.0
+var _was_airborne := false
+var _landing_time := 0.0
 
 func build(animation_tree: AnimationTree, animation_player: AnimationPlayer) -> bool:
 	if animation_tree == null or animation_player == null:
@@ -123,6 +125,8 @@ func build(animation_tree: AnimationTree, animation_player: AnimationPlayer) -> 
 	tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_IDLE
 	tree.active = true
 	_playback = tree.get("parameters/Locomotion/playback") as AnimationNodeStateMachinePlayback
+	if _playback != null:
+		_playback.start(STATE_IDLE)
 	return _playback != null
 
 ## The GLB import leaves every clip non-looping, which would freeze a gait on its
@@ -154,13 +158,13 @@ func _build_blend_space(animation_player: AnimationPlayer, prefix: String, centr
 	space.snap = Vector2(0.05, 0.05)
 	space.blend_mode = AnimationNodeBlendSpace2D.BLEND_MODE_INTERPOLATED
 	space.auto_triangles = true
-	space.add_blend_point(_clip(centre_clip), Vector2.ZERO)
+	space.add_blend_point(_clip(centre_clip), Vector2.ZERO, -1, centre_clip)
 	for suffix: String in DIRECTIONS:
 		var clip_name := "%s_%s" % [prefix, suffix]
 		if not animation_player.has_animation(clip_name):
 			push_warning("SOLDIER_LOCOMOTION: нет клипа %s" % clip_name)
 			continue
-		space.add_blend_point(_clip(clip_name), DIRECTIONS[suffix])
+		space.add_blend_point(_clip(clip_name), DIRECTIONS[suffix], -1, suffix)
 	return space
 
 ## Every state reaches every other one directly. `travel()` could path through
@@ -177,7 +181,7 @@ func _connect_all(machine: AnimationNodeStateMachine) -> void:
 			if from == to:
 				continue
 			var transition := AnimationNodeStateMachineTransition.new()
-			transition.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_DISABLED
+			transition.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED
 			if to == STATE_DEATH:
 				# Dying must read as an interruption, not as a blend.
 				transition.xfade_time = 0.05
@@ -200,6 +204,14 @@ func update(local_velocity: Vector3, crouching: bool, aiming: bool, sprinting: b
 	var planar := Vector2(local_velocity.x, -local_velocity.z)
 	var speed := planar.length()
 	var wanted_state := _select_state(speed, crouching, aiming, sprinting, airborne, dead)
+	if airborne and not dead:
+		wanted_state = STATE_JUMP_UP if local_velocity.y > 0.5 else STATE_JUMP
+	elif _was_airborne and not dead:
+		_landing_time = 0.18
+	_was_airborne = airborne
+	if _landing_time > 0.0 and not airborne and not dead:
+		_landing_time = maxf(0.0, _landing_time - delta)
+		wanted_state = STATE_JUMP_DOWN
 	var reference := _reference_speed(wanted_state)
 
 	var target_blend := Vector2.ZERO

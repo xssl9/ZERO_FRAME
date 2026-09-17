@@ -10,7 +10,8 @@ const WANTED: PackedStringArray = [
 	"getNumLobbyMembers", "getLobbyMemberByIndex", "getLobbyOwner",
 	"run_callbacks", "setLobbyJoinable", "getFriendPersonaName",
 	"getSmallFriendAvatar", "isSteamRunning", "inviteUserToLobby",
-	"setLobbyType", "getLobbyOwner"]
+	"setLobbyType", "getLobbyOwner", "isOverlayEnabled", "getFriendCount",
+	"getFriendByIndex", "getFriendPersonaState", "getMediumFriendAvatar", "getPlayerAvatar"]
 
 func _initialize() -> void:
 	for method: Dictionary in ClassDB.class_get_method_list("Steam", true):

@@ -73,7 +73,8 @@ static func build(skeleton: Skeleton3D, owner_avatar: Node, owner_peer: int) -> 
 
 		var collision := CollisionShape3D.new()
 		collision.name = "Shape"
-		var radius := float(entry["radius"])
+		# Shapes inherit the armature scale; convert metre radii to bone units.
+		var radius := float(entry["radius"]) / skeleton.global_basis.get_scale().abs().x
 		var offset := _bone_offset(skeleton, String(entry["tip"]))
 		var length := offset.length()
 
@@ -112,5 +113,5 @@ static func _align_to(offset: Vector3) -> Transform3D:
 	var up := offset / length
 	var reference := Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT
 	var right := reference.cross(up).normalized()
-	var forward := up.cross(right).normalized()
+	var forward := right.cross(up).normalized()
 	return Transform3D(Basis(right, up, forward), offset * 0.5)
