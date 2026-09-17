@@ -14,9 +14,11 @@ const MUZZLE_FLASH_SECONDS: float = 0.042
 # The gas cloud keeps glowing slightly longer than the visible flame, so the lights
 # outlive the quads. Still well inside one round at 650 RPM.
 const MUZZLE_LIGHT_SECONDS: float = 0.075
-# Restarting the smoke puff on every round would delete the previous puff and leave a
-# single popping cloud. Firing it every fourth round instead builds a real haze.
-const MUZZLE_SMOKE_INTERVAL: float = 0.22
+# Bounded world-space emitters preserve earlier smoke. Sparse trailing emissions
+# keep gas rising from the barrel after release without restarting live particles.
+const MUZZLE_SMOKE_INTERVAL: float = 0.18
+const MUZZLE_SMOKE_LIFETIME: float = 1.8
+const MUZZLE_SMOKE_POOL_SIZE: int = 12
 
 
 var weapon_name: String = "WEAPON"
@@ -36,6 +38,7 @@ var reloading: bool = false
 var aiming: bool = false
 var model_root: Node3D
 var muzzle: Marker3D
+var flashlight_mount: Marker3D
 var muzzle_light: OmniLight3D
 var authored_camera: Camera3D
 var authored_camera_fov: float = 96.0
@@ -44,12 +47,14 @@ var authored_camera_keep_aspect: Camera3D.KeepAspect = Camera3D.KEEP_HEIGHT
 @export_category("Recoil profile")
 # Per-shot view kick. The pitch figure is what the shooter has to pull back down:
 # it is added to the real aim, not just to the visual camera shake. An uncompensated
-# 30-round magazine walks the aim roughly 44 degrees up and 10 degrees right, which
-# is most of a screen height at this FOV.
-@export var recoil_pitch_degrees: float = 0.88
-@export var recoil_pitch_climb_degrees: float = 1.1
-@export var recoil_yaw_bias_degrees: float = 0.32
-@export var recoil_yaw_spread_degrees: float = 0.62
+# 30-round magazine climbs strongly, with signed lateral scatter rather than a
+# fixed rightward pattern. Exact displacement varies with each random series.
+@export var recoil_pitch_degrees: float = 1.45
+@export var recoil_pitch_climb_degrees: float = 1.15
+@export var recoil_yaw_bias_degrees: float = 0.2
+@export var recoil_yaw_spread_degrees: float = 1.35
+# At least this fraction reaches real aim immediately, including the first round.
+@export_range(0.0, 1.0) var recoil_direct_fraction: float = 0.65
 # Viewmodel kick: how far the gun slams back into the shoulder and how far the
 # muzzle flips up. Purely cosmetic, but it is what sells the weight. The spring is
 # deliberately underdamped (ratio about 0.43), so the rifle snaps and then visibly
@@ -134,6 +139,7 @@ var _smoke: GPUParticles3D
 var _smoke_pool: Array[GPUParticles3D] = []
 var _smoke_index: int = 0
 var _smoke_cooldown: float = 0.0
+var _smoke_tail: float = 0.0
 var _world_flash_light: OmniLight3D
 var _flash_surface_bus: PhotorealEnvironment
 var _authored_camera_rest: Transform3D = Transform3D.IDENTITY
@@ -248,6 +254,11 @@ func _build_model() -> void:
 		muzzle.name = "MuzzleFallback"
 		muzzle.position = Vector3(0.21, 0.02, -0.8 if weapon_name == "AK-74M" else -0.47)
 		model_root.add_child(muzzle)
+	var mount_pose := model_root.global_transform.affine_inverse() * muzzle.global_transform
+	mount_pose = mount_pose.orthonormalized()
+	mount_pose.origin += Vector3(0.045, -0.025, 0.10) if weapon_name == "AK-74M" else Vector3(0.0, -0.035, 0.015)
+	flashlight_mount = WeaponFlashlight.build(model_root, mount_pose)
+	_bind_barrel_markers()
 	muzzle_light = OmniLight3D.new()
 	muzzle_light.name = "MuzzleLight"
 	muzzle_light.light_color = Color("ffc182")
@@ -259,6 +270,26 @@ func _build_model() -> void:
 	_build_muzzle_flash()
 	_build_shot_audio()
 	_build_reload_audio()
+
+func _bind_barrel_markers() -> void:
+	# Markers follow the receiver during authored reloads as well as procedural
+	# recoil. Preserve their authored idle placement, including metre scale.
+	var skeletons := model_root.find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty():
+		return
+	var skeleton := skeletons[0] as Skeleton3D
+	var bone := skeleton.find_bone("PBody" if weapon_name == "AK-74M" else "PBody_058")
+	if bone < 0:
+		return
+	if _animation_player != null:
+		_animation_player.advance(0.0)
+	var attachment := BoneAttachment3D.new()
+	attachment.name = "BarrelAttachment"
+	attachment.bone_idx = bone
+	skeleton.add_child(attachment)
+	attachment.transform = skeleton.get_bone_global_pose(bone)
+	muzzle.reparent(attachment, true)
+	flashlight_mount.reparent(attachment, true)
 
 func _bind_animation_player(imported: Node) -> void:
 	for node: Node in imported.find_children("*", "AnimationPlayer", true, false):
@@ -376,7 +407,7 @@ func _build_muzzle_sparks() -> void:
 	ember.size = Vector2(muzzle_flash_size * 0.05, muzzle_flash_size * 0.05)
 	# HDR albedo on an unshaded material: unshaded ignores emission, so the over-1.0
 	# colour is what makes the ember read as a glowing particle and trip the bloom.
-	ember.material = _build_particle_material(Color(4.0, 2.1, 0.7), null)
+	ember.material = _build_particle_material(Color(4.0, 2.1, 0.7), _build_soft_disc())
 	_sparks.draw_pass_1 = ember
 	muzzle.add_child(_sparks)
 
@@ -386,7 +417,7 @@ func _build_muzzle_smoke() -> void:
 	_smoke = GPUParticles3D.new()
 	_smoke.name = "MuzzleSmoke"
 	_smoke.amount = muzzle_smoke_amount
-	_smoke.lifetime = 0.7
+	_smoke.lifetime = MUZZLE_SMOKE_LIFETIME
 	_smoke.one_shot = true
 	_smoke.explosiveness = 0.85
 	_smoke.randomness = 0.7
@@ -402,33 +433,35 @@ func _build_muzzle_smoke() -> void:
 	process.gravity = Vector3(0.0, 0.42, 0.0)
 	process.damping_min = 1.8
 	process.damping_max = 4.2
-	process.scale_min = 0.5
-	process.scale_max = 1.3
+	process.scale_min = 0.65
+	process.scale_max = 1.5
+	process.angle_min = -180.0
+	process.angle_max = 180.0
 	process.scale_curve = _build_growth_curve()
-	process.color_ramp = _build_fade_ramp(Color(0.72, 0.7, 0.68), Color(0.4, 0.39, 0.38))
 	_smoke.process_material = process
 	var puff := QuadMesh.new()
-	puff.size = Vector2(muzzle_flash_size * 0.62, muzzle_flash_size * 0.62)
-	var smoke_material := _build_particle_material(Color(0.62, 0.61, 0.6, 0.16), _build_soft_disc())
-	smoke_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	smoke_material.disable_receive_shadows = false
-	smoke_material.roughness = 1.0
-	smoke_material.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
-	puff.material = smoke_material
+	puff.size = Vector2.ONE * muzzle_flash_size * 1.3
+	puff.material = _build_smoke_material(Color(0.68, 0.7, 0.73, 0.24))
 	_smoke.draw_pass_1 = puff
 	_smoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_smoke.visibility_aabb = AABB(Vector3(-3.0, -3.0, -3.0), Vector3(6.0, 6.0, 6.0))
 	muzzle.add_child(_smoke)
 	_smoke_pool.append(_smoke)
-	# Four emitters cover 0.7 s lifetime / 0.22 s interval without erasing a live puff.
-	# Mesh/textures are shared; only per-puff trajectories need their own resource.
-	for index: int in 3:
+	# Enough slots for the complete lifetime, including trailing gas after release.
+	# Mesh/shader are shared; old particles are never restarted while still alive.
+	for index: int in MUZZLE_SMOKE_POOL_SIZE - 1:
 		var emitter := _smoke.duplicate() as GPUParticles3D
 		emitter.process_material = process.duplicate()
 		muzzle.add_child(emitter)
 		_smoke_pool.append(emitter)
 
-func _emit_world_smoke() -> void:
+func _build_smoke_material(tint: Color) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/soft_smoke.gdshader") as Shader
+	material.set_shader_parameter("tint", tint)
+	return material
+
+func _emit_world_smoke(strength: float = 1.0) -> void:
 	if _smoke_pool.is_empty() or not is_instance_valid(_world_flash_light):
 		return
 	var player := get_tree().get_first_node_in_group("player") as PlayerController
@@ -438,8 +471,11 @@ func _emit_world_smoke() -> void:
 	_smoke_index = (_smoke_index + 1) % _smoke_pool.size()
 	if emitter.get_parent() != player.get_parent():
 		emitter.reparent(player.get_parent(), false)
-	emitter.global_transform = _world_flash_light.global_transform.orthonormalized()
+	emitter.global_transform = world_marker_transform(player.camera, muzzle)
+	emitter.amount_ratio = strength
 	var process := emitter.process_material as ParticleProcessMaterial
+	process.initial_velocity_min = 0.12 if strength < 1.0 else 0.45
+	process.initial_velocity_max = 0.35 if strength < 1.0 else 1.7
 	var breeze := Vector3.ZERO
 	if player._level_environment != null and player._level_environment.standing_water < 0.0:
 		var rain := player.get_parent().find_child("Rain", true, false) as RainSystem
@@ -656,20 +692,19 @@ func _apply_recoil() -> void:
 		return
 	# Random per round rather than a memorisable pattern: the climb grows with heat, the
 	# sideways component is signed noise around a small per-weapon bias.
-	var pitch_kick: float = (recoil_pitch_degrees + recoil_pitch_climb_degrees * _recoil_heat) * control * randf_range(0.85, 1.2)
+	var pitch_kick: float = (recoil_pitch_degrees + recoil_pitch_climb_degrees * _recoil_heat) * control * randf_range(0.72, 1.32)
 	var yaw_bias: float = recoil_yaw_bias_degrees * control
 	var yaw_scatter: float = randf_range(-recoil_yaw_spread_degrees, recoil_yaw_spread_degrees) * control
-	# Free aim first. The muzzle wanders inside its envelope while it has room, and only the
-	# part that no longer fits reaches the camera and the real aim. The brake's constant
-	# sideways push is deliberately left out of that: wrists absorb a random jolt, they do not
-	# absorb a force that pulls the same way thirty times in a row, so the burst still walks.
+	# Split, don't swallow: shoulders take a real kick on every round. Only the
+	# remaining wrist motion uses free aim, with overflow also reaching the view.
 	var yaw_kick: float = yaw_bias
 	var manager := get_parent() as WeaponManager
 	if manager != null:
-		var spill := manager.add_free_aim(deg_to_rad(pitch_kick), deg_to_rad(-yaw_scatter),
+		var wrist_fraction := 1.0 - recoil_direct_fraction
+		var spill := manager.add_free_aim(deg_to_rad(pitch_kick * wrist_fraction), deg_to_rad(-yaw_scatter * wrist_fraction),
 			free_aim_envelope_scale)
-		pitch_kick = rad_to_deg(spill.y)
-		yaw_kick = yaw_bias - rad_to_deg(spill.x)
+		pitch_kick = pitch_kick * recoil_direct_fraction + rad_to_deg(spill.y)
+		yaw_kick = yaw_bias + yaw_scatter * recoil_direct_fraction - rad_to_deg(spill.x)
 	else:
 		yaw_kick = yaw_bias + yaw_scatter
 	if is_zero_approx(pitch_kick) and is_zero_approx(yaw_kick):
@@ -715,6 +750,11 @@ func _process(delta: float) -> void:
 func _update_muzzle_flash(delta: float) -> void:
 	if _smoke_cooldown > 0.0:
 		_smoke_cooldown = maxf(_smoke_cooldown - delta, 0.0)
+	if _smoke_tail > 0.0:
+		_smoke_tail = maxf(0.0, _smoke_tail - delta)
+		if _smoke_cooldown <= 0.0:
+			_smoke_cooldown = MUZZLE_SMOKE_INTERVAL
+			_emit_world_smoke(0.3)
 	if _light_timer > 0.0:
 		_light_timer = maxf(_light_timer - delta, 0.0)
 		var light_life: float = _light_timer / MUZZLE_LIGHT_SECONDS
@@ -746,6 +786,7 @@ func _end_muzzle_flash() -> void:
 	_hide_flash_quads()
 	_light_timer = 0.0
 	_smoke_cooldown = 0.0
+	_smoke_tail = 0.0
 	if muzzle_light != null:
 		muzzle_light.light_energy = 0.0
 	if _world_flash_light != null and is_instance_valid(_world_flash_light):
@@ -755,6 +796,15 @@ func _end_muzzle_flash() -> void:
 		_sparks.emitting = false
 	if _smoke != null:
 		_smoke.emitting = false
+
+func world_marker_transform(world_camera: Camera3D, marker: Node3D) -> Transform3D:
+	var view_camera := get_viewport().get_camera_3d()
+	if marker == null or view_camera == null:
+		return world_camera.global_transform
+	return (world_camera.global_transform * view_camera.global_transform.affine_inverse() * marker.global_transform).orthonormalized()
+
+func world_muzzle_position(world_camera: Camera3D) -> Vector3:
+	return world_marker_transform(world_camera, muzzle).origin
 
 func _fire_hitscan() -> void:
 	# The viewmodel now lives in its own SubViewport/World3D, so aim and the shot
@@ -782,27 +832,30 @@ func _fire_hitscan() -> void:
 		+ basis.y * randf_range(-spread, spread)).normalized()
 	var network := get_node_or_null("/root/NetworkGame")
 	var excluded: Array[RID] = [player.get_rid()]
+	var muzzle_origin := world_muzzle_position(player.camera)
 	if network != null and network.active:
-		network.report_shot(origin, direction, 0 if weapon_name == "AK-74M" else 1)
+		network.report_shot(origin, direction, 0 if weapon_name == "AK-74M" else 1, muzzle_origin)
 		var avatar := network.local_avatar() as SoldierAvatar
 		if avatar != null:
 			for area: Area3D in avatar._hitboxes:
 				excluded.append(area.get_rid())
-	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * 120.0)
-	query.exclude = excluded
-	query.collide_with_areas = true
-	var hit := player.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit := ShotBallistics.trace(player.get_world_3d().direct_space_state, origin, direction, muzzle_origin, excluded)
 	if not hit.is_empty():
 		var collider: Object = hit["collider"]
 		# Networked hitbox: Area3D with metadata set by SoldierHitboxes.
 		if collider is Area3D and collider.has_meta("hit_zone"):
-			_spawn_impact(hit["position"], hit["normal"])
+			# Concrete chips/metal audio and wall decals do not belong on flesh.
+			# Damage confirmation comes exclusively from the host.
 			return
 		if collider.has_method("apply_damage"):
 			collider.call("apply_damage", damage, String(hit.get("shape", "torso")))
 		_spawn_impact(hit["position"], hit["normal"])
 
 func _spawn_impact(point: Vector3, normal: Vector3) -> void:
+	# Inside-cover queries intentionally return a zero normal. They block damage,
+	# but have no surface on which to orient a decal or particle burst.
+	if not normal.is_finite() or normal.is_zero_approx():
+		return
 	# The decal must land in the LEVEL's world, never under the weapon viewport.
 	# current_scene is null when a tool script drives the tree directly, so fall
 	# back to the node the player is parented under.
@@ -879,14 +932,16 @@ func _create_bullet_decal(impact_root: Node3D) -> void:
 func _create_impact_particles(impact_root: Node3D) -> void:
 	var debris := GPUParticles3D.new()
 	debris.name = "ConcreteDebris"
-	debris.amount = 22
+	debris.amount = 9
 	debris.lifetime = 0.72
 	debris.one_shot = true
 	debris.local_coords = false
 	debris.explosiveness = 0.92
 	debris.randomness = 0.42
 	var debris_process := ParticleProcessMaterial.new()
-	debris_process.direction = impact_root.global_transform.basis.y.normalized()
+	debris_process.direction = Vector3.UP
+	debris_process.angular_velocity_min = -240.0
+	debris_process.angular_velocity_max = 240.0
 	debris_process.spread = 48.0
 	debris_process.initial_velocity_min = 1.2
 	debris_process.initial_velocity_max = 3.8
@@ -895,8 +950,11 @@ func _create_impact_particles(impact_root: Node3D) -> void:
 	debris_process.scale_max = 1.25
 	debris_process.color = Color("8a8174")
 	debris.process_material = debris_process
-	var chip := BoxMesh.new()
-	chip.size = Vector3(0.018, 0.012, 0.024)
+	var chip := SphereMesh.new()
+	chip.radius = 0.008
+	chip.height = 0.023
+	chip.radial_segments = 5
+	chip.rings = 2
 	var chip_material := StandardMaterial3D.new()
 	chip_material.albedo_color = Color("8a8174")
 	chip_material.roughness = 0.94
@@ -908,30 +966,31 @@ func _create_impact_particles(impact_root: Node3D) -> void:
 	var dust := GPUParticles3D.new()
 	dust.name = "ConcreteDust"
 	dust.amount = 14
-	dust.lifetime = 1.25
+	dust.lifetime = 1.8
 	dust.one_shot = true
 	dust.local_coords = false
 	dust.explosiveness = 0.78
 	dust.randomness = 0.55
 	var dust_process := ParticleProcessMaterial.new()
-	dust_process.direction = impact_root.global_transform.basis.y.normalized()
+	dust_process.direction = Vector3.UP
+	dust_process.damping_min = 1.6
+	dust_process.damping_max = 3.2
+	dust_process.angle_min = -180.0
+	dust_process.angle_max = 180.0
+	dust_process.scale_curve = _build_growth_curve()
 	dust_process.spread = 62.0
 	dust_process.initial_velocity_min = 0.35
 	dust_process.initial_velocity_max = 1.4
 	dust_process.gravity = Vector3(0.0, -0.32, 0.0)
 	dust_process.scale_min = 0.35
 	dust_process.scale_max = 1.0
-	dust_process.color = Color(0.48, 0.45, 0.4, 0.34)
 	dust.process_material = dust_process
 	var dust_quad := QuadMesh.new()
-	dust_quad.size = Vector2(0.13, 0.13)
-	var dust_material := StandardMaterial3D.new()
-	dust_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	dust_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dust_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	dust_material.vertex_color_use_as_albedo = true
-	dust_material.albedo_color = Color(0.55, 0.51, 0.45, 0.34)
-	dust_quad.material = dust_material
+	dust_quad.size = Vector2(0.38, 0.38)
+	dust_quad.material = _build_smoke_material(Color(0.55, 0.51, 0.45, 0.38))
+	dust.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dust.draw_order = GPUParticles3D.DRAW_ORDER_VIEW_DEPTH
+	dust.visibility_aabb = AABB(Vector3.ONE * -3.0, Vector3.ONE * 6.0)
 	dust.draw_pass_1 = dust_quad
 	impact_root.add_child(dust)
 	dust.emitting = true
@@ -965,6 +1024,7 @@ func _muzzle_flash() -> void:
 		_sparks.restart()
 	# A bounded pool preserves earlier puffs in the LEVEL's coordinates: turning or
 	# holstering the gun must not drag airborne gas along with the weapon camera.
+	_smoke_tail = 0.85 + _recoil_heat * 0.65
 	if _smoke != null and _smoke_cooldown <= 0.0:
 		_smoke_cooldown = MUZZLE_SMOKE_INTERVAL
 		_emit_world_smoke()
@@ -987,7 +1047,7 @@ func _flash_world_light() -> void:
 		# The muzzle taken relative to the weapon camera is exactly where the muzzle
 		# sits relative to the player camera out in the level, so the same offset can
 		# be reused verbatim as a local transform under the world camera.
-		_world_flash_light.transform = view_camera.global_transform.affine_inverse() * muzzle.global_transform
+		_world_flash_light.transform = (view_camera.global_transform.affine_inverse() * muzzle.global_transform).orthonormalized()
 	_world_flash_light.light_energy = muzzle_flash_world_energy * _flash_gain
 	_push_surface_flash(1.0)
 

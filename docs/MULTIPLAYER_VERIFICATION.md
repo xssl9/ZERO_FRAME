@@ -1,5 +1,8 @@
 # Multiplayer repair / verification
 
+For the subsequent in-place animation, first-person visibility, barrel/cover
+and non-disconnecting Esc menu changes, see [gameplay verification](GAMEPLAY_VERIFICATION.md).
+
 ## Model and gameplay
 
 `SoldierModel.instantiate()` is the common entry point for body awareness and full

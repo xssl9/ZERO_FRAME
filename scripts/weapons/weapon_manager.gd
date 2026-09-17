@@ -10,6 +10,7 @@ var collision_camera: Camera3D
 var collision_player: CharacterBody3D
 var wall_pushback: float = 0.0
 var wall_blocked: bool = false
+var require_trigger_release := false
 # Positional trail. The rifle has mass: it lags behind a fast turn and swings back, which is
 # what separates a carried weapon from one bolted to the camera.
 var _drag: Vector2 = Vector2.ZERO
@@ -80,14 +81,15 @@ func _ready() -> void:
 	# The 9 mm sample is already resampled down so it does not read as a cap gun, and it
 	# sits about 3 dB under the rifle: one round never stacks the way a burst does.
 	pistol.shot_volume_db = -4.0
-	# A 9 mm sidearm snaps rather than climbs, so it gets a lighter profile than
-	# the rifle defaults declared on WeaponBase.
-	pistol.recoil_pitch_degrees = 0.72
-	pistol.recoil_pitch_climb_degrees = 0.45
-	pistol.recoil_yaw_bias_degrees = 0.12
-	pistol.recoil_yaw_spread_degrees = 0.4
-	pistol.recoil_kick_speed = 2.7
-	pistol.recoil_pitch_speed = 4.0
+	# A lighter gun flips sharply in the wrists. Aimed single shots still move
+	# real aim; fast follow-ups stack instead of recovering completely each round.
+	pistol.recoil_pitch_degrees = 2.4
+	pistol.recoil_pitch_climb_degrees = 0.65
+	pistol.recoil_yaw_bias_degrees = 0.08
+	pistol.recoil_yaw_spread_degrees = 1.1
+	pistol.recoil_direct_fraction = 0.85
+	pistol.recoil_kick_speed = 3.4
+	pistol.recoil_pitch_speed = 6.8
 	pistol.recoil_heat_per_shot = 0.14
 	pistol.recoil_heat_decay = 2.4
 	# Held out in front in two hands: much less room for the muzzle to wander than a rifle at
@@ -109,8 +111,12 @@ func _ready() -> void:
 	_select(1 if "--pistol" in OS.get_cmdline_user_args() else 0)
 
 func _process(delta: float) -> void:
-	if collision_player is PlayerController and (collision_player as PlayerController).health <= 0.0:
+	if collision_player is PlayerController and not (collision_player as PlayerController).gameplay_input_enabled():
+		weapons[current_index].set_aiming(false)
+		require_trigger_release = true
 		return
+	if not Input.is_action_pressed("fire"):
+		require_trigger_release = false
 	if Input.is_action_just_pressed("weapon_1"):
 		_select(0)
 	if Input.is_action_just_pressed("weapon_2"):
@@ -119,7 +125,7 @@ func _process(delta: float) -> void:
 		weapons[current_index].cycle_fire_mode()
 	if Input.is_action_just_pressed("reload"):
 		weapons[current_index].reload()
-	if not wall_blocked:
+	if not wall_blocked and not require_trigger_release:
 		weapons[current_index].try_fire(delta)
 	weapons[current_index].set_aiming(Input.is_action_pressed("aim"))
 	var movement := Input.get_vector("move_left", "move_right", "move_forward", "move_back")

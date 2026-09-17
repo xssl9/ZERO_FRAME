@@ -32,10 +32,14 @@ var hud_status: Label
 var hud_stamp: Label
 var hud_rec: Label
 var health: float = 100.0
+var menu_open := false
+var pause_menu: PauseMenu
 var crouching: bool = false
 var sprinting: bool = false
 var flashlight: SpotLight3D
-var base_bodycam_position: Vector3 = Vector3(0.16, 1.5, 0.02)
+# Lens sits in front of the vest, not inside the torso. Looking down reveals
+# belt/waist before boots; pitch rotates at this chest-mounted point.
+var base_bodycam_position: Vector3 = Vector3(0.10, 1.42, -0.04)
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_transform: Transform3D = Transform3D.IDENTITY
 
@@ -60,6 +64,12 @@ var _body_model: Node3D
 var _body_skeleton: Skeleton3D
 var _body_locomotion: SoldierLocomotion
 var _body_rig_modifier: SoldierRigModifier
+var _ragdoll: SoldierRagdoll
+var _death_camera_offset := Transform3D.IDENTITY
+var _camera_rest := Transform3D.IDENTITY
+
+func gameplay_input_enabled() -> bool:
+	return not menu_open and health > 0.0
 
 func _ready() -> void:
 	add_to_group("player")
@@ -77,6 +87,12 @@ func _ready() -> void:
 	# and the viewmodel grade is copied from the result.
 	call_deferred("_bind_level_lighting")
 	_build_body_awareness()
+	camera.fov = float(ProjectSettings.get_setting("zero_frame/fov", 96.0))
+	(camera as BodycamPhysics).mouse_sensitivity = float(ProjectSettings.get_setting("zero_frame/mouse_sensitivity", (camera as BodycamPhysics).mouse_sensitivity))
+	pause_menu = PauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	pause_menu.player = self
+	add_child(pause_menu)
 	get_node("/root/NetworkGame").local_health_changed.connect(_on_network_health)
 
 func replicate_sound(event: String, variant: int, gain: float, pitch: float) -> void:
@@ -89,9 +105,30 @@ func replicate_sound(event: String, variant: int, gain: float, pitch: float) -> 
 func _on_network_health(value: float) -> void:
 	health = value
 	if health <= 0.0:
-		velocity = Vector3.ZERO
-		for weapon: WeaponBase in weapon_manager.weapons:
-			weapon.reset_recoil()
+		_start_death()
+	elif _ragdoll != null and _ragdoll.running:
+		revive()
+
+func _start_death() -> void:
+	if _ragdoll == null or _ragdoll.running:
+		return
+	for weapon: WeaponBase in weapon_manager.weapons:
+		weapon.reset_recoil()
+	flashlight.visible = false
+	get_node("WeaponLayer").hide()
+	_camera_rest = camera.transform
+	camera.set_process(false)
+	camera.set_physics_process(false)
+	(_body_model.get_node("BodyAnimTree") as AnimationTree).active = false
+	(_body_model.find_child("AnimationPlayer", true, false) as AnimationPlayer).stop(true)
+	_body_rig_modifier.active = false
+	_ragdoll.start(velocity)
+	_death_camera_offset = _ragdoll.bone_world_transform("mixamorig_Spine2").orthonormalized().affine_inverse() * camera.global_transform
+	velocity = Vector3.ZERO
+	get_node("CollisionShape3D").set_deferred("disabled", true)
+	var full := _body_model.find_child("SoldierMesh", true, false) as MeshInstance3D
+	full.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_body_model.find_child("FirstPersonLegs", true, false).hide()
 
 func _build_movement_audio() -> void:
 	# Non-positional on purpose. The shooter's own boots are at the listener, and a
@@ -166,6 +203,12 @@ func _configure_runtime_body() -> void:
 	var collider := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if collider != null:
 		collider.shape = collider.shape.duplicate()
+	bodycam.position = base_bodycam_position
+	# The level light follows the weapon mount mapped out of its isolated viewport.
+	flashlight.reparent(self, false)
+	flashlight.shadow_enabled = true
+	flashlight.spot_angle = 23.0
+	flashlight.spot_angle_attenuation = 1.6
 	weapon_manager.configure_weapon_collision(self, camera)
 	var physics_camera := camera as BodycamPhysics
 	physics_camera.configure(self, weapon_aim_pivot)
@@ -276,6 +319,21 @@ func _process(delta: float) -> void:
 	_sync_weapon_camera_profile()
 	_update_viewmodel_lighting()
 	_update_overlay(delta)
+	_update_weapon_flashlight()
+	if _ragdoll != null and _ragdoll.running:
+		camera.global_transform = _ragdoll.bone_world_transform("mixamorig_Spine2").orthonormalized() * _death_camera_offset
+
+func _update_weapon_flashlight() -> void:
+	if weapon_manager == null or weapon_manager.weapons.is_empty():
+		return
+	var weapon := weapon_manager.weapons[weapon_manager.current_index]
+	if weapon.flashlight_mount == null:
+		return
+	flashlight.global_transform = weapon.world_marker_transform(camera, weapon.flashlight_mount)
+	# Don't shine through a wall when a retracted barrel/mount intersects cover.
+	var query := PhysicsRayQueryParameters3D.create(camera.global_position, flashlight.global_position)
+	query.exclude = [get_rid()]
+	flashlight.light_energy = 7.0 if get_world_3d().direct_space_state.intersect_ray(query).is_empty() else 0.0
 
 # The burnt-in camera stamp. Nothing here is a game HUD element: a real body camera writes a
 # wordmark, a record indicator, a battery readout and a wall-clock timestamp, and that is all
@@ -326,6 +384,8 @@ func _update_viewmodel_lighting() -> void:
 	var process := _viewmodel_rain.process_material as ParticleProcessMaterial
 	process.direction = down
 	process.gravity = down * 6.0
+	var material := _viewmodel_rain.draw_pass_1.material as ShaderMaterial
+	material.set_shader_parameter("fall_direction", down)
 
 # A thin curtain of drops inside the weapon viewport, so rain falls past the hands instead
 # of stopping at an invisible line in front of the camera.
@@ -354,13 +414,9 @@ func _build_viewmodel_rain() -> void:
 	_viewmodel_rain.process_material = process
 	var drop := QuadMesh.new()
 	drop.size = Vector2(0.004, 0.11)
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	material.billboard_keep_scale = true
-	material.albedo_color = Color(0.7, 0.76, 0.84, 0.5)
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/rain_streak.gdshader") as Shader
+	material.set_shader_parameter("tint", Color(0.7, 0.76, 0.84, 0.22))
 	drop.material = material
 	_viewmodel_rain.draw_pass_1 = drop
 	weapon_camera.add_child(_viewmodel_rain)
@@ -439,22 +495,22 @@ func _build_bodycam_overlay() -> void:
 	overlay_layer.add_child(overlay)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not gameplay_input_enabled():
+		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion := event as InputEventMouseMotion
 		weapon_manager.add_look_impulse(motion.relative)
-	if event.is_action_pressed("pause"):
-		get_node("/root/NetworkGame").leave_match()
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 	if event.is_action_pressed("flashlight"):
 		flashlight.visible = not flashlight.visible
 
 func _physics_process(delta: float) -> void:
+	if health <= 0.0:
+		return
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	_update_stance()
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	if health <= 0.0:
+	if not gameplay_input_enabled():
 		input = Vector2.ZERO
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	sprinting = Input.is_action_pressed("sprint") and not crouching and not Input.is_action_pressed("aim") and not input.is_zero_approx()
@@ -474,9 +530,9 @@ func _update_lean(_delta: float) -> void:
 	if physics_camera == null:
 		return
 	var wanted := 0.0
-	if Input.is_action_pressed("lean_left"):
+	if gameplay_input_enabled() and Input.is_action_pressed("lean_left"):
 		wanted -= 1.0
-	if Input.is_action_pressed("lean_right"):
+	if gameplay_input_enabled() and Input.is_action_pressed("lean_right"):
 		wanted += 1.0
 	# Sprinting with the rifle up and your head out of cover is not a thing.
 	if Input.is_action_pressed("sprint") and Vector2(velocity.x, velocity.z).length() > SPRINT_SPEED * 0.6:
@@ -588,6 +644,9 @@ func _next_breath_stream() -> AudioStream:
 	return _breath_streams[variant]
 
 func _update_stance() -> void:
+	# Opening a menu must not stand the player up out of cover.
+	if not gameplay_input_enabled():
+		return
 	var wanted := Input.is_action_pressed("crouch")
 	var collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if collision == null:
@@ -628,14 +687,19 @@ func apply_weapon_recoil(pitch_degrees: float, yaw_degrees: float) -> void:
 	physics_camera.add_recoil(pitch_degrees, yaw_degrees)
 
 func apply_damage(amount: float) -> void:
-	health -= amount
 	if health <= 0.0:
-		global_transform = spawn_transform
-		reset_physics_interpolation()
-		velocity = Vector3.ZERO
-		health = 100.0
+		return
+	health = maxf(health - amount, 0.0)
+	if health <= 0.0:
+		_start_death()
+		# Online respawn belongs to NetworkGame, not a second local timer.
+		if not get_node("/root/NetworkGame").active:
+			get_tree().create_timer(5.0, false).timeout.connect(func() -> void:
+				if health <= 0.0:
+					teleport_to(spawn_transform)
+					revive())
 
-# --- Body Awareness (first-person soldier legs) ---------------------------
+# --- Body Awareness (first-person waist, lower vest and legs) --------------
 
 func _build_body_awareness() -> void:
 	_body_model = SoldierModel.instantiate()
@@ -652,11 +716,15 @@ func _build_body_awareness() -> void:
 	if _body_skeleton == null or body_anim_player == null:
 		push_warning("PLAYER: Body awareness: Skeleton3D или AnimationPlayer не найдены")
 		return
-	# Rig modifier hides head and arms so they don't clip the camera / viewmodel.
+	SoldierModel.first_person_legs(_body_model, _body_skeleton)
+	# Local legs keep their gait; aim pitch belongs to the full network rig only.
 	_body_rig_modifier = SoldierRigModifier.new()
 	_body_rig_modifier.name = "BodyRigModifier"
 	_body_rig_modifier.hide_upper_body = true
 	_body_skeleton.add_child(_body_rig_modifier)
+	_ragdoll = SoldierRagdoll.new()
+	_ragdoll.name = "Ragdoll"
+	_body_skeleton.add_child(_ragdoll)
 	# AnimationTree for the body model (independent of the viewmodel).
 	var body_tree := AnimationTree.new()
 	body_tree.name = "BodyAnimTree"
@@ -671,7 +739,7 @@ func _update_body_awareness(delta: float) -> void:
 	if _body_locomotion == null:
 		return
 	var local_vel := global_transform.basis.inverse() * velocity
-	var aiming := Input.is_action_pressed("aim")
+	var aiming := gameplay_input_enabled() and Input.is_action_pressed("aim")
 	var airborne := not is_on_floor()
 	_body_locomotion.update(local_vel, crouching, aiming, sprinting, airborne, health <= 0.0, delta)
 	if _body_rig_modifier != null and bodycam != null:
@@ -688,6 +756,24 @@ func teleport_to(target: Transform3D) -> void:
 
 func revive() -> void:
 	health = 100.0
+	if _ragdoll == null or not _ragdoll.running:
+		return
+	_ragdoll.stop()
+	_body_rig_modifier.active = true
+	(_body_model.get_node("BodyAnimTree") as AnimationTree).active = true
+	var full := _body_model.find_child("SoldierMesh", true, false) as MeshInstance3D
+	full.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	_body_model.find_child("FirstPersonLegs", true, false).show()
+	get_node("CollisionShape3D").set_deferred("disabled", false)
+	get_node("WeaponLayer").show()
+	camera.transform = _camera_rest
+	camera.set_process(true)
+	camera.set_physics_process(true)
+	bodycam.rotation = Vector3.ZERO
+	(camera as BodycamPhysics).reset_recoil()
+	weapon_manager._free_aim = Vector2.ZERO
+	weapon_manager.require_trigger_release = true
+	reset_physics_interpolation()
 
 func notify_hit_confirmed(_zone: String, _killed: bool) -> void:
 	# TODO: hit-marker HUD feedback.

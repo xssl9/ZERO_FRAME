@@ -19,9 +19,10 @@ extends Node3D
 @export var fall_speed: float = 17.0
 # Rain is never vertical. This is the horizontal drift the wind puts on every drop.
 @export var wind: Vector3 = Vector3(2.2, 0.0, -1.1)
-@export var drop_length: float = 0.8
-@export var drop_width: float = 0.014
-@export var drop_color: Color = Color(0.66, 0.71, 0.78, 0.42)
+# Exposure-length streaks, not metre-long opaque ribbons.
+@export var drop_length: float = 0.32
+@export var drop_width: float = 0.009
+@export var drop_color: Color = Color(0.66, 0.71, 0.78, 0.3)
 
 @export_category("Splashes")
 @export var splash_count: int = 320
@@ -127,6 +128,7 @@ func _apply_intensity() -> void:
 		emitter.amount_ratio = scale * quality_scale
 		emitter.emitting = intensity > 0.0
 		(emitter.process_material as ParticleProcessMaterial).gravity = Vector3(wind.x, -3.0, wind.z)
+		(emitter.draw_pass_1.material as ShaderMaterial).set_shader_parameter("fall_direction", Vector3(wind.x, -fall_speed, wind.z))
 	if _heightfield != null:
 		_heightfield.visible = intensity > 0.0
 	if _splashes != null:
@@ -242,15 +244,9 @@ func _build_splashes() -> void:
 	_splashes.draw_pass_1 = splash
 	add_child(_splashes)
 
-func _build_drop_material(color: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	# Fixed-Y billboard: the streak always faces the camera but stays upright, which is
-	# what makes falling rain read as streaks instead of confetti.
-	material.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	material.billboard_keep_scale = true
-	material.albedo_color = color
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	material.disable_receive_shadows = true
+func _build_drop_material(color: Color) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = load("res://shaders/rain_streak.gdshader") as Shader
+	material.set_shader_parameter("tint", color)
+	material.set_shader_parameter("fall_direction", Vector3(wind.x, -fall_speed, wind.z))
 	return material

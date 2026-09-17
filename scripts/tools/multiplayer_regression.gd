@@ -26,9 +26,11 @@ func _run() -> void:
 	for gait: String in ["walk", "run", "sprint", "walk_crouching"]:
 		var speed := 1.9 if gait == "walk" else (7.0 if gait == "sprint" else (2.2 if gait == "walk_crouching" else 4.2))
 		for direction: Vector2 in SoldierLocomotion.DIRECTIONS.values():
-			for frame: int in 30:
+			for frame: int in 180:
 				avatar._locomotion.update(Vector3(direction.x, 0, -direction.y) * speed, gait == "walk_crouching", false, gait == "sprint", false, false, 1.0 / 60.0)
 				avatar._animation_tree.advance(1.0 / 60.0)
+				var hips := skel.global_transform * skel.get_bone_global_pose(skel.find_bone("mixamorig_Hips")).origin
+				check(Vector2(hips.x, hips.z).length() < 0.35, "in-place hip position across loops/transitions: " + gait + str(direction) + " hips=" + str(hips))
 			var head := skel.global_transform * skel.get_bone_global_pose(skel.find_bone("mixamorig_Head")).origin
 			check(head.y > 0.65 and head.y < 2.1, "upright head in " + gait + str(direction))
 			var bounds := skel.global_transform * SoldierModel.bake_mesh(mesh, skel).get_aabb()

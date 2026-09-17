@@ -1,6 +1,7 @@
 extends SceneTree
 
-var failed := false
+const HOST_POSITION := Vector3(0, 0, 18)
+const CLIENT_POSITION := Vector3(3, 0, 18)
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -16,7 +17,7 @@ func _run() -> void:
 	player.set_physics_process(false)
 	player.weapon_manager.set_process(false)
 	player.camera.set_process(false)
-	player.position = Vector3.ZERO if server else Vector3(3, 0, 0)
+	player.position = HOST_POSITION if server else CLIENT_POSITION
 	player.rotation = Vector3.ZERO
 	player.bodycam.rotation.x = 0.3
 	player.velocity = Vector3(1, 0, -1)
@@ -36,6 +37,7 @@ func _run() -> void:
 	var received_audio := false
 	var killed := false
 	var saw_death := false
+	var remote_moved_during_menu := false
 	while Time.get_ticks_msec() < deadline:
 		await process_frame
 		if not is_instance_valid(player):
@@ -44,7 +46,7 @@ func _run() -> void:
 			return
 		# Spawn assignment teleports the client's local controller; place it at the
 		# test position after assignment to exercise real state replication.
-		player.position = Vector3.ZERO if server else Vector3(3, 0, 0)
+		player.position = HOST_POSITION if server else CLIENT_POSITION
 		var local := network.local_avatar() as SoldierAvatar
 		if local == null:
 			continue
@@ -57,17 +59,43 @@ func _run() -> void:
 		for voice: AudioStreamPlayer3D in other._audio._voices:
 			if voice.stream != null:
 				received_audio = true
+		if server and player.menu_open and other.sync_position.distance_to(CLIENT_POSITION) > 0.08:
+			remote_moved_during_menu = true
 		if absf(other.sync_pitch - 0.3) > 0.01:
 			continue
-		if server and not sent and other.sync_position.distance_to(Vector3(3, 0, 0)) < 0.05:
+		if server and not sent and other.sync_position.distance_to(CLIENT_POSITION) < 0.05:
 			# Allow interpolation / bone attachments to settle before tracing.
 			await create_timer(1.0).timeout
 			local.send_sound("shot", 0, -1.0, 1.0)
 			_fire_at_head(network, player, other, 0)
+			player.pause_menu.set_open(true)
+			if paused or not network.active:
+				push_error("NETWORK_ROUNDTRIP host menu stopped the match")
+				quit(1)
+				return
 			sent = true
 		elif not server and not sent and player.health == 15.0 and received_audio:
+			# The host has its menu open. Exercise actual client locomotion and
+			# replication before the client opens its own menu as well.
+			var before := player.position
+			player.velocity = Vector3.ZERO
+			Input.action_press("move_right")
+			for frame: int in 12:
+				player._physics_process(1.0 / 60.0)
+				await physics_frame
+			Input.action_release("move_right")
+			player.velocity = Vector3.ZERO
+			if player.position.x < before.x + 0.1:
+				push_error("NETWORK_ROUNDTRIP host menu prevented client movement")
+				quit(1)
+				return
 			local.send_sound("step", 1, -5.0, 0.95)
 			_fire_at_head(network, player, other, 1)
+			player.pause_menu.set_open(true)
+			if paused or not network.active:
+				push_error("NETWORK_ROUNDTRIP client menu stopped the match")
+				quit(1)
+				return
 			sent = true
 		if server and player.health == 37.5 and received_audio and not killed:
 			# Respect the real server fire-rate gate before the lethal follow-up.
@@ -81,13 +109,21 @@ func _run() -> void:
 				quit(1)
 				return
 		if server and killed and network.health_of(other.peer_id) == 100.0:
-			print("NETWORK_ROUNDTRIP server PASS: position/pitch, spatial audio, server raycasts/head multipliers, death/respawn")
+			if not remote_moved_during_menu or not player.menu_open:
+				push_error("NETWORK_ROUNDTRIP missing movement replication while host menu open")
+				quit(1)
+				return
+			print("NETWORK_ROUNDTRIP server PASS: position/pitch, client movement during host menu, spatial audio, barrel raycasts/head multipliers, death/respawn with menu open")
 			await create_timer(1.0).timeout
 			await _shutdown(network)
 			quit()
 			return
 		if not server and sent and saw_death and player.health == 100.0 and not local.sync_dead:
-			print("NETWORK_ROUNDTRIP client PASS: owned synchronizer, shot audio, health replication, death/respawn")
+			if not player.menu_open:
+				push_error("NETWORK_ROUNDTRIP respawn unexpectedly closed the menu")
+				quit(1)
+				return
+			print("NETWORK_ROUNDTRIP client PASS: owned synchronizer, movement, shot audio, health replication, death/respawn with menu open")
 			await create_timer(0.5).timeout
 			await _shutdown(network)
 			quit()
@@ -107,4 +143,13 @@ func _fire_at_head(network: Node, player: PlayerController, target: SoldierAvata
 	var area := target._hitboxes[0]
 	var shape := area.get_child(0) as CollisionShape3D
 	var origin := player.position + Vector3(0, 1.5, 0)
-	network.report_shot(origin, (shape.global_position - origin).normalized(), weapon)
+	var direction := (shape.global_position - origin).normalized()
+	var excluded: Array[RID] = [player.get_rid()]
+	for hitbox: Area3D in (network.local_avatar() as SoldierAvatar)._hitboxes:
+		excluded.append(hitbox.get_rid())
+	player.weapon_manager._select(weapon)
+	var muzzle := player.weapon_manager.weapons[weapon].world_muzzle_position(player.camera)
+	var trace := ShotBallistics.trace(player.get_world_3d().direct_space_state, origin, direction, muzzle, excluded)
+	var collider := trace.get("collider") as Area3D
+	print("ROUNDTRIP_SHOT muzzle_offset=", muzzle.distance_to(origin), " zone=", collider.get_meta("hit_zone", "none") if collider != null else "cover/miss")
+	network.report_shot(origin, direction, weapon, muzzle)

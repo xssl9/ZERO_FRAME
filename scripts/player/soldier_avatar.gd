@@ -51,6 +51,7 @@ var _rig_modifier: SoldierRigModifier
 var _weapon_attach: BoneAttachment3D
 var _weapon_proxies: Array[Node3D] = []
 var _hitboxes: Array[Area3D] = []
+var _ragdoll: SoldierRagdoll
 
 # --- Public API (called by NetworkGame) -----------------------------------
 
@@ -59,13 +60,22 @@ func configure(p_peer: int, p_steam_id: int) -> void:
 	steam_id = p_steam_id
 
 func set_dead(dead: bool) -> void:
+	if sync_dead == dead:
+		return
 	sync_dead = dead
 	for area: Area3D in _hitboxes:
 		area.set_deferred("collision_layer", 0 if dead else SoldierHitboxes.layer_mask())
 	if dead and _audio != null:
 		_audio.play_event("reload_stop", 0, 0, 1)
-	if dead and _locomotion != null:
-		_locomotion.play_death("torso", sync_crouching, false)
+	if _ragdoll != null:
+		_animation_tree.active = not dead
+		_rig_modifier.active = not dead
+		if dead:
+			_animation_player.stop(true)
+			_ragdoll.start(sync_velocity)
+		else:
+			_ragdoll.stop()
+			_received_pose = false
 
 # --- Lifecycle ------------------------------------------------------------
 
@@ -110,15 +120,19 @@ func _build() -> void:
 	_rig_modifier.name = "AimModifier"
 	_rig_modifier.hide_upper_body = false
 	_skeleton.add_child(_rig_modifier)
+	_ragdoll = SoldierRagdoll.new()
+	_ragdoll.name = "Ragdoll"
+	_skeleton.add_child(_ragdoll)
 	# Per-bone hitboxes on collision layer 3.
 	_hitboxes = SoldierHitboxes.build(_skeleton, self, peer_id)
 	# Weapon proxy mesh in the right hand.
 	_build_weapon_attachment()
 	_flashlight = SpotLight3D.new()
-	_flashlight.position = Vector3(0.15, 1.35, -0.1)
 	_flashlight.light_energy = 7.0
 	_flashlight.spot_range = 24.0
-	_flashlight.spot_angle = 30.0
+	_flashlight.spot_angle = 23.0
+	_flashlight.shadow_enabled = true
+	_flashlight.spot_angle_attenuation = 1.6
 	_flashlight.visible = false
 	add_child(_flashlight)
 	_audio = SoldierAudio.new()
@@ -195,7 +209,7 @@ func _push_local_state() -> void:
 		sync_pitch = player.bodycam.rotation.x
 	sync_velocity = player.velocity
 	sync_crouching = player.crouching
-	sync_aiming = Input.is_action_pressed("aim")
+	sync_aiming = player.gameplay_input_enabled() and Input.is_action_pressed("aim")
 	sync_sprinting = player.sprinting
 	sync_airborne = not player.is_on_floor()
 	sync_flashlight = player.flashlight.visible
@@ -203,6 +217,10 @@ func _push_local_state() -> void:
 		sync_weapon_index = player.weapon_manager.current_index
 
 func _apply_remote_state(delta: float) -> void:
+	if sync_dead:
+		if _flashlight != null:
+			_flashlight.visible = false
+		return
 	var w := 1.0 - exp(-INTERP_SPEED * delta)
 	if is_local or not _received_pose or global_position.distance_to(sync_position) > 4.0:
 		global_position = sync_position
@@ -214,8 +232,9 @@ func _apply_remote_state(delta: float) -> void:
 		global_rotation.y = lerp_angle(global_rotation.y, sync_rotation_y, w)
 	if _flashlight != null:
 		_flashlight.visible = sync_flashlight and not is_local and not sync_dead
-		_flashlight.rotation.x = sync_pitch
-		_flashlight.position.y = 0.9 if sync_crouching else 1.35
+		if not _weapon_proxies.is_empty():
+			var mount := _weapon_proxies[clampi(sync_weapon_index, 0, 1)].get_node("FlashlightMount") as Marker3D
+			_flashlight.global_transform = mount.global_transform.orthonormalized()
 	# Drive aim pitch on the skeleton modifier.
 	if _rig_modifier != null:
 		_rig_modifier.aim_pitch = rad_to_deg(sync_pitch)

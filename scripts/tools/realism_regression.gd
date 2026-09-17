@@ -114,14 +114,15 @@ func _run() -> void:
 			weapon.fire_once()
 			check(weapon.ammo == ammo - 1, "firing consumes one round")
 			check(weapon._world_flash_light != null and weapon._world_flash_light.light_energy > 0.0, "world flash light")
-			check(weapon._smoke_pool.size() == 4, "bounded four-puff pool")
+			check(weapon._smoke_pool.size() == WeaponBase.MUZZLE_SMOKE_POOL_SIZE, "bounded persistent-smoke pool")
+			check(weapon._smoke_pool.size() * WeaponBase.MUZZLE_SMOKE_INTERVAL > WeaponBase.MUZZLE_SMOKE_LIFETIME, "pool never overwrites a live puff")
 			var first_puff := weapon._smoke_pool[0]
 			check(first_puff.get_world_3d() == player.get_world_3d(), "smoke receives real world lighting")
 			var puff_transform := first_puff.global_transform
 			for frame: int in 15:
 				await physics_frame
 			weapon.fire_once()
-			check(weapon._smoke_index == 2, "burst uses a different emitter, not restart of previous puff")
+			check(weapon._smoke_index >= 2 and weapon._smoke_index < weapon._smoke_pool.size(), "shot and residual gas use fresh emitters without wrapping live pool")
 			check(first_puff.global_transform.is_equal_approx(puff_transform), "previous smoke remains world anchored")
 			for frame: int in 8:
 				await physics_frame

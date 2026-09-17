@@ -16,11 +16,7 @@ const MAPS := ["res://scenes/levels/dev_test_grid.tscn", "res://scenes/levels/pv
 
 ## Server-side damage scaling. Both the hit zone and these multipliers are
 ## resolved on the host, never supplied by the shooting client.
-const ZONE_MULTIPLIER := {
-	"head": 2.5,
-	"torso": 1.0,
-	"limbs": 0.7,
-}
+const ZONE_MULTIPLIER := ShotBallistics.ZONE_MULTIPLIER
 
 signal match_state_changed(active: bool)
 signal local_health_changed(health: float)
@@ -263,12 +259,12 @@ func _assign_spawn_index(index: int) -> void:
 
 ## Clients submit a ray, never a victim, zone or damage value. The host traces
 ## its bone hitboxes and cover geometry; the local trace is cosmetic feedback.
-func report_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
+func report_shot(origin: Vector3, direction: Vector3, weapon: int, muzzle: Vector3) -> void:
 	if active:
-		_receive_shot.rpc_id(1, origin, direction, weapon)
+		_receive_shot.rpc_id(1, origin, direction, weapon, muzzle)
 
 @rpc("any_peer", "call_local", "reliable")
-func _receive_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
+func _receive_shot(origin: Vector3, direction: Vector3, weapon: int, muzzle: Vector3) -> void:
 	if not is_server() or weapon < 0 or weapon > 1 or not origin.is_finite() or not direction.is_finite():
 		return
 	var sender := multiplayer.get_remote_sender_id()
@@ -277,6 +273,8 @@ func _receive_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
 	var shooter := avatar_for(sender) as SoldierAvatar
 	if shooter == null or health_of(sender) <= 0.0 or not _health.has(sender):
 		return
+	if not muzzle.is_finite() or muzzle.distance_to(origin) > 1.8:
+		return
 	if origin.distance_to(shooter.sync_position) > 2.5 or direction.length() < 0.9 or direction.length() > 1.1:
 		return
 	var now := Time.get_ticks_msec()
@@ -284,8 +282,6 @@ func _receive_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
 	if float(now - int(_last_shot.get(sender, -10000))) < interval * 0.8:
 		return
 	_last_shot[sender] = now
-	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction.normalized() * 120.0)
-	query.collide_with_areas = true
 	var excluded: Array[RID] = []
 	for area: Area3D in shooter._hitboxes:
 		excluded.append(area.get_rid())
@@ -293,20 +289,24 @@ func _receive_shot(origin: Vector3, direction: Vector3, weapon: int) -> void:
 	var player := get_tree().get_first_node_in_group("player") as PlayerController
 	if player != null:
 		excluded.append(player.get_rid())
-	query.exclude = excluded
-	var hit := shooter.get_world_3d().direct_space_state.intersect_ray(query)
+	var space := shooter.get_world_3d().direct_space_state
+	# A reported camera on the far side of cover cannot bypass that cover.
+	var chest := shooter.sync_position + Vector3(0, 0.85 if shooter.sync_crouching else 1.35, 0)
+	if not ShotBallistics.ray(space, chest, origin, excluded).is_empty():
+		return
+	var hit := ShotBallistics.trace(space, origin, direction, muzzle, excluded)
 	if hit.is_empty():
 		return
-	_show_impact.rpc(sender, hit.position, hit.normal)
 	var collider := hit.collider as Area3D
 	if collider == null or not collider.has_meta("hit_peer"):
+		_show_impact.rpc(sender, hit.position, hit.normal)
 		return
 	var target_peer := int(collider.get_meta("hit_peer"))
 	if not _health.has(target_peer) or health_of(target_peer) <= 0.0:
 		return
 	var zone := String(collider.get_meta("hit_zone"))
-	var base_damage := 34.0 if weapon == 0 else 25.0
-	var remaining := maxf(0.0, health_of(target_peer) - base_damage * float(ZONE_MULTIPLIER.get(zone, 1.0)))
+	var damage := ShotBallistics.damage_at(weapon, zone, muzzle.distance_to(hit.position))
+	var remaining := maxf(0.0, health_of(target_peer) - damage)
 	_push_health.rpc(target_peer, remaining)
 	if sender == local_peer_id():
 		_confirm_hit(zone, remaining <= 0.0)

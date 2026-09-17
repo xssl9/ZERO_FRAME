@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Isolate render-resource teardown independently of gameplay/quality switching.
-## --no-meter and --no-rain isolate optional systems; --cycles=3 tests repeated loads.
+## --no-meter, --no-rain and --no-player isolate systems; --cycles=3 tests repeated loads.
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -23,6 +23,10 @@ func _run() -> void:
 			var rain := level.get_node_or_null("Rain")
 			if rain != null:
 				rain.free()
+		if "--no-player" in args:
+			var player := level.get_node_or_null("Player")
+			if player != null:
+				player.free()
 		root.add_child(level)
 		for frame: int in 90:
 			await process_frame

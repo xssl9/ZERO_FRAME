@@ -41,8 +41,8 @@ extends Camera3D
 # because the per-shot aim kick below is now large and the two add up.
 @export_range(0.0, 40.0, 0.5) var recoil_visual_gain: float = 15.0
 # Sustained fire must not recover between rounds, or the burst would never climb.
-@export_range(0.0, 1.0, 0.01) var recoil_recovery_delay: float = 0.16
-@export_range(0.0, 120.0, 1.0) var recoil_recovery_degrees_per_second: float = 34.0
+@export_range(0.0, 1.0, 0.01) var recoil_recovery_delay: float = 0.28
+@export_range(0.0, 120.0, 1.0) var recoil_recovery_degrees_per_second: float = 8.0
 @export_range(0.0, 60.0, 0.5) var maximum_recoil_debt_degrees: float = 30.0
 # A chest-mounted camera does not only rotate when the rifle goes off: the whole housing is
 # shoved. This is the positional half of the kick, plus the tremble that builds during a
@@ -117,6 +117,8 @@ func configure(body: CharacterBody3D, aim_pivot: Node3D) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if character_body == null or event is not InputEventMouseMotion:
+		return
+	if character_body is PlayerController and not (character_body as PlayerController).gameplay_input_enabled():
 		return
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
@@ -312,6 +314,18 @@ func add_recoil(pitch_degrees: float, yaw_degrees: float) -> void:
 		-deg_to_rad(yaw_degrees),
 		deg_to_rad(pitch_degrees) * randf_range(-0.45, 0.45)
 	) * recoil_visual_gain
+
+func reset_recoil() -> void:
+	_recoil_pitch_debt = 0.0
+	_recoil_yaw_debt = 0.0
+	_recoil_recovery_timer = 0.0
+	_impact_rotation = Vector3.ZERO
+	_impact_velocity = Vector3.ZERO
+	_impact_position = Vector3.ZERO
+	_impact_position_velocity = Vector3.ZERO
+	_shake = 0.0
+	_lean = 0.0
+	_lean_target = 0.0
 
 func _recover_recoil(delta: float) -> void:
 	if _recoil_recovery_timer > 0.0:

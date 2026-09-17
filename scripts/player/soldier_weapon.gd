@@ -5,6 +5,7 @@ const SCENES := ["res://scenes/weapons/ak_viewmodel.tscn", "res://scenes/weapons
 const IDLES := ["Rig|AK_Idle", "Armature|FPS_Pistol_Idle"]
 const HANDS := ["Hand_R", "Hand_R_038"]
 static var _cache: Dictionary = {}
+static var _mounts: Dictionary = {}
 
 # Only baked weapon meshes survive. No first-person arms, cameras, scripts,
 # lights or collision objects are copied into the opponent's hand.
@@ -28,10 +29,14 @@ static func build(index: int, parent: Node, soldier_hand: Transform3D) -> Node3D
 				continue
 			var pose := source.global_transform.affine_inverse() * mesh.global_transform
 			pose.origin -= grip
-			# The rifle source is oversized even in its FPS scene.
-			pose = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * (0.72 if index == 0 else 1.0)), Vector3.ZERO) * pose
+			# Use the same metre-scale assembly as first person; no second scale correction.
 			parts.append({"mesh": SoldierModel.bake_mesh(mesh, skeleton), "pose": pose})
 		_cache[index] = parts
+		var muzzle := source.find_child("MuzzlePoint", true, false) as Marker3D
+		var mount := (source.global_transform.affine_inverse() * muzzle.global_transform).orthonormalized()
+		mount.origin -= grip
+		mount.origin += Vector3(0.045, -0.025, 0.10) if index == 0 else Vector3(0.0, -0.035, 0.015)
+		_mounts[index] = mount
 		source.free()
 	var weapon := Node3D.new()
 	weapon.name = "AK74M" if index == 0 else "Pistol"
@@ -43,4 +48,5 @@ static func build(index: int, parent: Node, soldier_hand: Transform3D) -> Node3D
 		mesh.mesh = part.mesh
 		mesh.transform = part.pose
 		weapon.add_child(mesh)
+	WeaponFlashlight.build(weapon, _mounts[index])
 	return weapon
