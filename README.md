@@ -1,85 +1,124 @@
 # ZERO FRAME
 
-Playable Godot 4.7 first-person shooting sandbox.
+Тактический шутер от первого лица на **Godot 4.7 (Forward+)**, стилизованный под запись с нательной камеры (bodycam), с полностью рабочим **Steam-мультиплеером**.
 
-Open `project.godot` in Godot and press F5. The main menu opens; pick `DEV TEST GRID` to load the test level. There is no story level.
+Открой `project.godot` в Godot и нажми F5 — откроется главное меню. Одиночные карты запускаются кнопкой сразу; сетевая игра идёт через лобби Steam.
 
-Controls: WASD, mouse, Shift sprint, C crouch, LMB fire, RMB aim, V fire mode (AK only), R reload, 1/2 switch weapon, F flashlight, Esc pause/settings, F11 fullscreen.
+**Управление:** WASD, мышь, Shift — спринт, C — присед, ЛКМ — огонь, ПКМ — прицел, V — режим огня (только АК), R — перезарядка, 1/2 — смена оружия, F — фонарик, Q/E — наклон из-за угла, Esc — пауза/настройки, F11 — полный экран, F1 — DEV-панель.
 
-Esc resumes/opens an in-game menu, never immediately leaves the match. Offline it pauses the simulation; online it blocks only local gameplay input, so the other player, damage and respawn continue (you remain vulnerable). The menu exposes graphics quality, world FOV, mouse sensitivity, volume and fullscreen. Settings follow the existing session-only convention. Leaving is a separate confirmation; the host is warned that leaving ends the match. Weapon-camera framing is not changed by the world FOV slider.
+Esc не выходит из матча: оффлайн он ставит симуляцию на паузу, онлайн — блокирует только локальный ввод, а другой игрок, урон и респаун продолжаются (ты остаёшься уязвим). В меню — качество графики, FOV мира, чувствительность мыши, громкость и полный экран. Настройки живут в рамках сессии и сбрасываются при перезапуске. Выход из матча — отдельное подтверждение; хоста предупреждают, что выход завершает матч.
 
-Locomotion is converted to in-place on private cached animation copies. First person draws a skinned vest, waist and legs beneath a Spine2-mounted camera, plus the isolated arms/weapon viewmodel and a full-body shadow; opponents retain the complete model and bone hitboxes. Shots converge from the authored muzzle towards the camera aim point, checking intervening cover, and the host applies zone and distance-dependent damage. See [gameplay verification](docs/GAMEPLAY_VERIFICATION.md) for checks and remaining limitations.
+---
 
-The menu also carries the graphics preset (`AUTO`/`PERFORMANCE`/`HIGH`/`ULTRA`) and the weather (`ЯСНО`/`ДОЖДЬ`).
+## Клонирование (важно про карту паркинга)
 
-The AK-74M starts on full auto; V cycles it between `АВТО` and `ОД` (single). The pistol has no selector. Recoil moves the real aim, not just the camera: a held burst climbs and drifts right and has to be pulled back down. Compensating with the mouse cancels the automatic recovery, so the view does not spring back over your own aim.
+Большинство моделей (`.glb`/`.fbx`) лежат в репозитории обычными файлами — чистый `git clone` даёт запускаемый проект без дополнительных инструментов.
 
-## Maps
+**Исключение — карта паркинга `assets/environment/parking_rework/assembly.glb` (~230 МБ).** Она не влезает в лимит GitHub на обычный файл (100 МБ), поэтому хранится в **Git LFS**. Чтобы паркинг корректно загрузился:
 
-`DEV TEST GRID` is the greybox proving ground. `PVP — LINSE` is a RealityCapture photogrammetry scan of an abandoned cultural centre (`assets/environment/linse`), meant for fast PvP once there is any networking; for now it is a plain map with no weather. Its collision is a 48k-triangle trimesh built at load by `scripts/environment/scan_collision_body.gd`, and the same scene is what the main menu renders behind its buttons.
+```bash
+git lfs install
+git clone https://github.com/xssl9/ZERO_FRAME.git
+# или, если уже клонировал без git-lfs:
+git lfs pull
+```
 
-The scan needed two corrections. Its floor was tilted 2.22° out of level, measured by area-weighted plane fit over the up-facing faces and rotated flat in the node transform. Its units are not metres — floor-to-floor in the raw file is 43 units and one storey's rubble varies by 14 units — so the node is scaled by 0.075, which puts floor-to-floor at 3.2 m and the whole shell at 34 × 7 m with a 8.3 m height. Its lighting uses `PhotorealEnvironment.lighting_model = SCAN_FLAT`: a photogrammetry albedo already contains the real sunlight, its own shadows and its own ambient occlusion, so the flat model lights it with uniform white ambient, drops the sun to a shadowless 0.45 fill and turns SSAO, SSIL, SDFGI and fog off. Stacking those on top is what turned everything the original camera did not see into black.
+Без git-lfs паркинг (и только он) выкачается как 134-байтный указатель и не импортируется — игрок будет проваливаться под карту. Остальные карты работают без LFS.
 
-## Test level
+---
 
-`scenes/levels/dev_test_grid.tscn` is a 48 × 48 m greybox room with a Poly Haven worn tile floor and concrete block walls (`shaders/dev_grid.gdshader`, world-space triplanar so a 48 m box tiles without UVs; `texture_blend = 0` falls back to the procedural checkerboard it started as), a walled perimeter, tall and chest-high test walls, cover boxes, stairs onto a raised platform, a 15° ramp, three orange targets on the far wall, a nine-beam overhead pergola that cuts the sunlight into shafts, and a daytime HDRI sky. Everything is authored geometry and fully editable in the editor — nothing is generated at runtime.
+## Мультиплеер (Steam)
 
-## Light and air
+Онлайн полностью реализован и работоспособен. Топология — **звезда с авторитетом хоста**.
 
-Sunlight is visible in the air, not just on surfaces: the environment runs volumetric fog with forward-biased scattering, the sun feeds it through `light_volumetric_fog_energy`, and the pergola beams are what break it into shafts. The flashlight (`F`) has a physical weapon-mounted housing: its world-space beam follows the receiver through sway, recoil and reload, rather than originating at the camera. The remote soldier uses the same rail mount. Every muzzle flash pulses the fog around the shooter. Density is one export — `shaft_density` on `PhotorealEnvironment` — and `0.0` gives clear air.
+### Как играть по сети
+1. `СОЗДАТЬ ЛОББИ` в главном меню (нужен запущенный Steam-клиент).
+2. `ПРИГЛАСИТЬ ДРУГА` — через оверлей Steam или список друзей. Приглашения и `+connect_lobby` из командной строки тоже поддерживаются.
+3. Все жмут `ГОТОВ`; хост выбирает карту и жмёт `НАЧАТЬ МАТЧ`.
+4. Хост загружает уровень, открывает сокет и только затем публикует `STATE_PLAYING` — клиенты подтягиваются, когда уровень у них уже в дереве, поэтому поздний спавн всегда попадает на живой путь.
 
-The sky is `kloofendal_43d_clear_puresky_2k.hdr`, a real HDRI whose solar disc peaks around 110 000 in luminance, and `PhysicalSun` is aligned to that disc (42.9° elevation) by `scripts/tools/align_sun_to_sky.gd`, so the shadows, the shafts and the sun you can see in the background all agree. `Environment.sky_rotation` must stay at zero or that alignment breaks. The sky it replaced measured a peak luminance of 0.8 — no dynamic range and no sun in it at all, which is why the level used to look flat and cast no visible shadows.
+### Как это устроено
+- **Транспорт** — `godotsteam` GDExtension + `SteamMultiplayerPeer` (`scripts/network/steam_manager.gd`). Всё безопасно при отсутствии Steam: headless-прогон или клиент без Steam оставляет `available = false`, лобби-вызовы становятся no-op, одиночная игра не страдает. Сейчас используется тестовый App ID `480` (Spacewar) — заменить на реальный вместе с `steam_appid.txt`.
+- **Оркестрация матча** — `scripts/network/network_game.gd`. Лобби Steam превращается в раунд через ключи лобби (`host_steam_id`, `map`, `state`, per-member `ready`). Спавн игроков — через `MultiplayerSpawner` (`soldier_avatar.tscn`).
+- **Авторитет хоста.** У `SteamMultiplayerPeer` нет релея SceneMultiplayer, поэтому клиенты шлют хосту (peer 1) только собственную позу/выстрел/звук через `rpc_id(1, ...)`, а хост-владелец `MultiplayerSynchronizer` (authority = 1) раздаёт состояние всем остальным.
+- **Урон только на сервере.** Клиент присылает **луч** (origin, direction, muzzle, weapon) — никогда не жертву, зону или величину урона. Хост трассирует свои покостные хитбоксы, проверяет укрытие между камерой и стволом, применяет множители зоны и падение урона по дистанции (`scripts/weapons/shot_ballistics.gd`), и раздаёт здоровье, раны и подтверждение попадания. Локальная трассировка у стрелка — только косметический фидбэк.
+- **Синхронизируется:** позиция, поворот по Y, наклон прицела (pitch), скорость, флаги (присед/прицел/спринт/в воздухе), индекс оружия, фонарик, здоровье. Поза — `unreliable_ordered` на 30 Гц; здоровье — `on_change`, чтобы запоздавший пакет позы не «оживил» мёртвого.
+- **Смерть/респаун** авторитетны у хоста (5 с до респауна), симуляция трупа косметическая на каждом пире.
+- Звук (шаги, дыхание, приземление, выстрел, перезарядка) реплицируется и валидируется хостом, проигрывается пространственно на аватаре стрелка.
 
-Godot 4.7 has no ray tracing, hardware or otherwise, and none of this is a path tracer. What `HIGH` runs is SDFGI (which does cone-trace rays against a signed distance field of the scene every frame), SSIL, screen-space reflections, SSAO, volumetric fog with GI injected into it, and additive glow above the tonemapper's white point. `ULTRA` raises SDFGI to six cascades, SSR to 64 steps and switches on TAA, which is what settles the temporal noise all of those produce. Presets are cycled in the main menu.
+### Аватар соперника
+Соперник виден **полной моделью**, а не «летающими руками» — по спецификации `IMPORTANT_MULTIPLAYER_ASSETS/README.md` (мастер-ассет `soldier_rifle_locomotion.glb`, риг Mixamo, 41 кость, ~50 анимаций). Не удалять эту папку.
 
-## Weather
+- **Честная 8-направленная локомоция** (`scripts/player/soldier_locomotion.gd`): `AnimationTree` со `StateMachine` → `TimeScale`, где каждый режим (walk/run/sprint/crouch) — `BlendSpace2D` со всеми восемью направлениями. Позиция смешивания — `Vector2(local_velocity.x, -local_velocity.z)`. Никаких костылей вроде обратного проигрывания или разворота корпуса; ступни планируются по реальной скорости через `TimeScale`.
+- **Покостные хитбоксы** (`scripts/player/soldier_hitboxes.gd`): 14 капсул/сфер на своём слое коллизий (Area3D), зоны с множителями урона (голова ×3.5, шея ×2.8, торс ×1.0, живот ×1.15, конечности 0.45–0.8). Оружие в руках соперника — сцена, пули сквозь неё проходят.
+- **Оружие** крепится на кость `mixamorig_RightHand` через `BoneAttachment3D`.
 
-The main menu has a `ПОГОДА` button that toggles between `ЯСНО` and `ДОЖДЬ`, and the level reads that choice when it loads. Clear is brighter and warmer with thin air and a harder sun (energy 3.1); rain is dimmer and cooler with roughly twice the fog and a sun that has been softened to 2.4 but pushes three times as much light into the air, which is where the shafts live. The two grades are absolute values in `PhotorealEnvironment`, not offsets, so switching back and forth cannot drift. Like the graphics preset, the choice lives in `ProjectSettings` for the session and resets on restart.
+---
 
-Rain also has a voice: a 28.5 s loop (`assets/audio/environment/rain_loop.ogg`) on a non-positional player at about -12 dB, because rain surrounds the listener rather than coming from a point in the level. It follows `RainSystem.intensity`, so lighter rain is quieter as well as thinner, and clear weather never starts it — the start is deferred until after the weather pass has run.
+## Карты
 
-In the rain, `scripts/environment/rain_system.gd` keeps a 30 × 14 × 30 m drop volume centred on the player, so a few thousand particles cover the whole visible downpour instead of trying to fill the arena; the drops live in world space, so nothing slides sideways when you move, and there is a second flat emitter at foot level for splashes. `intensity` scales it down to nothing at `0.0`, which is exactly what clear weather sets.
+- **`DEV TEST GRID`** — грейбокс 48 × 48 м: пол из плитки Poly Haven и стены из бетонных блоков (`shaders/dev_grid.gdshader`, world-space triplanar), периметр, высокие и по грудь стены, укрытия, лестница на платформу, рампа 15°, три мишени, надземная пергола, которая режет солнце на шахты, дневное HDRI-небо. Всё — авторская геометрия, полностью редактируемая.
+- **`PVP — LINSE`** — RealityCapture-скан заброшенного ДК (`assets/environment/linse`). Коллизия — 48k-треугольный trimesh, собирается при загрузке (`scripts/environment/scan_collision_body.gd`). Он же рендерится за кнопками меню. Освещается моделью `SCAN_FLAT` (в альбедо фотограмметрии уже запечены свет, тени и AO, поэтому SSAO/SSIL/SDFGI/туман выключены). Пол выправлен на 2.22° и отмасштабирован на 0.075 (единицы скана — не метры).
+- **`ПАРКИНГ`** (`parking_garage_rework.tscn`) — двухуровневый паркинг, фон меню. Коллизия строится при импорте `assembly.glb` через `import_script` (`scripts/environment/parking_assembly_import.gd`, `uid://dxmmanoqcbpou`): каждый меш с флагом `solid` (полы, стены, потолок, ставня, машины — 627 шт.) получает `StaticBody3D` с trimesh-коллизией; накладки и мелочь остаются проходимыми. Если это свойство слетит при пересохранении — меши импортируются без коллизии и игрок проваливается; тогда пере-указать `import_script` на тот uid и переимпортировать. Файл карты хранится в Git LFS (см. раздел «Клонирование»).
 
-The ground gets wet two ways. `shaders/dev_grid.gdshader` takes a `wetness` uniform that darkens the concrete and cuts its roughness by more than half, so the whole greybox turns glossy in one value. On top of that, `shaders/rain_puddles.gdshader` on the `WetGround` node (CC0 by shadecore_dev, see `ASSET_CREDITS.md`) is a single fullscreen pass: it rebuilds world position from the depth buffer, decides where standing water would pool from two noise octaves and the surface normal, animates rain rings on it and ray-marches the screen into the water for reflections. No authored water geometry anywhere, and it wets whatever the level happens to be. Clear weather hides that node, which is also the biggest thing the clear preset saves.
+---
 
-## Hands and weapon
+## Свет и воздух
 
-The viewmodel renders in its own `SubViewport` with `own_world_3d`, so nothing about the level reaches it by itself. `PlayerController` copies it across: the weapon environment takes the level's ambient level and colour and its exposure, the weapon key light is re-aimed every frame along the real sun direction expressed in camera space (so turning around moves the highlight on the receiver), and in the rain a thin curtain of drops falls past the hands inside the weapon viewport. Without that the gun was lit by a fixed studio light in perpetual clear weather.
+`PhotorealEnvironment` (`scripts/environment/photoreal_environment.gd`) управляет всем рендером: SDFGI (cone-trace по signed distance field каждый кадр), SSIL, screen-space отражения, SSAO, объёмный туман с инъекцией GI и аддитивный glow выше точки белого тонемаппера. Солнце видно в воздухе, а не только на поверхностях: туман с forward-scattering, солнце питает его через `light_volumetric_fog_energy`, а пергола разбивает свет на шахты (`shaft_density`, `0.0` = чистый воздух).
 
-## Sound
+Небо — реальный HDRI `kloofendal_43d_clear_puresky_2k.hdr` (пик солнца ~110 000), `PhysicalSun` выровнен по его диску (42.9° над горизонтом) скриптом `scripts/tools/align_sun_to_sky.gd`. `sky_rotation` должен оставаться нулём, иначе выравнивание ломается.
 
-The AK, pistol, run cycle and out-of-breath recordings are the user-supplied files from `game/sounds`, re-mastered into the project (see `ASSET_CREDITS.md`). Footsteps pick one of six separate recorded strides per step and never repeat the same one twice; walking pitches them down and softens them, crouching almost mutes them. After ten unbroken seconds of sprinting the player starts breathing hard *while still running*, one of five separate breaths at a time, mixed at about -23 dB so it sits under everything else. Shots and bullet impacts go through a `Weapons` bus with a hard limiter at -1 dBFS (`default_bus_layout.tres`, regenerated by `scripts/tools/generate_bus_layout.gd`), so a full magazine at 650 RPM compresses instead of clipping.
+**Пресеты графики** (`AUTO`/`PERFORMANCE`/`HIGH`/`ULTRA`) цикл в меню. `HIGH` включает SDFGI, SSIL, SSR, SSAO, объёмный туман и glow; `ULTRA` поднимает SDFGI до 6 каскадов, SSR до 64/80 шагов и включает TAA, которая гасит темпоральный шум всех этих эффектов. Godot 4.7 не имеет аппаратного трассинга — ничего из этого не path-tracer.
 
-## Editing weapon cameras and transforms
+---
 
-Each weapon scene (`scenes/weapons/ak_viewmodel.tscn`, `scenes/weapons/pistol_viewmodel.tscn`) owns its own first-person camera, and the game uses it verbatim. There are three nodes you are meant to touch:
+## Погода
 
-- `WeaponTuningCamera` — the actual in-game viewmodel camera. Its authored transform is captured before sway and it is reparented directly under the weapon viewport. Enable Camera Preview to frame the weapon; do not use Left/Right Orthogonal view for placement. Its `fov`, `keep_aspect`, `near` and `far` remain authored. Runtime ADS/recoil/sway still move geometry, but `WeaponBase.preserve_authored_framing` defaults to `true`: no whole-assembly near-plane correction drags intentionally cropped upper arms or stock into view. Set it to `false` only to opt into that constraint for another asset. `FORWARD_minus_Z` marks the forward axis.
-- `MuzzlePoint` — the barrel tip in the idle pose. At runtime it and the flashlight mount attach to the receiver bone, so effects and shot origin follow reloads too.
-- `ModelAndArms` — moves the gun, hands, skeleton and animations together. The AK's enclosing `WeaponAssembly` applies uniform `0.675` source normalization: measured length is 0.942 m, not the original 1.395 m. Third person uses that same scale, with no second correction. The pistol measures 0.220 m. Each weapon keeps its saved camera FOV (currently about 58.1° for AK and 96° for pistol); the world FOV slider does not rewrite them.
+Кнопка `ПОГОДА` в меню циклит `ЯСНО`/`ДОЖДЬ`/`ПАСМУРНО`/`ЛИВЕНЬ`; уровень читает выбор при загрузке. Погодные градации — **абсолютные наборы** значений в профилях (`WeatherVisualProfile`), а не смещения, поэтому переключение туда-обратно не «дрейфит». Ясно — ярче, теплее, воздух тоньше, солнце жёстче; дождь — тусклее, холоднее, вдвое больше тумана, солнце мягче, но втрое сильнее светит в воздух (там живут шахты).
 
-RMB raises the complete arms/weapon assembly to the fixed camera without changing either camera transform or FOV. `RearSight` marks the top of the rear notch (its local Y is sight-up); `FrontSight` marks the front-post tip, both in the authored idle pose. Runtime attaches them to the receiver and aligns that line with the lens, retaining the rear sight's authored depth rather than pushing every weapon to 62 cm. Local chest locomotion does not switch to an aiming clip, so lifting the gun does not shift the chest-mounted lens; remote avatars still animate aiming. See [ADS verification](docs/ADS_WEAPON_RAISE.md).
+У дождя есть звук: 28.5-секундный луп (`assets/audio/environment/rain_loop.ogg`) на непозиционном плеере, громкость следует за `RainSystem.intensity`. `scripts/environment/rain_system.gd` держит объём капель 30 × 14 × 30 м по центру игрока в мировых координатах (капли не «съезжают» при движении), плюс плоский эмиттер брызг у ног. Земля мокнет двумя путями: `shaders/dev_grid.gdshader` затемняет бетон и режет шероховатость по `wetness`, а `shaders/rain_puddles.gdshader` на ноде `WetGround` — один фуллскрин-проход, восстанавливающий мировую позицию из буфера глубины, решающий, где стоят лужи, анимирующий кольца дождя и ray-marching-отражения. Никакой авторской геометрии воды. `standing_water` описывает мокрый пол без дождя (подземный паркинг) отдельно от погоды.
 
-Do not rotate the imported `Skeleton3D` separately: the apparent opposite bone gizmo direction is the glTF/FBX bone coordinate convention, while the meshes are already bound through Skin. Long orange bones outside the arms are authored IK/control bones (`Head_Cam`, hand IK and pole targets), not detached deformation bones.
+---
 
-## Weapon feel
+## Руки и оружие
 
-Recoil, bolt cycling and the muzzle flash are tuned per weapon through exports on `WeaponBase` (`Recoil profile`, `Muzzle flash` and `Audio` categories), overridden for the pistol in `scripts/weapons/weapon_manager.gd`. The shot animation is compressed to exactly one bolt cycle per round (`speed_scale = clip_length / fire_interval`, restarted with a `seek` on every shot), so at 650 RPM the AK's bolt runs at 3.4× and stays in sync with the shots instead of finishing once per three or four rounds. The first shot now displaces real aim instead of disappearing into the free-aim envelope. Pitch and signed lateral kick vary per round; recovery starts after 0.28 s at 8°/s, so rapid pistol shots stack too. One measured uncompensated run climbed 46.8° with the AK (30 rounds) and 31.6° with the pistol (15 rounds); these are samples, not fixed patterns.
+Вьюмодель рендерится в собственном `SubViewport` с `own_world_3d` — из уровня к ней ничего не проникает само по себе (гильза никогда не клипается в геометрию). `PlayerController` копирует туда окружение, экспозицию и пере-целит ключевой свет оружия каждый кадр вдоль реального направления солнца в пространстве камеры; в дождь сквозь руки падает тонкая завеса капель.
 
-The flash is procedural: three flame quads crossed at 60° around the barrel plus a face-on ragged star (the crossed quads are edge-on from the shooter's own view, which is why the star exists), a white-hot core, a dim halo, sparks and a gated powder-smoke puff. `shaders/muzzle_flash.gdshader` builds the tongues from fbm noise with a per-shot seed and a blackbody gradient, and every round jitters its size, brightness and rotation. Because the viewmodel lives in its own `World3D`, the flash also places a second `OmniLight3D` out in the level — without it the level would never light up when you fire. `scripts/tools/muzzle_flash_capture.gd` stages one round and saves the frame so the flash can be reviewed without playing (run it *without* `--headless`; it needs a GPU).
+Два ствола (`scripts/weapons/weapon_manager.gd`): **АК-74М** (30 патронов, 650 в/мин, стартует на авто, V переключает `АВТО`/`ОД`) и **пистолет** (15 патронов, 330 в/мин, без селектора). Отдача двигает **реальный прицел**, а не только камеру: очередь ползёт вверх и вправо, её надо стягивать вручную, а компенсация мышью отменяет автовосстановление. «Free aim»: ствол гуляет в рамке кадра, прежде чем отдача тянет вид, и хитскан идёт за стволом, а не за центром экрана.
 
-## Death and particle effects
+Каждая сцена оружия (`scenes/weapons/*.tscn`) несёт собственную камеру `WeaponTuningCamera` (используется как есть), маркеры `MuzzlePoint`/`RearSight`/`FrontSight` (в рантайме крепятся к кости ресивера — следуют за перезарядкой и отдачей) и узел `ModelAndArms`. ПКМ поднимает всю сборку рук/оружия к фиксированной линзе по железному прицелу, не меняя трансформ и FOV камеры. АК нормализован множителем 0.675 (длина 0.942 м), пистолет 0.220 м.
 
-Deaths use `SoldierRagdoll`: 14 metre-scale rigid bodies (including a separate neck) joined by 13 constrained joints drive the existing skinned soldier. Segment masses, friction and bounded point impulses keep hits from launching the body. There is no Euphoria/active-balance, scripted incapacitation or automatic get-up. The local bodycam follows the falling chest; weapons/input are disabled until respawn. Online death/respawn remains host-authoritative, while corpse simulation is cosmetic per peer (final poses need not match exactly). Respawn still takes five seconds; `SoldierCorpse` retains the actual physics bodies and wounds until **120 seconds from death**, then frees them. Bodies collide with level geometry but are not live hitboxes or player obstacles.
+Дульная вспышка процедурная: три скрещенных под 60° пламенных квада + встречная рваная «звезда» (осевые квады с точки зрения стрелка — с ребра), бело-горячее ядро, тусклый ореол, искры и порохо-дым (`shaders/muzzle_flash.gdshader`, fbm-шум с seed на выстрел и blackbody-градиент). Поскольку вьюмодель в своём World3D, вспышка ещё ставит второй `OmniLight3D` в мире уровня и толкает вспышку в шейдеры поверхностей (мокрый пол, лужи) — иначе уровень бы не подсвечивался при выстреле. Дым — пул из 12 эмиттеров в мировых координатах, чтобы старые клубы не тянулись за поворотом.
 
-`SoldierBlood` attaches cosmetic wounds to the struck neck, head, torso or limb. World-space droplets and bounded surface stains follow animated/ragdoll wounds; bleeding subsides after death rather than spraying indefinitely. These effects never change health. Confirmed online hits are distributed by the host, including to the victim; the hidden local network avatar does not produce a second effect. DEV dummies now use health-based death and the same physical impulses, wounds and 120-second cleanup.
+---
 
-The menu's parking map is `parking_garage_rework.tscn`. Its Blender light rotations are converted from column-major report data to Godot's row-major text basis in `tools/integrate_live_parking.py`; ceiling lamps shine down, not into the slabs. Regressions: `scripts/tools/ragdoll_blood_regression.gd` (use `--headless --fixed-fps 60` for the full 120 simulated seconds) and `scripts/tools/parking_lighting_regression.gd` (also run with Forward+ for GPU illumination checks on both floors).
+## Звук
 
-Collision is built at import time by `scripts/environment/parking_assembly_import.gd`, wired through `assembly.glb`'s `import_script/path`. It reads `assets/environment/parking_rework/live_export.json` and gives each mesh flagged `solid` (floors, walls, ceiling, shutter, parked cars — 627 in all) its own `StaticBody3D` with a trimesh `CollisionShape3D`; overlays and fixtures stay collision-free. If that import property is ever dropped on a re-save, the meshes import with no collision and the player falls through the floor — re-point it at `uid://dxmmanoqcbpou` and reimport.
+АК, пистолет, цикл бега и одышка — пользовательские файлы, ремастеренные в проект (см. `ASSET_CREDITS.md`). Шаги выбирают одну из шести записанных страйдов и не повторяют одну дважды подряд; ходьба питчится вниз, присед почти беззвучен. После шести секунд непрерывного спринта игрок начинает тяжело дышать прямо на бегу (пять вариантов вдоха, ~-23 дБ). Выстрелы и импакты идут через шину `Weapons` с жёстким лимитером на -1 dBFS (`default_bus_layout.tres`), так что полный магазин на 650 в/мин компрессируется, а не клиппит.
 
-Muzzle smoke uses soft procedural turbulent billboards, scene-depth intersection fading, world lighting and 1.8 s particle lifetimes. Sparse gas continues from the moving muzzle for 0.85–1.5 s after firing. A 12-emitter pool prevents old puffs being erased or dragged along when turning. Impact dust uses the same soft shader with expanding clouds and a few small irregular fragments instead of opaque square dust cards. Rain and near-weapon drops use tapered, antialiased, depth-faded streaks; existing roof and surface collision sampling is retained.
+---
 
-See [body/weapon verification](docs/BODY_WEAPON_VERIFICATION.md) for earlier checks, and [bodycam / multi-peer follow-up](docs/BODYCAM_MULTIPLAYER_VERIFICATION.md) for the current camera/ADS transforms, host-distributed Steam topology, reproducible multi-process tests and remaining visual/Steam limitations.
+## Смерть и рэгдолл
 
-The project includes user-provided animated first-person AK and pistol assets, hitscan combat, bodycam movement, the dev test grid level, a graphics menu and a daytime HDRI environment. See `ASSET_CREDITS.md` and `USER_ASSET_REPORT.md` before redistribution.
+Смерти — `SoldierRagdoll`: 14 rigid body метрового масштаба (включая отдельную шею) на 13 ограниченных суставах двигают запечённый скелет спецназовца. Массы, трение и ограниченные импульсы не дают телу «улетать». Нет Euphoria/активного баланса и авто-вставания. Локальная bodycam следует за падающей грудью; оружие и ввод отключены до респауна. Онлайн смерть/респаун авторитетны у хоста, симуляция трупа косметична per-peer. Респаун через 5 с; `SoldierCorpse` держит тело и раны **120 секунд**, затем освобождает. Тела сталкиваются с геометрией уровня, но не являются хитбоксами или препятствиями.
+
+`SoldierBlood` цепляет косметические раны к поражённой кости; капли и ограниченные пятна следуют за анимированными/рэгдолл-ранами, кровотечение стихает после смерти. Раны никогда не меняют здоровье. DEV-манекены (F1 → DEV-панель, спавн ×1/×5/×10, показ хитбоксов/костей) используют ту же смерть по здоровью, импульсы, раны и очистку через 120 с.
+
+---
+
+## Тело от первого лица (Body Awareness)
+
+Тот же меш соперника используется снизу для вида своего тела: локально видны жилет, пояс и ноги под камерой, примонтированной к кости груди (`ChestCameraMount` — линза следует за деформацией жилета при беге/приседе), плюс изолированная сборка рук/оружия и полная тень тела. Локомоция конвертируется в in-place на приватных кэшированных копиях анимаций. Соперники сохраняют полную модель и покостные хитбоксы. Не вращать импортированный `Skeleton3D` отдельно — меши уже привязаны через Skin.
+
+---
+
+## Инструменты и регрессии
+
+- `scripts/tools/` — ~40 диагностических и регрессионных скриптов (проверки ADS, отдачи, локомоции, сети `network_star_regression.gd`, освещения паркинга, рэгдолла и т.д.), запускаются headless через SceneTree.
+- `tools/` — Python-скрипты для Blender (сборка/фотореализм/аудит паркинга через Blender MCP).
+- F1 — DEV-панель: спавн манекенов, визуализация хитбоксов и костей, лог попаданий.
+
+Проверочная документация — в `docs/` (`MULTIPLAYER_VERIFICATION.md`, `BODYCAM_MULTIPLAYER_VERIFICATION.md`, `GAMEPLAY_VERIFICATION.md`, `ADS_WEAPON_RAISE.md` и др.).
+
+Проект включает пользовательские анимированные ассеты АК и пистолета от первого лица. См. `ASSET_CREDITS.md` перед распространением.

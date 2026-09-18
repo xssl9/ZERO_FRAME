@@ -1,8 +1,14 @@
-# git-lfs is deliberately NOT used here. A plain `git clone` has to produce a
-# runnable project on a machine that has nothing but git and Godot installed.
-# With an lfs filter these files check out as 133-byte pointer text instead of
-# geometry, and Godot's ufbx importer fails with "Unrecognized file format",
-# which silently leaves the weapon viewmodel with no mesh at all.
+# Most model assets stay OUT of git-lfs on purpose: a plain `git clone` has to
+# produce a runnable project on a machine that has nothing but git and Godot
+# installed. With an lfs filter those files would check out as ~134-byte pointer
+# text instead of geometry, Godot's ufbx importer would fail with "Unrecognized
+# file format", and the weapon viewmodel would silently end up with no mesh.
+#
+# The one exception is the parking map assembly.glb (~230 MB): it is too large
+# for GitHub's 100 MB plain-blob push limit, so it MUST go through git-lfs.
+# Cloning that map correctly therefore requires `git lfs install` + `git lfs pull`
+# (or a clone on a machine with git-lfs configured). Without git-lfs the parking
+# map — and only that map — checks out as a pointer and will not import.
 *.glb binary
 *.fbx binary
 *.gltf -text
