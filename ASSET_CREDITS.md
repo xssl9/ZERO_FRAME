@@ -20,6 +20,13 @@
 - License: Creative Commons Attribution 4.0 (CC BY 4.0)
 - Use: first-person pistol, arms, skeleton, textures and animation clips.
 - Changes: copied from the user's archive; imported by Godot 4.7; runtime scale/placement adjusted. Godot converts its specular/glossiness materials to metallic/roughness.
+- Uniform variant: `assets/weapons/pistol/pistol_uniform.gltf`, authored through local
+  Blender MCP with `tools/blender_build_pistol_uniform.py`. Recolors the original
+  arm atlas to charcoal sleeve/glove tones sampled from the existing soldier;
+  retains authored stitching, normal detail and AO, with a nonmetallic cloth
+  roughness map. No downloaded textures or new geometry. The original `scene.bin`,
+  skeleton, skin weights and all five animation clips are shared unchanged.
+  Editable source and provenance: `assets/weapons/pistol/uniform/`.
 
 ### FPS AK-74m animations
 

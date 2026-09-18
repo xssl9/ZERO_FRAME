@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ok2ejjk8m1hl"]
 
-[ext_resource type="PackedScene" uid="uid://ce03s2maiha6f" path="res://assets/weapons/pistol/scene.gltf" id="1_pistol"]
+[ext_resource type="PackedScene" uid="uid://b5o488jl2pnkl" path="res://assets/weapons/pistol/pistol_uniform.gltf" id="1_pistol"]
 
 [node name="PistolViewModel" type="Node3D" unique_id=1706195490]
 

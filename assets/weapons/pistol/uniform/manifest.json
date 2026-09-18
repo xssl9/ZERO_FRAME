@@ -1,0 +1,30 @@
+{
+  "source": "assets/weapons/pistol/scene.gltf",
+  "source_gltf_sha256": "33fe4544b8a41ee8c6e07c3ff1c0098ed833ed2d4132ae7f33eb657d3d6776d6",
+  "shared_binary_sha256": "e9983a30c56d0fd7d098d4834717378658125b199932962197c47bde7071b466",
+  "palette_reference": "IMPORTANT_MULTIPLAYER_ASSETS/soldier_rifle_locomotion.glb",
+  "reference_sha256": "9da9fe97e0a48fec52944964b1639eaa76643946dc5f917fdec10122b4507775",
+  "sleeve_rgb": [
+    0.062745101749897,
+    0.062745101749897,
+    0.06666667014360428
+  ],
+  "glove_rgb": [
+    0.03529411926865578,
+    0.03529411926865578,
+    0.03529411926865578
+  ],
+  "texture_size": [
+    2048,
+    2048
+  ],
+  "covered_texels": 2905800,
+  "animations": [
+    "Armature|FPS_Pistol_Idle",
+    "Armature|FPS_Pistol_Walk",
+    "Armature|FPS_Pistol_Fire",
+    "Armature|FPS_Pistol_Reload_easy",
+    "Armature|FPS_Pistol_Reload_full"
+  ],
+  "method": "Blender material export merged into unchanged source glTF rig; original UV detail recolored to sampled soldier palette"
+}
