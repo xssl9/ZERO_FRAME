@@ -303,10 +303,15 @@ func add_recoil(pitch_degrees: float, yaw_degrees: float) -> void:
 	# back more than maximum_recoil_debt_degrees for free.
 	character_body.rotate_y(yaw_step)
 	var pitch_pivot := get_parent() as Node3D
+	var applied_pitch := 0.0
 	if pitch_pivot != null:
 		var pitch_limit: float = deg_to_rad(pitch_limit_degrees)
-		pitch_pivot.rotation.x = clampf(pitch_pivot.rotation.x + pitch_step, -pitch_limit, pitch_limit)
-	_recoil_pitch_debt = minf(_recoil_pitch_debt + pitch_step, debt_limit)
+		var previous_pitch := pitch_pivot.rotation.x
+		pitch_pivot.rotation.x = clampf(previous_pitch + pitch_step, -pitch_limit, pitch_limit)
+		applied_pitch = pitch_pivot.rotation.x - previous_pitch
+	# At the pitch limit the blocked part of a kick never moved the aim.
+	# Banking it would pull the view below its starting point after firing.
+	_recoil_pitch_debt = clampf(_recoil_pitch_debt + applied_pitch, 0.0, debt_limit)
 	_recoil_yaw_debt = clampf(_recoil_yaw_debt + yaw_step, -debt_limit, debt_limit)
 	_recoil_recovery_timer = recoil_recovery_delay
 	# Shove the housing back, up and slightly sideways, and add to the tremble.

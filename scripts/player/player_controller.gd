@@ -37,11 +37,10 @@ var pause_menu: PauseMenu
 var crouching: bool = false
 var sprinting: bool = false
 var flashlight: SpotLight3D
-# Lens sits in front of the vest, not inside the torso. Looking down reveals
-# belt/waist before boots; pitch rotates at this chest-mounted point.
+# X/Y select the chest mounting site in idle; Z is only a startup fallback.
+# Runtime placement comes from the actual skinned vest, not this capsule offset.
 var base_bodycam_position: Vector3 = Vector3(0.055, 1.30, -0.10)
-var _chest_bone: int = -1
-var _chest_mount: Vector3 = Vector3.ZERO
+var _chest_mount: ChestCameraMount
 var spawn_position: Vector3 = Vector3.ZERO
 var spawn_transform: Transform3D = Transform3D.IDENTITY
 
@@ -676,15 +675,13 @@ func _update_stance() -> void:
 	collision.position.y = 0.575 if crouching else 0.9
 
 func _update_bodycam(_delta: float) -> void:
-	if _chest_bone < 0:
+	if _chest_mount == null:
 		return
-	# Follow the animated vest, not the head or a fixed capsule-height offset.
-	# Crouch/jump/sprint are already present in this pose: adding a second stance
-	# offset would put the lens inside the torso during animation transitions.
-	var chest := _body_skeleton.global_transform * _body_skeleton.get_bone_global_pose(_chest_bone)
-	bodycam.global_position = chest * _chest_mount
+	# The lens follows the deformed front surface, including blended crouch/run
+	# poses. A single Spine2 offset does not follow the vest's blended skinning.
+	bodycam.global_position = _chest_mount.sample()
 	# Input/recoil still own pitch on BodycamRig, yaw on CharacterBody3D.
-	# Bone orientation moves the mount point but must not rotate real aim twice.
+	# Surface orientation places the lens outside the vest, not a second aim rotation.
 
 func add_camera_impulse(pitch_impulse: float, yaw_impulse: float, roll_impulse: float = 0.0) -> void:
 	var physics_camera := camera as BodycamPhysics
@@ -716,6 +713,9 @@ func apply_damage(amount: float) -> void:
 func _build_body_awareness() -> void:
 	_body_model = SoldierModel.instantiate()
 	_body_model.name = "BodyModel"
+	# The local camera and skin attachment are evaluated on render frames.
+	# Interpolating only the visible vest would separate it from that attachment.
+	_body_model.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	add_child(_body_model)
 	# The model is oriented and scaled at the CharacterBody3D origin (feet).
 	var body_anim_player: AnimationPlayer
@@ -731,12 +731,16 @@ func _build_body_awareness() -> void:
 	# Calibrate in the real idle pose. The imported rest/bind pose is not idle.
 	body_anim_player.play("idle")
 	body_anim_player.advance(0.0)
-	_chest_bone = _body_skeleton.find_bone("mixamorig_Spine2")
-	if _chest_bone >= 0:
-		var chest := _body_skeleton.global_transform * _body_skeleton.get_bone_global_pose(_chest_bone)
-		_chest_mount = chest.affine_inverse() * to_global(base_bodycam_position)
-	body_anim_player.stop(true)
 	SoldierModel.first_person_legs(_body_model, _body_skeleton)
+	var vest := _body_model.find_child("FirstPersonLegs", true, false) as MeshInstance3D
+	var mount := ChestCameraMount.new()
+	var ray_origin := to_global(Vector3(base_bodycam_position.x, base_bodycam_position.y, -1.0))
+	if mount.configure(vest, _body_skeleton, ray_origin, -global_basis.z):
+		_chest_mount = mount
+		_update_bodycam(0.0)
+	else:
+		push_error("PLAYER: Could not locate the front chest surface for the bodycam")
+	body_anim_player.stop(true)
 	# Local legs keep their gait; aim pitch belongs to the full network rig only.
 	_body_rig_modifier = SoldierRigModifier.new()
 	_body_rig_modifier.name = "BodyRigModifier"
@@ -759,9 +763,11 @@ func _update_body_awareness(delta: float) -> void:
 	if _body_locomotion == null:
 		return
 	var local_vel := global_transform.basis.inverse() * velocity
-	var aiming := gameplay_input_enabled() and Input.is_action_pressed("aim")
 	var airborne := not is_on_floor()
-	_body_locomotion.update(local_vel, crouching, aiming, sprinting, airborne, health <= 0.0, delta)
+	# Local ADS raises the isolated arms/weapon, not the chest-mounted lens.
+	# Switching the local vest to idle_aiming shifts its skinned camera mount.
+	# Remote avatars still receive and animate sync_aiming independently.
+	_body_locomotion.update(local_vel, crouching, false, sprinting, airborne, health <= 0.0, delta)
 	if _body_rig_modifier != null and bodycam != null:
 		_body_rig_modifier.aim_pitch = rad_to_deg(bodycam.rotation.x)
 

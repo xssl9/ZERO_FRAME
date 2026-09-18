@@ -36,10 +36,11 @@ func _run() -> void:
 		for frame: int in 20:
 			anim.seek(anim.current_animation_length * frame / 20.0, true)
 			player._update_bodycam(1.0 / 60.0)
-			var chest := player._body_skeleton.global_transform * player._body_skeleton.get_bone_global_pose(player._chest_bone)
-			# Compare in metres. Inverse imported rig scale magnifies float rounding
-			# at non-origin map spawns by 55x; it is not physical mount separation.
-			check(player.bodycam.global_position.distance_to(chest * player._chest_mount) < 0.00001, "mount remains attached: " + clip)
+			# The mount now follows the skinned surface, not a single bone. The
+			# independent ray/triangle check lives in bodycam_mount_probe.gd.
+			var mount := player._chest_mount
+			var offset := player.bodycam.global_position - mount.surface_position
+			check(offset.distance_to(mount.surface_normal * ChestCameraMount.LENS_STANDOFF) < 0.00001, "mount remains on the vest surface: " + clip)
 			check(player.to_local(player.camera.global_position).y < 1.5, "chest not head: " + clip)
 	anim.play("idle", 0.0)
 	anim.advance(0.0)
@@ -50,6 +51,9 @@ func _run() -> void:
 		(player.camera as BodycamPhysics).reset_recoil()
 		manager._select(index)
 		var weapon := manager.weapons[index]
+		# This suite tests the optional whole-assembly constraint, not the FPS
+		# default. authored_viewmodel_regression checks the saved scene framing.
+		weapon.preserve_authored_framing = false
 		weapon.set_process(false)
 		weapon._animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 		var camera := weapon.authored_camera
@@ -101,7 +105,14 @@ func _run() -> void:
 				check(Vector2(sight.x, sight.y).length() < 0.001, "ADS sight on camera axis: " + name + str(sight))
 				check(sight.z < -0.5, "sights have eye relief")
 			print("ADS_CLEARANCE ", weapon.clearance_offset)
-			check(weapon.clearance_offset < 0.01, "authored ADS does not rely on large corrective displacement")
+			# Raised ADS now preserves the authored sight depth and intentional
+			# stock/arm cropping. This opt-in all-geometry constraint must therefore
+			# push it away; zero correction belongs to the default framing mode,
+			# checked by ads_regression and authored_viewmodel_regression.
+			weapon._clearance_pivot.position = Vector3.ZERO
+			var required := maxf(0.0, weapon._clearance.nearest_z(camera) + camera.near + WeaponBase.CAMERA_CLEARANCE)
+			weapon.enforce_camera_clearance(1.0 / 60.0)
+			check(absf(weapon.clearance_offset - required) < 0.00001, "optional ADS constraint applies exactly the required clearance")
 		var measure_start := Time.get_ticks_usec()
 		for iteration: int in 500:
 			weapon.enforce_camera_clearance(1.0 / 60.0)

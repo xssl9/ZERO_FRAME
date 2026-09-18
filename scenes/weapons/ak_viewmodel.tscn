@@ -5,9 +5,9 @@
 [node name="AKViewModel" type="Node3D" unique_id=1331583053]
 
 [node name="WeaponTuningCamera" type="Camera3D" parent="." unique_id=1957415907]
-transform = Transform3D(0.99993056, -0.011785933, 0, 0.011785933, 0.99993056, 0, 0, 0, 1, -0.009825025, 0.026388958, 0.121536955)
+transform = Transform3D(0.99993056, -0.011785933, 0, 0.011785933, 0.99993056, 0, 0, 0, 1, 0.013898924, 0.108921126, -0.008003205)
 current = true
-fov = 58.114532
+fov = 93.043724
 near = 0.01
 far = 20.0
 
@@ -15,10 +15,10 @@ far = 20.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
 
 [node name="RearSight" type="Marker3D" parent="." unique_id=1008038744]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0232, -0.022, -0.27)
+transform = Transform3D(0.995585, 0.093862, 0, -0.093862, 0.995585, 0, 0, 0, 1, -0.00838, -0.0084, -0.26955)
 
 [node name="FrontSight" type="Marker3D" parent="." unique_id=2056469577]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.007, -0.0332, -0.635)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.01741, -0.02285, -0.62962)
 
 [node name="WeaponAssembly" type="Node3D" parent="." unique_id=523938684]
 transform = Transform3D(0.675, 0, 0, 0, 0.675, 0, 0, 0, 0.675, 0, 0, 0)

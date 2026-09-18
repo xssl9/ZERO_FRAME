@@ -69,6 +69,9 @@ func _ready() -> void:
 	ak.configure("AK-74M", 30, 30, 650.0, 34.0, ak_modes, "res://scenes/weapons/ak_viewmodel.tscn", "Rig|AK_Idle", "Rig|AK_Reload_full", "Rig|AK_Shot")
 	ak.shot_stream_path = "res://assets/audio/weapons/ak_shot.ogg"
 	ak.reload_stream_path = "res://assets/audio/weapons/ak_reload.ogg"
+	# A shouldered rifle cannot travel 13 cm towards the lens in ADS. Keep
+	# the full gameplay recoil, but limit the rendered spring motion to 10%.
+	ak.ads_recoil_motion_scale = 0.1
 	add_child(ak)
 	weapons.append(ak)
 	var pistol := WeaponBase.new()
@@ -133,18 +136,23 @@ func _process(delta: float) -> void:
 	# Rotational sway: where the muzzle trails to when the view turns. Deliberately underdamped
 	# (damping ratio about 0.45) so the rifle overshoots and swings back instead of gliding into
 	# place - a carried weapon has mass and the shooter is correcting it, not tracking with it.
-	sway_velocity += (-sway * 54.0 - sway_velocity * 6.6) * delta
-	sway += sway_velocity * delta
-	# Positional trail on the same impulse, but slower and softer, so the gun visibly swings
-	# through the frame on a fast turn instead of only tilting.
-	_drag_velocity += (-_drag * 38.0 - _drag_velocity * 5.2) * delta
-	_drag += _drag_velocity * delta
+	# Integrate both springs in small steps, like BodycamPhysics. One large
+	# Euler step after a frame hitch otherwise throws the hands out of frame.
+	var remaining := minf(delta, 0.25)
+	while remaining > 0.00001:
+		var step := minf(remaining, 1.0 / 120.0)
+		sway_velocity += (-sway * 54.0 - sway_velocity * 6.6) * step
+		sway += sway_velocity * step
+		# Positional trail is slower and softer than angular sway.
+		_drag_velocity += (-_drag * 38.0 - _drag_velocity * 5.2) * step
+		_drag += _drag_velocity * step
+		remaining -= step
 
 	var horizontal_speed := 0.0
 	var sprinting := false
 	if collision_player != null:
 		horizontal_speed = Vector2(collision_player.velocity.x, collision_player.velocity.z).length()
-		sprinting = Input.is_action_pressed("sprint") and horizontal_speed > 5.0
+		sprinting = Input.is_action_pressed("sprint") and not aiming and horizontal_speed > 5.0
 	# Sprinting drops the muzzle and rolls the rifle in towards the chest.
 	_sprint_blend = move_toward(_sprint_blend, 1.0 if sprinting else 0.0, delta * (5.0 if sprinting else 3.2))
 	# Weapon gait, driven by real speed rather than by a timer, so it stops when you stop.

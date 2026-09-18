@@ -44,6 +44,12 @@ var authored_camera: Camera3D
 var authored_camera_fov: float = 96.0
 var authored_camera_keep_aspect: Camera3D.KeepAspect = Camera3D.KEEP_HEIGHT
 
+@export_category("Viewmodel framing")
+# FPS scenes deliberately crop upper arms/stock at the camera. Forcing every
+# vertex in front of the near plane exposes those cut ends and cancels editor
+# camera placement. Whole-assembly clearance is opt-in for other assets only.
+@export var preserve_authored_framing: bool = true
+
 @export_category("Recoil profile")
 # Per-shot view kick. The pitch figure is what the shooter has to pull back down:
 # it is added to the real aim, not just to the visual camera shake. An uncompensated
@@ -63,6 +69,9 @@ var authored_camera_keep_aspect: Camera3D.KeepAspect = Camera3D.KEEP_HEIGHT
 @export var recoil_pitch_speed: float = 6.0
 @export var recoil_spring_stiffness: float = 300.0
 @export var recoil_spring_damping: float = 15.0
+# Cosmetic only: blend with the weapon raise, not the binary aim input. Real
+# aim kick/free aim and the spring state remain unchanged during transitions.
+@export_range(0.0, 1.0, 0.01) var ads_recoil_motion_scale: float = 1.0
 # Burst heat: sustained fire climbs harder and scatters wider than the first round.
 @export var recoil_heat_per_shot: float = 0.2
 @export var recoil_heat_decay: float = 1.7
@@ -307,6 +316,11 @@ func _bind_barrel_markers() -> void:
 	attachment.transform = skeleton.get_bone_global_pose(bone)
 	muzzle.reparent(attachment, true)
 	flashlight_mount.reparent(attachment, true)
+	# Iron sights follow the same animated receiver, not an unanimated scene root.
+	for marker_name: String in ["RearSight", "FrontSight"]:
+		var sight := model_root.find_child(marker_name, true, false) as Marker3D
+		if sight != null:
+			sight.reparent(attachment, true)
 
 func _bind_animation_player(imported: Node) -> void:
 	for node: Node in imported.find_children("*", "AnimationPlayer", true, false):
@@ -739,15 +753,31 @@ func _process(delta: float) -> void:
 			_play_animation(idle_animation)
 	if model_root == null:
 		return
-	var step: float = minf(delta, 1.0 / 30.0)
+	# Do not discard elapsed recoil time below 30 FPS. Small steps keep the
+	# springs stable without slowing their recovery relative to ADS/animation.
+	var remaining := minf(delta, 0.25)
+	while remaining > 0.00001:
+		var step := minf(remaining, 1.0 / 120.0)
+		_integrate_recoil(step)
+		remaining -= step
+	# Frame-rate independent sights: the old fixed 0.14 lerp made aiming faster at 144 Hz
+	# than at 60.
+	_aim_weight = lerpf(_aim_weight, 1.0 if aiming and not reloading else 0.0, 1.0 - exp(-delta * 13.0))
+	var motion_scale := lerpf(1.0, ads_recoil_motion_scale, _aim_weight)
+	model_root.position.z = _kick_offset * motion_scale
+	model_root.position.x = _kick_side * 0.12 * motion_scale
+	model_root.rotation.x = _kick_pitch * motion_scale
+	model_root.rotation.z = _kick_roll * 0.7 * motion_scale
+	transform = Transform3D.IDENTITY.interpolate_with(_ads_transform, _aim_weight)
+
+func _integrate_recoil(step: float) -> void:
 	var kick_acceleration: float = -_kick_offset * recoil_spring_stiffness - _kick_velocity * recoil_spring_damping
 	_kick_velocity += kick_acceleration * step
 	_kick_offset += _kick_velocity * step
 	var pitch_acceleration: float = -_kick_pitch * recoil_spring_stiffness - _kick_pitch_velocity * recoil_spring_damping
 	_kick_pitch_velocity += pitch_acceleration * step
 	_kick_pitch += _kick_pitch_velocity * step
-	# Roll and lateral springs are softer and less damped, so they settle a beat after the
-	# main kick has already gone.
+	# Roll and lateral springs settle a beat after the main kick.
 	var roll_acceleration: float = -_kick_roll * recoil_spring_stiffness * 0.65 - _kick_roll_velocity * recoil_spring_damping * 0.8
 	_kick_roll_velocity += roll_acceleration * step
 	_kick_roll += _kick_roll_velocity * step
@@ -756,14 +786,6 @@ func _process(delta: float) -> void:
 	_kick_side += _kick_side_velocity * step
 	_kick_offset = clampf(_kick_offset, -0.03, 0.13)
 	_kick_pitch = clampf(_kick_pitch, -0.07, 0.27)
-	model_root.position.z = _kick_offset
-	model_root.position.x = _kick_side * 0.12
-	model_root.rotation.x = _kick_pitch
-	model_root.rotation.z = _kick_roll * 0.7
-	# Frame-rate independent sights: the old fixed 0.14 lerp made aiming faster at 144 Hz
-	# than at 60.
-	_aim_weight = lerpf(_aim_weight, 1.0 if aiming and not reloading else 0.0, 1.0 - exp(-delta * 13.0))
-	transform = Transform3D.IDENTITY.interpolate_with(_ads_transform, _aim_weight)
 
 func _update_muzzle_flash(delta: float) -> void:
 	if _smoke_cooldown > 0.0:
@@ -1150,16 +1172,27 @@ func _configure_ads() -> void:
 	if rear == null or front == null or authored_camera == null:
 		_ads_transform.origin = Vector3(-0.07, 0.07, -0.08)
 		return
-	# Align the authored iron-sight line, not the ballistic ray. Recoil and
-	# free aim remain separate layers and the physical source scale is unchanged.
+	# Raise the complete weapon/arms assembly to the fixed lens. Keep the
+	# authored rear-sight depth: a universal 62 cm relief pushed the gun away
+	# and shrank the sights, especially with wide authored camera FOVs.
 	var rear_local := to_local(rear.global_position)
 	var sight_line := (to_local(front.global_position) - rear_local).normalized()
 	var camera_local := global_transform.affine_inverse() * _authored_camera_rest
-	var alignment := Basis(Quaternion(sight_line, -camera_local.basis.z.normalized()))
-	_ads_transform = Transform3D(alignment, camera_local * Vector3(0, 0, -0.62) - alignment * rear_local)
+	var sight_up := global_basis.inverse() * rear.global_basis.y
+	var sight_basis := Basis.looking_at(sight_line, sight_up)
+	var alignment := camera_local.basis.orthonormalized() * sight_basis.inverse()
+	var rear_depth := (camera_local.affine_inverse() * rear_local).z
+	var target := camera_local * Vector3(0.0, 0.0, minf(rear_depth, -authored_camera.near - CAMERA_CLEARANCE))
+	_ads_transform = Transform3D(alignment, target - alignment * rear_local)
 
 func enforce_camera_clearance(delta: float) -> void:
-	if _clearance_pivot == null or not is_visible_in_tree():
+	if _clearance_pivot == null:
+		return
+	if preserve_authored_framing:
+		clearance_offset = 0.0
+		_clearance_pivot.position = Vector3.ZERO
+		return
+	if not is_visible_in_tree():
 		return
 	var view := get_viewport().get_camera_3d()
 	if view == null or view != authored_camera:

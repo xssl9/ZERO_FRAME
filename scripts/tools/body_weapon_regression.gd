@@ -1,5 +1,15 @@
 extends SceneTree
 
+class DeathCameraMonitor extends Node:
+	var player: PlayerController
+	var samples := 0
+	var maximum_error := 0.0
+
+	func _process(_delta: float) -> void:
+		var expected := player._ragdoll.bone_world_transform("mixamorig_Spine2").orthonormalized() * player._death_camera_offset
+		maximum_error = maxf(maximum_error, player.camera.global_position.distance_to(expected.origin))
+		samples += 1
+
 var failures := 0
 
 func check(value: bool, message: String) -> void:
@@ -33,7 +43,12 @@ func _run() -> void:
 			player._update_weapon_flashlight()
 			var expected := weapon.world_marker_transform(player.camera, weapon.flashlight_mount)
 			check(player.flashlight.global_transform.is_equal_approx(expected), "flashlight follows weapon at pitch/recoil " + str(pitch))
-			check(player.flashlight.global_position.distance_to(player.camera.global_position) > 0.25, "flashlight not at eyes")
+			# Camera placement is authored per weapon: the AK rail can legitimately
+			# be closer than 25 cm. Verify the exact nonzero mount offset instead of
+			# forcing camera framing to satisfy an arbitrary distance threshold.
+			var rail_offset := weapon.authored_camera.to_local(weapon.flashlight_mount.global_position)
+			var light_offset := player.camera.to_local(player.flashlight.global_position)
+			check(not rail_offset.is_zero_approx() and light_offset.distance_to(rail_offset) < 0.00001, "flashlight keeps the authored rail offset, not the camera origin")
 		player.bodycam.rotation = Vector3.ZERO
 		# Authored reload moves the receiver independently of the procedural root.
 		var mount_parent := weapon.flashlight_mount.get_parent() as BoneAttachment3D
@@ -189,10 +204,16 @@ func _ragdoll_checks(level: Node, player: PlayerController) -> void:
 	player.teleport_to(Transform3D(Basis.IDENTITY, Vector3(3, 20.4, 0)))
 	player._on_network_health(0)
 	check(player._ragdoll.running and not player.get_node("WeaponLayer").visible, "local death hides isolated arms/weapon")
+	# Several physics ticks can occur before one render frame at low FPS. The
+	# camera deliberately updates in _process: sample after it, not mid-physics.
+	var monitor := DeathCameraMonitor.new()
+	monitor.player = player
+	monitor.process_priority = player.process_priority + 1
+	level.add_child(monitor)
 	for frame: int in 60:
 		await physics_frame
-	var expected := player._ragdoll.bone_world_transform("mixamorig_Spine2").orthonormalized() * player._death_camera_offset
-	check(player.camera.global_position.distance_to(expected.origin) < 0.1, "death camera follows chest")
+	check(monitor.samples > 0 and monitor.maximum_error < 0.001, "death camera follows chest on every rendered frame: error=" + str(monitor.maximum_error))
+	monitor.free()
 	player.revive()
 	await physics_frame
 	await physics_frame
