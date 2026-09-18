@@ -225,9 +225,15 @@ func _check_ballistics(player: PlayerController) -> void:
 	check(ShotBallistics.trace(space, eye, Vector3.FORWARD, muzzle, excluded).is_empty(), "self hitbox exclusion")
 	for weapon: int in 2:
 		check(ShotBallistics.damage_at(weapon, "head", 5) > ShotBallistics.damage_at(weapon, "torso", 5), "head damage > torso")
-		check(ShotBallistics.damage_at(weapon, "torso", 5) > ShotBallistics.damage_at(weapon, "limbs", 5), "torso damage > limbs")
+		check(ShotBallistics.damage_at(weapon, "neck", 5) > ShotBallistics.damage_at(weapon, "torso", 5), "neck damage > torso")
+		check(ShotBallistics.damage_at(weapon, "torso", 5) > ShotBallistics.damage_at(weapon, "arm_lower", 5), "torso damage > arm_lower")
+		check(ShotBallistics.damage_at(weapon, "torso_low", 5) > ShotBallistics.damage_at(weapon, "leg_lower", 5), "torso_low damage > leg_lower")
+		check(ShotBallistics.damage_at(weapon, "leg_upper", 5) > ShotBallistics.damage_at(weapon, "leg_lower", 5), "leg_upper damage > leg_lower")
+		check(ShotBallistics.damage_at(weapon, "arm_upper", 5) > ShotBallistics.damage_at(weapon, "arm_lower", 5), "arm_upper damage > arm_lower")
+		# Legacy zone still works as a fallback.
+		check(ShotBallistics.damage_at(weapon, "torso", 5) > ShotBallistics.damage_at(weapon, "limbs", 5), "torso damage > limbs fallback")
 		check(ShotBallistics.damage_at(weapon, "torso", 100) < ShotBallistics.damage_at(weapon, "torso", 5), "range loses damage")
-		check(ShotBallistics.damage_at(weapon, "limbs", 120) > 0, "distant limbs still take damage")
+		check(ShotBallistics.damage_at(weapon, "leg_lower", 120) > 0, "distant leg_lower still takes damage")
 	fixture.free()
 
 func _capture(label: String, player: PlayerController, pitch: float) -> void:

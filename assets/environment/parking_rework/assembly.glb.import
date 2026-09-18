@@ -3,7 +3,7 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cm70ur4s0l2u0"
+uid="uid://0qsltmvr25vw"
 path="res://.godot/imported/assembly.glb-498f4c29de87a4a7343955c9587c6972.scn"
 
 [deps]
@@ -35,7 +35,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://scripts/environment/parking_assembly_import.gd"
+import_script/path=""
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""

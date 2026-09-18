@@ -2,7 +2,20 @@ class_name ShotBallistics
 extends RefCounted
 
 const RANGE := 120.0
-const ZONE_MULTIPLIER := {"head": 2.5, "torso": 1.0, "limbs": 0.7}
+
+## Damage is resolved by the host; wound effects never change health.
+const ZONE_MULTIPLIER := {
+	"head":      3.5,
+	"neck":      2.8,
+	"torso":     1.0,   # centre-mass, armour zone
+	"torso_low": 1.15,  # abdomen/pelvis
+	"arm_upper": 0.65,
+	"arm_lower": 0.45,
+	"leg_upper": 0.80,  # thigh
+	"leg_lower": 0.50,
+	# Legacy fallback so old callers that still pass "limbs" don't break.
+	"limbs":     0.65,
+}
 
 static func damage_at(weapon: int, zone: String, distance: float) -> float:
 	var base := 34.0 if weapon == 0 else 25.0

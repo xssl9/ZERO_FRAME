@@ -66,6 +66,7 @@ var _body_skeleton: Skeleton3D
 var _body_locomotion: SoldierLocomotion
 var _body_rig_modifier: SoldierRigModifier
 var _ragdoll: SoldierRagdoll
+var _blood: SoldierBlood
 var _death_camera_offset := Transform3D.IDENTITY
 var _camera_rest := Transform3D.IDENTITY
 
@@ -122,10 +123,11 @@ func _start_death() -> void:
 	_camera_rest = camera.transform
 	camera.set_process(false)
 	camera.set_physics_process(false)
+	# Ragdoll must read bone poses BEFORE the animation player resets them to rest.
+	_ragdoll.start(velocity)
 	(_body_model.get_node("BodyAnimTree") as AnimationTree).active = false
 	(_body_model.find_child("AnimationPlayer", true, false) as AnimationPlayer).stop(true)
 	_body_rig_modifier.active = false
-	_ragdoll.start(velocity)
 	_death_camera_offset = _ragdoll.bone_world_transform("mixamorig_Spine2").orthonormalized().affine_inverse() * camera.global_transform
 	velocity = Vector3.ZERO
 	get_node("CollisionShape3D").set_deferred("disabled", true)
@@ -668,6 +670,7 @@ func _update_stance() -> void:
 		query.shape = standing
 		query.transform = global_transform * Transform3D(Basis.IDENTITY, Vector3(0, 0.9, 0))
 		query.exclude = [get_rid()]
+		query.collision_mask = 1  # world geometry only — ignore hitboxes, ragdoll bodies, etc.
 		wanted = not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 	crouching = wanted
 	var capsule := collision.shape as CapsuleShape3D
@@ -749,15 +752,22 @@ func _build_body_awareness() -> void:
 	_ragdoll = SoldierRagdoll.new()
 	_ragdoll.name = "Ragdoll"
 	_body_skeleton.add_child(_ragdoll)
+	_build_blood()
 	# AnimationTree for the body model (independent of the viewmodel).
 	var body_tree := AnimationTree.new()
 	body_tree.name = "BodyAnimTree"
 	_body_model.add_child(body_tree)
+	_ragdoll._anim_tree = body_tree
 	# 8-way locomotion builder.
 	_body_locomotion = SoldierLocomotion.new()
 	_body_locomotion.name = "BodyLocomotion"
 	add_child(_body_locomotion)
 	_body_locomotion.build(body_tree, body_anim_player)
+
+func _build_blood() -> void:
+	_blood = SoldierBlood.new()
+	_body_model.add_child(_blood)
+	_blood.configure(_body_skeleton, _ragdoll)
 
 func _update_body_awareness(delta: float) -> void:
 	if _body_locomotion == null:
@@ -784,6 +794,8 @@ func revive() -> void:
 	health = 100.0
 	if _ragdoll == null or not _ragdoll.running:
 		return
+	SoldierCorpse.preserve(_ragdoll, _blood)
+	_build_blood()
 	_ragdoll.stop()
 	_body_rig_modifier.active = true
 	(_body_model.get_node("BodyAnimTree") as AnimationTree).active = true
@@ -800,6 +812,12 @@ func revive() -> void:
 	weapon_manager._free_aim = Vector2.ZERO
 	weapon_manager.require_trigger_release = true
 	reset_physics_interpolation()
+
+func apply_physical_hit(hit_position: Vector3, hit_direction: Vector3,
+		bone_name: String, zone: String, impulse_scale: float = 1.0) -> void:
+	_blood.add_wound(hit_position, hit_direction, bone_name, zone)
+	if health <= 0.0:
+		_ragdoll.apply_impulse(bone_name, hit_position, hit_direction.normalized() * 4.0 * impulse_scale)
 
 func notify_hit_confirmed(zone: String, killed: bool) -> void:
 	# Trigger hit feedback (camera kick, hit-stop, sound, debug marker) for

@@ -17,7 +17,7 @@ original = SCENE.read_text()
 blocks = re.split(r'(?=^\[(?:ext_resource|sub_resource|node) )', original, flags=re.M)
 resources = {}
 nodes = []
-kept_names = {'ParkingGarage', 'PhotorealEnvironment', 'Reflections', 'SpawnPoint3D', 'WetGround', 'Player'}
+kept_names = {'ParkingGarage', 'PhotorealEnvironment', 'Reflections', 'SpawnPoint3D', 'WetGround', 'Player', 'LightmapGI'}
 for block in blocks[1:]:
     header = block.splitlines()[0]
     if not header.startswith('[node '):
@@ -44,7 +44,12 @@ for item in report['lights']:
     kind = 'SpotLight3D' if area else 'OmniLight3D'
     energy = item['energy_watts'] * (3.4 / 125.0 if area else 1.0 / 8.0)
     lights.append('[node name=%s type="%s" parent="Lights"]\n' % (json.dumps(item['name']), kind))
-    lights.append('transform = Transform3D(%s)\n' % ', '.join('%.9g' % v for v in item['transform']))
+    # Blender report stores column vectors. Godot's text Transform3D stores
+    # the 3x3 basis row-major (then origin), unlike its Basis-vector constructor.
+    # Writing columns verbatim transposes rotation: downlights point UP.
+    source_transform = item['transform']
+    scene_transform = [source_transform[i] for i in (0, 3, 6, 1, 4, 7, 2, 5, 8, 9, 10, 11)]
+    lights.append('transform = Transform3D(%s)\n' % ', '.join('%.9g' % v for v in scene_transform))
     lights.append('light_color = Color(%s, 1)\n' % ', '.join('%.9g' % v for v in item['color']))
     lights.append('light_energy = %.9g\nshadow_enabled = true\nshadow_bias = 0.045\n' % energy)
     lights.append('metadata/blender_energy_watts = %.9g\n' % item['energy_watts'])

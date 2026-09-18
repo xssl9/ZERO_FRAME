@@ -104,16 +104,21 @@ func _process(delta: float) -> void:
 	# MSAA on the isolated gun avoids TAA trails on fast recoil and transparent edges.
 	viewport.use_taa = false
 	viewport.msaa_3d = Viewport.MSAA_4X if high else Viewport.MSAA_2X
-	if sun != null and player.weapon_key_light != null:
+	if player.weapon_key_light != null:
 		var key := player.weapon_key_light
-		key.global_basis = mapping.basis.orthonormalized() * sun.global_basis.orthonormalized()
-		key.light_color = sun.light_color
-		# Sun visibility: 0 when occluded (indoors), 1 when in direct sun.
-		# Smooth the transition to avoid a hard cut when crossing a doorway.
-		key.light_energy = sun.light_energy * _filtered_sun_visibility
-		key.light_angular_distance = sun.light_angular_distance
-		key.shadow_enabled = high
-		key.directional_shadow_max_distance = 4.0
+		if sun != null:
+			key.global_basis = mapping.basis.orthonormalized() * sun.global_basis.orthonormalized()
+			key.light_color = sun.light_color
+			# Sun visibility: 0 when occluded (indoors), 1 when in direct sun.
+			# Smooth the transition to avoid a hard cut when crossing a doorway.
+			key.light_energy = sun.light_energy * _filtered_sun_visibility
+			key.light_angular_distance = sun.light_angular_distance
+			key.shadow_enabled = high
+			key.directional_shadow_max_distance = 4.0
+		else:
+			# No sun in this level (underground). Kill the key light so the weapon
+			# viewport matches the ambient-only lighting of the world viewport.
+			key.light_energy = 0.0
 	for source: Light3D in _mirrors:
 		var mirror := _mirrors[source] as Light3D
 		mirror.global_transform = mapping * source.global_transform

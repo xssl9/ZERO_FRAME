@@ -886,16 +886,43 @@ func _fire_hitscan() -> void:
 		if collider is Area3D and collider.has_meta("hit_zone"):
 			# Concrete chips/metal audio and wall decals do not belong on flesh.
 			# Damage confirmation comes exclusively from the host.
-			# --- Dev dummy hitbox: apply damage locally and trigger hit feedback ---
+			var zone := collider.get_meta("hit_zone", "torso") as String
+			var hit_pos := hit["position"] as Vector3
+			var dist := origin.distance_to(hit_pos)
+			var dmg := ShotBallistics.damage_at(0 if weapon_name == "AK-74M" else 1, zone, dist)
+			# Derive the bone name from the Area3D node name (Hit_<bone_name>).
+			var bone_name := _bone_name_from_area(collider as Area3D)
+			var weapon_index := 0 if weapon_name == "AK-74M" else 1
+			var impulse_scale := 1.0 if weapon_index == 0 else 0.72
 			if collider.has_meta("dev_dummy"):
-				var zone := collider.get_meta("hit_zone", "torso") as String
-				var dist := origin.distance_to(hit["position"] as Vector3)
-				var dmg := ShotBallistics.damage_at(0 if weapon_name == "AK-74M" else 1, zone, dist)
-				_trigger_hit_feedback(hit, zone, null, dmg, dist, false)
+				var dummy := collider.get_meta("hit_avatar", null) as Node3D
+				if dummy != null:
+					var killed := SoldierDummy.receive_hit(dummy, dmg, hit_pos, direction, bone_name, zone, impulse_scale)
+					_trigger_hit_feedback(hit, zone, null, dmg, dist, killed)
+			# Online wounds and impulses come ONLY from the host-confirmed hit RPC.
 			return
 		if collider.has_method("apply_damage"):
 			collider.call("apply_damage", damage, String(hit.get("shape", "torso")))
 		_spawn_impact(hit["position"], hit["normal"])
+
+## Extracts the bone name from a hitbox Area3D.
+## Name format (FIX-10): "Hit_<zone>__<bone_name>"
+func _bone_name_from_area(area: Area3D) -> String:
+	if area.has_meta("hit_bone"):
+		return String(area.get_meta("hit_bone"))
+	var area_name := area.name as String
+	# New format: "Hit_<zone>__<bone>"
+	if area_name.begins_with("Hit_") and "__" in area_name:
+		return area_name.split("__", false, 1)[1]
+	# Legacy format: "Hit_<bone>" (no zone prefix, no double-underscore)
+	if area_name.begins_with("Hit_"):
+		return area_name.substr(4)
+	# Fallback: use the zone metadata to pick the first matching SPEC bone.
+	var zone := area.get_meta("hit_zone", "torso") as String
+	for spec: Dictionary in SoldierHitboxes.SPEC:
+		if String(spec["zone"]) == zone:
+			return String(spec["bone"])
+	return "mixamorig_Spine2"
 
 ## Routes a confirmed hit through HitFeedback and the DevPanel readout.
 func _trigger_hit_feedback(hit: Dictionary, zone: String, avatar: Node3D, dmg: float, dist: float, killed: bool) -> void:

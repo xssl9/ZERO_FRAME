@@ -215,11 +215,45 @@ func _spawn_dummies(count: int) -> void:
 		model.global_position = player.global_position + fwd * _spawn_distance + right * offset_x
 		model.look_at(player.global_position, Vector3.UP)
 
-		# Hitboxes
+		# Skeleton + AnimationPlayer
 		var skeleton: Skeleton3D = null
 		for c: Node in model.find_children("*", "Skeleton3D", true, false):
 			skeleton = c as Skeleton3D
 			break
+		var ap: AnimationPlayer = null
+		for c: Node in model.find_children("*", "AnimationPlayer", true, false):
+			ap = c as AnimationPlayer
+			break
+
+		# Shared physical ragdoll, health-based death and cosmetic wounds.
+		if skeleton != null and ap != null:
+			var ragdoll := SoldierRagdoll.new()
+			ragdoll.name = "Ragdoll"
+			skeleton.add_child(ragdoll)
+
+			var rig_mod := SoldierRigModifier.new()
+			rig_mod.name = "AimModifier"
+			rig_mod.hide_upper_body = false
+			skeleton.add_child(rig_mod)
+
+			var anim_tree := AnimationTree.new()
+			anim_tree.name = "DummyAnimTree"
+			model.add_child(anim_tree)
+			ragdoll._anim_tree = anim_tree
+
+			var locomotion := SoldierLocomotion.new()
+			locomotion.name = "DummyLocomotion"
+			model.add_child(locomotion)
+			locomotion.build(anim_tree, ap)
+
+			var blood := SoldierBlood.new()
+			model.add_child(blood)
+			blood.configure(skeleton, ragdoll)
+			model.set_meta("blood", blood)
+			model.set_meta("ragdoll", ragdoll)
+			model.set_meta("health", 100.0)
+
+		# Hitboxes
 		if skeleton != null:
 			var areas := SoldierHitboxes.build(skeleton, model, 0)
 			for area: Area3D in areas:
@@ -228,14 +262,6 @@ func _spawn_dummies(count: int) -> void:
 				_add_hitbox_overlays_for(areas)
 			if _show_bones:
 				_add_bone_overlays_for(skeleton)
-
-		# Idle animation
-		var ap: AnimationPlayer = null
-		for c: Node in model.find_children("*", "AnimationPlayer", true, false):
-			ap = c as AnimationPlayer
-			break
-		if ap != null and ap.has_animation("idle"):
-			ap.play("idle")
 
 	_info_label.text = "Spawned %d. Total: %d" % [count, _dummy_container.get_child_count()]
 

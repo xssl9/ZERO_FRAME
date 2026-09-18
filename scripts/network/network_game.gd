@@ -368,12 +368,23 @@ func _receive_shot(origin: Vector3, direction: Vector3, weapon: int, muzzle: Vec
 	var damage := ShotBallistics.damage_at(weapon, zone, muzzle.distance_to(hit.position))
 	var remaining := maxf(0.0, health_of(target_peer) - damage)
 	_push_health.rpc(target_peer, remaining)
+	_show_wound.rpc(target_peer, hit.position, direction, String(collider.get_meta("hit_bone", "mixamorig_Spine2")), zone, 1.0 if weapon == 0 else 0.72)
 	if sender == local_peer_id():
 		_confirm_hit(zone, remaining <= 0.0)
 	else:
 		_confirm_hit.rpc_id(sender, zone, remaining <= 0.0)
 	if remaining <= 0.0:
 		_schedule_respawn(target_peer)
+
+@rpc("authority", "call_local", "reliable")
+func _show_wound(target: int, point: Vector3, direction: Vector3, bone: String, zone: String, strength: float) -> void:
+	var avatar := avatar_for(target) as SoldierAvatar
+	if avatar != null:
+		avatar.apply_physical_hit(point, direction, bone, zone, strength)
+	if target == local_peer_id():
+		var player := get_tree().get_first_node_in_group("player") as PlayerController
+		if player != null:
+			player.apply_physical_hit(point, direction, bone, zone, strength)
 
 @rpc("authority", "call_local", "unreliable")
 func _show_impact(shooter: int, point: Vector3, normal: Vector3) -> void:

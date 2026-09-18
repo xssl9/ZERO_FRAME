@@ -99,7 +99,12 @@ func _process(delta: float) -> void:
 	if phase == 1:
 		var victim := _avatar_in_slot(count - 1)
 		if victim != null and victim.sync_dead and victim._ragdoll.running:
-			_ack_once()
+			var visible_blood := player._blood if victim.is_local else victim._blood
+			if visible_blood.wounds.size() == 1:
+				if victim.is_local and not victim._blood.wounds.is_empty():
+					_fail("hidden avatar duplicates local blood")
+					return
+				_ack_once()
 	elif phase == 3:
 		if slot != count - 1 and network._avatar_root.get_child_count() == count - 1:
 			if _avatar_in_slot(count - 1) == null:
@@ -116,6 +121,8 @@ func _process(delta: float) -> void:
 		old_peer = victim.peer_id
 		_set_phase.rpc(1)
 		network._push_health.rpc(old_peer, 0.0)
+		network._show_wound.rpc(old_peer, victim._ragdoll.bone_world_transform("mixamorig_Neck").origin,
+			Vector3.FORWARD, "mixamorig_Neck", "neck", 1.0)
 		network._schedule_respawn(old_peer)
 	elif phase == 1 and network.health_of(old_peer) == 100.0:
 		_set_phase.rpc(2)

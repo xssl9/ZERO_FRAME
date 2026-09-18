@@ -58,6 +58,7 @@ var _weapon_attach: BoneAttachment3D
 var _weapon_proxies: Array[Node3D] = []
 var _hitboxes: Array[Area3D] = []
 var _ragdoll: SoldierRagdoll
+var _blood: SoldierBlood
 
 # --- Public API (called by NetworkGame) -----------------------------------
 
@@ -77,11 +78,29 @@ func set_dead(dead: bool) -> void:
 		_animation_tree.active = not dead
 		_rig_modifier.active = not dead
 		if dead:
-			_animation_player.stop(true)
+			# Ragdoll must read bone poses BEFORE the animation player resets them.
 			_ragdoll.start(sync_velocity)
+			_animation_player.stop(true)
 		else:
+			# The hidden local avatar must not duplicate the player's visible corpse.
+			if not is_local:
+				SoldierCorpse.preserve(_ragdoll, _blood)
+				_build_blood()
 			_ragdoll.stop()
 			_received_pose = false
+
+func apply_physical_hit(hit_position: Vector3, hit_direction: Vector3,
+		bone_name: String, zone: String, impulse_scale: float = 1.0) -> void:
+	if is_local:
+		return
+	_blood.add_wound(hit_position, hit_direction, bone_name, zone)
+	if sync_dead:
+		_ragdoll.apply_impulse(bone_name, hit_position, hit_direction.normalized() * 4.0 * impulse_scale)
+
+func _build_blood() -> void:
+	_blood = SoldierBlood.new()
+	_model.add_child(_blood)
+	_blood.configure(_skeleton, _ragdoll)
 
 # --- Lifecycle ------------------------------------------------------------
 
@@ -129,6 +148,8 @@ func _build() -> void:
 	_ragdoll = SoldierRagdoll.new()
 	_ragdoll.name = "Ragdoll"
 	_skeleton.add_child(_ragdoll)
+	_ragdoll._anim_tree = _animation_tree
+	_build_blood()
 	# Per-bone hitboxes on collision layer 3.
 	_hitboxes = SoldierHitboxes.build(_skeleton, self, peer_id)
 	# Weapon proxy mesh in the right hand.

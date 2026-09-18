@@ -4,6 +4,9 @@ extends SkeletonModifier3D
 ## Metre-scale rigid bodies drive the imported, scaled skeleton after animation.
 ## Cosmetic on each peer: death/respawn remain host authoritative; bodies never
 ## become live hitboxes or obstruct players. No additional physics dependency.
+const CORPSE_LIFETIME := 120.0
+
+var age := 0.0
 var running := false
 var bodies: Dictionary = {}
 var _body_to_bone: Dictionary = {}
@@ -17,6 +20,7 @@ func start(inherited_velocity: Vector3) -> void:
 	if skeleton == null:
 		return
 	running = true
+	age = 0.0
 	_physics_root = Node3D.new()
 	_physics_root.name = "RagdollPhysics"
 	add_child(_physics_root)
@@ -25,14 +29,18 @@ func start(inherited_velocity: Vector3) -> void:
 	for spec: Dictionary in SoldierHitboxes.SPEC:
 		var index := skeleton.find_bone(spec.bone)
 		var tip := skeleton.find_bone(spec.tip)
-		if index < 0 or tip < 0:
+		if index < 0 or tip < 0 or bodies.has(index):
 			continue
 		var bone_world := skeleton.global_transform * skeleton.get_bone_global_pose(index)
 		var end := skeleton.global_transform * skeleton.get_bone_global_pose(tip).origin
 		var offset := end - bone_world.origin
 		var body := RigidBody3D.new()
 		body.name = str(spec.bone)
-		body.mass = 7.0 if spec.zone == "torso" else (4.5 if spec.zone == "head" else 3.0)
+		body.mass = float({"head": 4.5, "neck": 1.0, "torso": 9.0, "torso_low": 12.0,
+			"arm_upper": 2.5, "arm_lower": 1.5, "leg_upper": 8.0, "leg_lower": 4.0}.get(spec.zone, 3.0))
+		body.physics_material_override = PhysicsMaterial.new()
+		body.physics_material_override.friction = 0.7
+		body.physics_material_override.bounce = 0.0
 		# Layer 8 is cosmetic debris; world geometry is layer 1.
 		body.collision_layer = 128
 		body.collision_mask = 1
@@ -49,7 +57,9 @@ func start(inherited_velocity: Vector3) -> void:
 		_physics_root.add_child(body)
 		body.global_transform = Transform3D(SoldierHitboxes._align_to(offset).basis, bone_world.origin + offset * 0.5)
 		bodies[index] = body
-		_body_to_bone[index] = body.global_transform.affine_inverse() * bone_world
+		# Strip skeleton scale from bone_world so _body_to_bone is scale-free.
+		var bone_world_ortho := Transform3D(bone_world.basis.orthonormalized(), bone_world.origin)
+		_body_to_bone[index] = body.global_transform.affine_inverse() * bone_world_ortho
 		_indices.append(index)
 	_indices.sort()
 	for index: int in _indices:
@@ -85,23 +95,97 @@ func stop() -> void:
 	if skeleton != null:
 		skeleton.reset_bone_poses()
 
+## Deliver a physics impulse to the ragdoll body that owns `bone_name`.
+## `world_pos`  — world-space point of application (for torque calculation).
+## `impulse`    — world-space linear impulse (N·s).
+## Safe to call while the ragdoll is running; silently ignored otherwise.
+func apply_impulse(bone_name: String, world_pos: Vector3, impulse: Vector3) -> void:
+	if not running:
+		return
+	var skeleton := get_skeleton()
+	if skeleton == null:
+		return
+	var bone_index := skeleton.find_bone(bone_name)
+	# Walk up the hierarchy until we find a body that owns this bone.
+	while bone_index >= 0 and not bodies.has(bone_index):
+		bone_index = skeleton.get_bone_parent(bone_index)
+	if bone_index < 0:
+		return
+	var body := bodies[bone_index] as RigidBody3D
+	if not world_pos.is_finite() or not impulse.is_finite():
+		return
+	# Godot expects a world-oriented offset, not a body-local point.
+	var offset := (world_pos - body.global_position).limit_length(0.08)
+	# A light neck/forearm must not receive the same velocity change as a torso.
+	# Limit the point impulse as well as its lever arm to avoid joint explosions.
+	body.apply_impulse(impulse.limit_length(minf(8.0, body.mass * 0.6)), offset)
+
 func bone_world_transform(bone_name: String) -> Transform3D:
-	var index := get_skeleton().find_bone(bone_name)
+	var skeleton := get_skeleton()
+	var index := skeleton.find_bone(bone_name)
+	if index < 0:
+		return skeleton.global_transform
 	if bodies.has(index):
 		return (bodies[index] as RigidBody3D).global_transform * (_body_to_bone[index] as Transform3D)
-	return get_skeleton().global_transform * get_skeleton().get_bone_global_pose(index)
+	return skeleton.global_transform * skeleton.get_bone_global_pose(index)
+
+## Transfer the actual bodies/joints, retaining pose and momentum across respawn.
+## The corpse starts its own lifetime counter from zero so it lives the full
+## CORPSE_LIFETIME regardless of how long the source ragdoll was already running.
+func transfer_to(target: SoldierRagdoll) -> void:
+	target.running = running
+	target.age = 0.0          # corpse gets its own fresh lifetime
+	target.bodies = bodies
+	target._body_to_bone = _body_to_bone
+	target._indices = _indices
+	target._physics_root = _physics_root
+	_physics_root.reparent(target)
+	# Null out source references before stop() so stop() cannot free the
+	# physics root that now belongs to the target.
+	_physics_root = null
+	bodies = {}
+	_body_to_bone = {}
+	_indices = []
+	# Reset source skeleton to T-pose; does not touch the target.
+	running = false
+	var skeleton := get_skeleton()
+	if skeleton != null:
+		skeleton.reset_bone_poses()
 
 func _apply_pose() -> void:
 	if not running:
 		return
 	var skeleton := get_skeleton()
-	var inverse := skeleton.global_transform.affine_inverse()
+	if skeleton == null:
+		return
+	var skel_world := skeleton.global_transform
+	var skel_world_ortho_inv := Transform3D(skel_world.basis.orthonormalized(), skel_world.origin).affine_inverse()
 	for index: int in _indices:
-		var pose: Transform3D = inverse * (bodies[index] as RigidBody3D).global_transform * (_body_to_bone[index] as Transform3D)
-		skeleton.set_bone_global_pose(index, pose)
+		var body_world: Transform3D = (bodies[index] as RigidBody3D).global_transform
+		var bone_world_ortho: Transform3D = body_world * (_body_to_bone[index] as Transform3D)
+		var local := skel_world_ortho_inv * bone_world_ortho
+		skeleton.set_bone_global_pose(index, local)
 
+## Called by SkeletonModifier3D when AnimationTree is active.
 func _process_modification() -> void:
 	_apply_pose()
 
 func _process_modification_with_delta(_delta: float) -> void:
+	_apply_pose()
+
+## Fallback: drive bones directly when AnimationTree is inactive (death state).
+## SkeletonModifier3D._process_modification is only dispatched while the skeleton
+## is being ticked by an active AnimationTree/AnimationPlayer. After stop(true)
+## the skeleton goes silent and modifiers are never called, so we push poses
+## ourselves every physics frame instead.
+var _anim_tree: AnimationTree = null
+
+func _physics_process(delta: float) -> void:
+	if not running:
+		return
+	age += delta
+	# If AnimationTree is active it will tick the skeleton and trigger
+	# _process_modification automatically. Only drive bones manually when it is off.
+	if _anim_tree != null and _anim_tree.active:
+		return
 	_apply_pose()

@@ -157,7 +157,7 @@ func _ragdoll_checks(level: Node, player: PlayerController) -> void:
 	ragdoll.modification_processed.connect(func() -> void:
 		for index: int in ragdoll.bodies:
 			rendered_poses[index] = avatar._skeleton.global_transform * avatar._skeleton.get_bone_global_pose(index))
-	check(ragdoll.running and ragdoll.bodies.size() == 13, "13 dynamic body segments on death")
+	check(ragdoll.running and ragdoll.bodies.size() == 14, "14 dynamic body segments on death")
 	check(not avatar._animation_tree.active and not avatar._rig_modifier.active, "animation/aim no longer fight physics")
 	var anchors: Array[Dictionary] = []
 	for child: Node in ragdoll._physics_root.get_children():
@@ -166,10 +166,10 @@ func _ragdoll_checks(level: Node, player: PlayerController) -> void:
 			var a := joint.get_node(joint.node_a) as RigidBody3D
 			var b := joint.get_node(joint.node_b) as RigidBody3D
 			anchors.append({"a": a, "b": b, "local_a": a.to_local(joint.global_position), "local_b": b.to_local(joint.global_position)})
-	check(anchors.size() == 12, "all segments connected by constrained joints")
+	check(anchors.size() == 13, "all segments connected by constrained joints")
 	var initial := ragdoll.bone_world_transform("mixamorig_Hips").origin
 	avatar.set_dead(true)
-	check(ragdoll.bodies.size() == 13, "repeated death notification is idempotent")
+	check(ragdoll.bodies.size() == 14, "repeated death notification is idempotent")
 	for frame: int in 210:
 		await physics_frame
 	var settled := ragdoll.bone_world_transform("mixamorig_Hips").origin
