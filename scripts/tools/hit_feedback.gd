@@ -13,7 +13,7 @@ extends Node
 ## Usage: call HitFeedback.on_hit(hit_dict, zone, player) from weapon_base after
 ## a confirmed hitbox hit. The singleton is added to the scene tree by DevPanel.
 
-const HIT_STOP_SECONDS := 0.022          # 22 ms — perceptible but not jarring
+const HIT_STOP_MS := 22                  # 22 мс реального времени
 const HIT_STOP_TIME_SCALE := 0.0         # full freeze during hit-stop
 const CAMERA_KICK_PITCH := 0.18          # degrees of upward kick
 const CAMERA_KICK_YAW := 0.06
@@ -24,7 +24,7 @@ const MARKER_RADIUS := 0.045
 ## Set by DevPanel; when false the 3D markers are not spawned.
 var debug_hit_info: bool = false
 
-var _hit_stop_timer: float = 0.0
+var _hit_stop_end_ms: int = 0            # реальное время окончания hit-stop
 var _original_time_scale: float = 1.0
 var _impact_stream: AudioStream = null
 var _impact_voice: AudioStreamPlayer = null
@@ -40,11 +40,12 @@ func _ready() -> void:
 		_impact_voice.bus = &"Master"
 		add_child(_impact_voice)
 
-func _process(delta: float) -> void:
-	if _hit_stop_timer > 0.0:
-		_hit_stop_timer = maxf(_hit_stop_timer - delta, 0.0)
-		if _hit_stop_timer <= 0.0:
-			Engine.time_scale = _original_time_scale
+func _process(_delta: float) -> void:
+	# Используем реальное время — delta при time_scale=0 тоже равна 0,
+	# поэтому таймер на delta никогда бы не истёк.
+	if _hit_stop_end_ms > 0 and Time.get_ticks_msec() >= _hit_stop_end_ms:
+		_hit_stop_end_ms = 0
+		Engine.time_scale = _original_time_scale
 
 ## Called by weapon_base._fire_hitscan() after a hitbox is confirmed.
 ## `hit`  — the Dictionary returned by ShotBallistics.trace()
@@ -58,11 +59,11 @@ func on_hit(hit: Dictionary, zone: String, avatar: Node3D) -> void:
 		_spawn_debug_marker(hit.get("position", Vector3.ZERO), zone)
 
 func _do_hit_stop() -> void:
-	if _hit_stop_timer > 0.0:
-		return  # already in a stop; don't stack
+	if _hit_stop_end_ms > 0:
+		return  # уже в hit-stop, не стекируем
 	_original_time_scale = Engine.time_scale
 	Engine.time_scale = HIT_STOP_TIME_SCALE
-	_hit_stop_timer = HIT_STOP_SECONDS
+	_hit_stop_end_ms = Time.get_ticks_msec() + HIT_STOP_MS
 
 func _do_camera_kick(zone: String) -> void:
 	var player := get_tree().get_first_node_in_group("player") as PlayerController
