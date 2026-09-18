@@ -38,7 +38,6 @@ func _ready() -> void:
 	hit_feedback = HitFeedback.new()
 	hit_feedback.name = "HitFeedback"
 	add_child(hit_feedback)
-	# root.add_child() нельзя вызывать прямо в _ready() — дерево ещё строится.
 	call_deferred("_build_canvas")
 
 func _build_canvas() -> void:
@@ -62,6 +61,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _toggle() -> void:
+	if not is_instance_valid(_root):
+		return
 	_opened = not _opened
 	_root.visible = _opened
 	if _opened:
