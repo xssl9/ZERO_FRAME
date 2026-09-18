@@ -801,6 +801,15 @@ func revive() -> void:
 	weapon_manager.require_trigger_release = true
 	reset_physics_interpolation()
 
-func notify_hit_confirmed(_zone: String, _killed: bool) -> void:
-	# TODO: hit-marker HUD feedback.
-	pass
+func notify_hit_confirmed(zone: String, killed: bool) -> void:
+	# Trigger hit feedback (camera kick, hit-stop, sound, debug marker) for
+	# server-confirmed hits in multiplayer. The hit position is unknown here,
+	# so we pass an empty dict — HitFeedback handles that gracefully.
+	var global_input := get_node_or_null("/root/GlobalInput")
+	if global_input == null:
+		return
+	var dev_panel := global_input.get_node_or_null("DevPanel") as DevPanel
+	if dev_panel == null or dev_panel.hit_feedback == null:
+		return
+	dev_panel.hit_feedback.on_hit({}, zone, null)
+	dev_panel.report_hit(zone, 0.0, 0.0, killed)

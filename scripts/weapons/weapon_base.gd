@@ -886,10 +886,29 @@ func _fire_hitscan() -> void:
 		if collider is Area3D and collider.has_meta("hit_zone"):
 			# Concrete chips/metal audio and wall decals do not belong on flesh.
 			# Damage confirmation comes exclusively from the host.
+			# --- Dev dummy hitbox: apply damage locally and trigger hit feedback ---
+			if collider.has_meta("dev_dummy"):
+				var zone := collider.get_meta("hit_zone", "torso") as String
+				var dist := origin.distance_to(hit["position"] as Vector3)
+				var dmg := ShotBallistics.damage_at(0 if weapon_name == "AK-74M" else 1, zone, dist)
+				_trigger_hit_feedback(hit, zone, null, dmg, dist, false)
 			return
 		if collider.has_method("apply_damage"):
 			collider.call("apply_damage", damage, String(hit.get("shape", "torso")))
 		_spawn_impact(hit["position"], hit["normal"])
+
+## Routes a confirmed hit through HitFeedback and the DevPanel readout.
+func _trigger_hit_feedback(hit: Dictionary, zone: String, avatar: Node3D, dmg: float, dist: float, killed: bool) -> void:
+	# Locate the DevPanel via GlobalInput autoload.
+	var global_input := get_node_or_null("/root/GlobalInput")
+	if global_input == null:
+		return
+	var dev_panel := global_input.get_node_or_null("DevPanel") as DevPanel
+	if dev_panel == null:
+		return
+	if dev_panel.hit_feedback != null:
+		dev_panel.hit_feedback.on_hit(hit, zone, avatar)
+	dev_panel.report_hit(zone, dmg, dist, killed)
 
 func _spawn_impact(point: Vector3, normal: Vector3) -> void:
 	# Inside-cover queries intentionally return a zero normal. They block damage,
