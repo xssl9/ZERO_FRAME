@@ -7,15 +7,15 @@ extends CanvasLayer
 ## All spawned dummies live in a dedicated Node3D container so Clear All is a
 ## single queue_free() on that container.
 ##
-## The panel is added as an autoload-style child of the current scene by
-## GlobalInput._ready(), so it is always available in any level.
+## The panel is added as a child of GlobalInput (autoload) so it survives
+## scene changes and is always available in any level.
 
 const SPAWN_DISTANCE_DEFAULT := 3.0
 const SPAWN_DISTANCE_MIN     := 1.0
 const SPAWN_DISTANCE_MAX     := 20.0
 
 # ── UI references ──────────────────────────────────────────────────────────
-var _panel: PanelContainer
+var _root: PanelContainer          # shown/hidden instead of the CanvasLayer
 var _spawn_distance_label: Label
 var _hitbox_btn: Button
 var _bone_btn: Button
@@ -23,7 +23,7 @@ var _debug_hit_btn: Button
 var _info_label: Label
 
 # ── State ──────────────────────────────────────────────────────────────────
-var _visible: bool = false
+var _opened: bool = false
 var _spawn_distance: float = SPAWN_DISTANCE_DEFAULT
 var _show_hitboxes: bool = false
 var _show_bones: bool = false
@@ -35,47 +35,48 @@ var _bone_overlays: Array[Node3D] = []
 var hit_feedback: HitFeedback = null
 
 func _ready() -> void:
-	layer = 200          # above everything including the bodycam overlay
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 201          # one above PauseMenu (200)
 	_build_ui()
-	hide()
+	_root.hide()         # hidden by default — same pattern as PauseMenu._shade
 	_ensure_hit_feedback()
 
 # ── Input ──────────────────────────────────────────────────────────────────
+# CanvasLayer receives _input, not _unhandled_input — same as PauseMenu.
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("dev_panel_toggle"):
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("dev_panel_toggle") and not event.is_echo():
 		_toggle()
 		get_viewport().set_input_as_handled()
 
 func _toggle() -> void:
-	_visible = not _visible
-	if _visible:
-		show()
+	_opened = not _opened
+	_root.visible = _opened
+	if _opened:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
-		hide()
 		# Only recapture if the player is alive and in a level.
 		var player := get_tree().get_first_node_in_group("player") as PlayerController
-		if player != null and player.health > 0.0:
+		if player != null and player.health > 0.0 and not player.menu_open:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 # ── UI construction ────────────────────────────────────────────────────────
 
 func _build_ui() -> void:
-	_panel = PanelContainer.new()
-	_panel.name = "DevPanelRoot"
-	add_child(_panel)
+	_root = PanelContainer.new()
+	_root.name = "DevPanelRoot"
+	add_child(_root)
 
 	# Position: top-left corner with a small margin.
-	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_panel.offset_left   = 16.0
-	_panel.offset_top    = 16.0
-	_panel.offset_right  = 320.0
-	_panel.offset_bottom = 520.0
+	_root.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_root.offset_left   = 16.0
+	_root.offset_top    = 16.0
+	_root.offset_right  = 320.0
+	_root.offset_bottom = 520.0
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
-	_panel.add_child(vbox)
+	_root.add_child(vbox)
 
 	# ── Title ──
 	var title := Label.new()
