@@ -7,6 +7,7 @@ extends Node
 ## Создаёт собственный CanvasLayer прямо в root-Viewport,
 ## чтобы UI гарантированно рендерился поверх всего.
 
+const MAX_DUMMIES := 24
 const SPAWN_DISTANCE_DEFAULT := 3.0
 const SPAWN_DISTANCE_MIN     := 1.0
 const SPAWN_DISTANCE_MAX     := 20.0
@@ -206,14 +207,25 @@ func _spawn_dummies(count: int) -> void:
 	var fwd   := -player.global_transform.basis.z.normalized()
 	var right := player.global_transform.basis.x.normalized()
 
-	for i: int in count:
+	var spawned := 0
+	for i: int in mini(count, maxi(0, MAX_DUMMIES - _dummy_container.get_child_count())):
 		var model := SoldierModel.instantiate()
 		model.name = "DevDummy_%d" % _dummy_container.get_child_count()
 		_dummy_container.add_child(model)
 
 		var offset_x := (float(i) - float(count - 1) * 0.5) * 1.2
-		model.global_position = player.global_position + fwd * _spawn_distance + right * offset_x
-		model.look_at(player.global_position, Vector3.UP)
+		var wanted := player.global_position + fwd * _spawn_distance + right * offset_x
+		var ground_query := PhysicsRayQueryParameters3D.create(wanted + Vector3.UP * 1.5, wanted + Vector3.DOWN * 4.0, 1, [player.get_rid()])
+		var ground := player.get_world_3d().direct_space_state.intersect_ray(ground_query)
+		if ground.is_empty() or (ground.normal as Vector3).y < 0.6:
+			model.queue_free()
+			continue
+		spawned += 1
+		model.global_position = ground.position
+		var facing := player.global_position
+		facing.y = model.global_position.y
+		if model.global_position.distance_squared_to(facing) > 0.01:
+			model.look_at(facing, Vector3.UP)
 
 		# Skeleton + AnimationPlayer
 		var skeleton: Skeleton3D = null
@@ -263,7 +275,7 @@ func _spawn_dummies(count: int) -> void:
 			if _show_bones:
 				_add_bone_overlays_for(skeleton)
 
-	_info_label.text = "Spawned %d. Total: %d" % [count, _dummy_container.get_child_count()]
+	_info_label.text = "Spawned %d. Total: %d / %d" % [spawned, _dummy_container.get_child_count(), MAX_DUMMIES]
 
 # ── Show Hitboxes ──────────────────────────────────────────────────────────
 

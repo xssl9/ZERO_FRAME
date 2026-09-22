@@ -3,6 +3,8 @@ extends RefCounted
 
 static func receive_hit(model: Node3D, damage: float, point: Vector3, direction: Vector3,
 		bone: String, zone: String, strength: float) -> bool:
+	if float(model.get_meta("health", 100.0)) <= 0.0:
+		return false
 	var ragdoll := model.get_meta("ragdoll") as SoldierRagdoll
 	var blood := model.get_meta("blood") as SoldierBlood
 	var health := maxf(0.0, float(model.get_meta("health", 100.0)) - damage)

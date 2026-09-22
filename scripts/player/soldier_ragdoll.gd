@@ -12,6 +12,9 @@ var bodies: Dictionary = {}
 var _body_to_bone: Dictionary = {}
 var _physics_root: Node3D
 var _indices: Array[int] = []
+var _bounds_clock := 0.0
+var _settled := false
+var _original_bounds: Dictionary = {}
 
 func start(inherited_velocity: Vector3) -> void:
 	if running:
@@ -19,8 +22,12 @@ func start(inherited_velocity: Vector3) -> void:
 	var skeleton := get_skeleton()
 	if skeleton == null:
 		return
+	for mesh: MeshInstance3D in skeleton.find_children("*", "MeshInstance3D", true, false):
+		if mesh.skin != null:
+			_original_bounds[mesh] = mesh.custom_aabb
 	running = true
 	age = 0.0
+	_settled = false
 	_physics_root = Node3D.new()
 	_physics_root.name = "RagdollPhysics"
 	add_child(_physics_root)
@@ -82,9 +89,14 @@ func start(inherited_velocity: Vector3) -> void:
 		body.linear_velocity = inherited_velocity.limit_length(10.0)
 		# Break the unstable upright equilibrium without launching the corpse.
 		body.angular_velocity = Vector3(0.45, 0.0, 0.2)
+		body.reset_physics_interpolation()
+	_apply_pose()
+	_update_bounds()
 
 func stop() -> void:
+	_restore_bounds()
 	running = false
+	_settled = false
 	if is_instance_valid(_physics_root):
 		_physics_root.free()
 	_physics_root = null
@@ -124,15 +136,18 @@ func bone_world_transform(bone_name: String) -> Transform3D:
 	var skeleton := get_skeleton()
 	var index := skeleton.find_bone(bone_name)
 	if index < 0:
-		return skeleton.global_transform
+		return skeleton.global_transform.orthonormalized()
 	if bodies.has(index):
 		return (bodies[index] as RigidBody3D).global_transform * (_body_to_bone[index] as Transform3D)
-	return skeleton.global_transform * skeleton.get_bone_global_pose(index)
+	# Wound offsets use metres before AND after the animation/physics transition.
+	return (skeleton.global_transform * skeleton.get_bone_global_pose(index)).orthonormalized()
 
 ## Transfer the actual bodies/joints, retaining pose and momentum across respawn.
 ## The corpse starts its own lifetime counter from zero so it lives the full
 ## CORPSE_LIFETIME regardless of how long the source ragdoll was already running.
 func transfer_to(target: SoldierRagdoll) -> void:
+	_restore_bounds()
+	target._settled = _settled
 	target.running = running
 	target.age = 0.0          # corpse gets its own fresh lifetime
 	target.bodies = bodies
@@ -159,11 +174,13 @@ func _apply_pose() -> void:
 	if skeleton == null:
 		return
 	var skel_world := skeleton.global_transform
-	var skel_world_ortho_inv := Transform3D(skel_world.basis.orthonormalized(), skel_world.origin).affine_inverse()
+	var position_inverse := skel_world.affine_inverse()
+	var rotation_inverse := skel_world.basis.orthonormalized().inverse()
 	for index: int in _indices:
 		var body_world: Transform3D = (bodies[index] as RigidBody3D).global_transform
 		var bone_world_ortho: Transform3D = body_world * (_body_to_bone[index] as Transform3D)
-		var local := skel_world_ortho_inv * bone_world_ortho
+		# Positions must return to imported rig units, rotations must remain unit scale.
+		var local := Transform3D(rotation_inverse * bone_world_ortho.basis, position_inverse * bone_world_ortho.origin)
 		skeleton.set_bone_global_pose(index, local)
 
 ## Called by SkeletonModifier3D when AnimationTree is active.
@@ -184,8 +201,41 @@ func _physics_process(delta: float) -> void:
 	if not running:
 		return
 	age += delta
+	_bounds_clock -= delta
+	if _bounds_clock <= 0.0:
+		_bounds_clock = 0.2
+		_update_bounds()
+	# Sleeping bodies keep their final pose; retain lifetime cleanup but stop solving.
+	if not _settled and age > 4.0:
+		var quiet := true
+		for body: RigidBody3D in bodies.values():
+			quiet = quiet and body.linear_velocity.length_squared() < 0.01 and body.angular_velocity.length_squared() < 0.04
+		if quiet:
+			_settled = true
+			for body: RigidBody3D in bodies.values():
+				body.freeze = true
 	# If AnimationTree is active it will tick the skeleton and trigger
 	# _process_modification automatically. Only drive bones manually when it is off.
 	if _anim_tree != null and _anim_tree.active:
 		return
 	_apply_pose()
+
+func _update_bounds() -> void:
+	var skeleton := get_skeleton()
+	if skeleton == null or bodies.is_empty():
+		return
+	# Bounds follow physics even when the living model's origin remains at spawn.
+	for mesh: MeshInstance3D in skeleton.find_children("*", "MeshInstance3D", true, false):
+		if mesh.skin == null:
+			continue
+		var inverse := mesh.global_transform.affine_inverse()
+		var bounds := AABB(inverse * (bodies.values()[0] as RigidBody3D).global_position, Vector3.ZERO)
+		for body: RigidBody3D in bodies.values():
+			bounds = bounds.expand(inverse * body.global_position)
+		mesh.custom_aabb = bounds.grow(0.45 / maxf(mesh.global_basis.get_scale().x, 0.001))
+
+func _restore_bounds() -> void:
+	for mesh: MeshInstance3D in _original_bounds:
+		if is_instance_valid(mesh):
+			mesh.custom_aabb = _original_bounds[mesh]
+	_original_bounds.clear()

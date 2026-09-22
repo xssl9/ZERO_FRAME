@@ -46,22 +46,23 @@ func _run() -> void:
 		if area.get_meta("hit_zone") == "neck":
 			neck = area
 	check(neck != null and neck.get_meta("hit_bone") == "mixamorig_Neck", "neck targets its own bone")
-	var point := ragdoll.bone_world_transform("mixamorig_Neck").origin
+	var point := ragdoll.bone_world_transform("mixamorig_Neck").origin + Vector3(0.035, 0.01, 0.02)
 	check(not SoldierDummy.receive_hit(dummy, 20, point, Vector3.FORWARD, "mixamorig_Neck", "neck", 1), "nonlethal wound does not incapacitate")
 	check(not ragdoll.running and blood.wounds.size() == 1, "no active-balance or scripted stumble")
+	check((blood.wounds[0].offset as Vector3).length() < 0.05, "live wound offset measured in metres, not imported rig units")
 	var arm_point := ragdoll.bone_world_transform("mixamorig_LeftArm").origin
 	SoldierDummy.receive_hit(dummy, 20, arm_point, Vector3.RIGHT, "mixamorig_LeftArm", "arm_upper", 1)
 	check(blood.wounds.size() == 2, "independent neck/arm wounds")
 	for frame: int in 90:
 		await physics_frame
 	check(not blood.stains.is_empty(), "bleeding deposits on real floor")
+	var before_death := ragdoll.get_skeleton().global_transform * ragdoll.get_skeleton().get_bone_global_pose(ragdoll.get_skeleton().find_bone("mixamorig_Hips"))
 	check(SoldierDummy.receive_hit(dummy, 100, point, Vector3.FORWARD, "mixamorig_Neck", "neck", 1), "health death starts physics")
+	var after_death := ragdoll.get_skeleton().global_transform * ragdoll.get_skeleton().get_bone_global_pose(ragdoll.get_skeleton().find_bone("mixamorig_Hips"))
+	check(before_death.origin.distance_to(after_death.origin) < 0.002, "death preserves scaled rig world pose without collapse")
 	check(ragdoll.bodies.size() == 14 and ragdoll._physics_root.get_child_count() == 27, "exactly 14 bodies and 13 joints")
 	for frame: int in 180:
 		await physics_frame
-	for wound: Dictionary in blood.wounds:
-		var expected := ragdoll.bone_world_transform(wound.bone) * (wound.offset as Vector3)
-		check((wound.emitter as Node3D).global_position.distance_to(expected) < 0.05, "wound follows falling bone")
 	var hips := ragdoll.bone_world_transform("mixamorig_Hips").origin
 	check(hips.y < dummy.global_position.y + 0.6, "lethal neck impulse settles instead of launching body")
 	for body: RigidBody3D in ragdoll.bodies.values():
@@ -76,7 +77,7 @@ func _run() -> void:
 		for frame: int in 10:
 			await physics_frame
 		await RenderingServer.frame_post_draw
-		check(root.get_texture().get_image().save_png("/tmp/ragdoll_blood.png") == OK, "blood/ragdoll Forward+ capture")
+		check(root.get_texture().get_image().save_png("res://build/verification/ragdoll_blood.png") == OK, "blood/ragdoll Forward+ capture")
 		camera.free()
 		player.camera.make_current()
 		player.get_node("WeaponLayer").show()
@@ -97,6 +98,9 @@ func _run() -> void:
 	check(corpse.ragdoll.bodies.values().has(original_body), "respawn transfers existing physics")
 	check(corpse._skeleton.global_position.distance_to(original_body.global_position) < 3.0, "corpse culling bounds stay at death location after distant respawn")
 	check(original_blood.get_parent() == corpse and player._blood != original_blood, "wounds remain with corpse, respawn clean")
+	for wound: Dictionary in original_blood.wounds:
+		var attachment := wound.get("attachment") as BoneAttachment3D
+		check(is_instance_valid(attachment) and attachment.get_parent() == corpse._skeleton, "attached wound moves to corpse skeleton")
 	check(not player._ragdoll.running and player.health == 100, "live controller restored")
 	# Actual physics clock, including the five-second respawn interval. Use
 	# --fixed-fps 60 to run these 120 simulation seconds without wall-clock waits.
@@ -106,7 +110,7 @@ func _run() -> void:
 	level.add_child(probe)
 	while is_instance_valid(corpse) and corpse.ragdoll.age < 30.0:
 		await physics_frame
-	check(is_instance_valid(original_blood) and not (original_blood.wounds[0].emitter as CPUParticles3D).emitting, "postmortem bleeding subsides")
+	check(is_instance_valid(original_blood) and not original_blood.is_physics_processing(), "postmortem bleeding subsides")
 	while is_instance_valid(corpse) and corpse.ragdoll.age < 121.0:
 		await physics_frame
 	check(not is_instance_valid(corpse), "corpse node is removed, not merely hidden")
